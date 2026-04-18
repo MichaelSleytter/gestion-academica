@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ============================================
+         PARENT — Spring Boot 3.5.13
+         ============================================ -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.13</version>
+        <relativePath/>
+    </parent>
+
+    <!-- ============================================
+         IDENTIFICACIÓN DEL PROYECTO
+         ============================================ -->
+    <groupId>com.example</groupId>
+    <artifactId>gestion-academica</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <name>gestion-academica</name>
+    <description>Sistema de Gestión Académica Universitaria - TechNova Solutions</description>
+
+    <!-- ============================================
+         PROPIEDADES GLOBALES
+         ============================================ -->
+    <properties>
+        <java.version>21</java.version>
+  
+        <springdoc.version>2.8.6</springdoc.version>
+    </properties>
+
+    <!-- ============================================
+         DEPENDENCIAS
+         ============================================ -->
+    <dependencies>
+
+        <!-- ── WEB ─────────────────────────────────── -->
+
+        <!-- Spring Web: REST API, controladores HTTP -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- ── PERSISTENCIA ────────────────────────── -->
+
+        <!-- Spring Data JPA: repositorios, entidades, Hibernate -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- MySQL Connector J: driver JDBC para MySQL 8 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ── VALIDACIÓN ──────────────────────────── -->
+
+        <!-- Bean Validation / Jakarta Validation (@NotBlank, @Email, etc.) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- ── UTILIDADES ──────────────────────────── -->
+
+        <!-- Lombok: @Getter, @Setter, @Builder, @RequiredArgsConstructor -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ── DOCUMENTACIÓN ───────────────────────── -->
+
+        <!-- Springdoc OpenAPI: Swagger UI en /swagger-ui.html -->
+        <!-- ✅ 2.8.6 es compatible con Spring Boot 3.5.x + Spring 6.2.x -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- ── TESTING ─────────────────────────────── -->
+
+        <!-- Spring Boot Test: JUnit 5 + Mockito + AssertJ incluidos -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <!-- ============================================
+         BUILD
+         ============================================ -->
+    <build>
+        <plugins>
+
+            <!-- Plugin principal de Spring Boot -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Excluir Lombok del JAR final (solo se usa en compilación) -->
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Compilador Java — fuerza Java 21 explícitamente -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <!-- Lombok debe estar como annotation processor -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
