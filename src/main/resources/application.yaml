@@ -1,0 +1,62 @@
+# ============================================
+# SERVIDOR
+# ============================================
+server:
+  port: 8080
+
+# ============================================
+# CONGIGURACIÓN DE .env
+# ============================================
+# Importa variables desde un fichero .env (key=value)
+spring:
+  config:
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:./src/.env[.properties]
+
+  # ============================================
+  # BASE DE DATOS - PostgreSQL
+  # Conecta a la BD existente con las siguientes credenciales:
+  # ============================================
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # ============================================
+  # JPA / HIBERNATE
+  # ============================================
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # Configuración Jackson
+  jackson:
+    default-property-inclusion: NON_NULL
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+
+# ============================================
+# SWAGGER / OPENAPI
+# ============================================
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# ============================================
+# LOGS
+# ============================================
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    com.example.gestionacademica: INFO
+

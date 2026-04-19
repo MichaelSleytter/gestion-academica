@@ -9,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * <p>TechNova Solutions - Avance 1</p>
  *
  * <p>Inicia el contexto de Spring Boot y levanta el servidor embebido Tomcat
- * en el puerto configurado en application.properties (default: 8080).</p>
+ * en el puerto configurado en application.yaml (default: 8080).</p>
  *
  * @author TechNova Solutions
  * @version 1.0.0
