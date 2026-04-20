@@ -34,3 +34,7 @@ build/
 
 ## .env files ##
 .env
+
+### Skills ###
+.agents/**
+skills-lock.json
