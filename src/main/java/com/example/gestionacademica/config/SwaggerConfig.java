@@ -7,21 +7,9 @@ import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configuración de Swagger / OpenAPI 3.
- *
- * Acceso en navegador:
- *  - Swagger UI:  http://localhost:8080/swagger-ui.html
- *  - JSON specs:  http://localhost:8080/api-docs
- */
 @Configuration
 public class SwaggerConfig {
 
-        /**
-         * Construye la configuración OpenAPI publicada por la aplicación.
-         *
-         * @return objeto OpenAPI con metadatos de la API
-         */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
