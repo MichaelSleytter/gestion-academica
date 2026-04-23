@@ -7,6 +7,7 @@ import com.example.gestionacademica.entities.Usuario;
 import com.example.gestionacademica.repositories.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class DocenteService {
     private final UsuarioRepository usuarioRepository;
     private final GradoAcademicoRepository gradoAcademicoRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final PasswordEncoder codificadorContrasena;
 
     /**
      * Lista todos los docentes.
@@ -57,36 +59,40 @@ public class DocenteService {
      * Crea un nuevo docente con su usuario base.
      */
     @Transactional
-    public Docente crear(Usuario usuario, Docente docente,
-                         Integer idGrado, Integer idTipoDocumento) {
+        public Docente crear(
+        Usuario usuario,
+        Docente docente,
+        Integer idGrado,
+        Integer idTipoDocumento
+        ) {
 
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new RuntimeException(
-                    "Ya existe un usuario con el email: " + usuario.getEmail());
+                "Ya existe un usuario con el email: " + usuario.getEmail());
         }
 
         if (usuarioRepository.existsByNumeroDocumento(usuario.getNumeroDocumento())) {
             throw new RuntimeException(
-                    "Ya existe un usuario con el documento: " + usuario.getNumeroDocumento());
+                "Ya existe un usuario con el documento: " + usuario.getNumeroDocumento());
         }
 
         TipoDocumento tipoDocumento = tipoDocumentoRepository.findById(idTipoDocumento)
-                .orElseThrow(() -> new RuntimeException(
-                        "Tipo de documento no encontrado con ID: " + idTipoDocumento));
+            .orElseThrow(() -> new RuntimeException(
+                "Tipo de documento no encontrado con ID: " + idTipoDocumento));
 
         GradoAcademico grado = gradoAcademicoRepository.findById(idGrado)
-                .orElseThrow(() -> new RuntimeException(
-                        "Grado academico no encontrado con ID: " + idGrado));
+            .orElseThrow(() -> new RuntimeException(
+                "Grado academico no encontrado con ID: " + idGrado));
 
         usuario.setTipoDocumento(tipoDocumento);
         usuario.setEstado(true);
+        usuario.setPassword(codificadorContrasena.encode(usuario.getPassword()));
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
         docente.setUsuario(usuarioGuardado);
         docente.setGradoAcademico(grado);
-
         return docenteRepository.save(docente);
-    }
+        }
 
     /**
      * Actualiza datos de un docente.

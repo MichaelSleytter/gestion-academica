@@ -51,10 +51,8 @@ public class EstudianteRequestDTO {
     @Max(value = 12, message = "El ciclo máximo es 12")
     private Integer ciclo;
 
-    @Size(
-        max = 50,
-        message = "El estado academico no puede superar 50 caracteres"
-    )
+
+    @NotNull(message = "El estado académico es obligatorio")
     @Enumerated(EnumType.STRING)
     private EstudianteEstadoAcademico estadoAcademico;
 

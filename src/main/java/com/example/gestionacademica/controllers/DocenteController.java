@@ -1,15 +1,23 @@
 package com.example.gestionacademica.controllers;
 
+import com.example.gestionacademica.dto.DocenteRequestDTO;
+import com.example.gestionacademica.dto.DocenteResponseDTO;
 import com.example.gestionacademica.entities.Docente;
+import com.example.gestionacademica.entities.Usuario;
+import com.example.gestionacademica.mappers.DocenteMapper;
+import com.example.gestionacademica.mappers.UsuarioMapper;
 import com.example.gestionacademica.services.DocenteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Controlador REST para la gestión de Docentes.
@@ -22,6 +30,8 @@ import java.util.List;
 public class DocenteController {
 
     private final DocenteService docenteService;
+    private final UsuarioMapper usuarioMapper;
+    private final DocenteMapper docenteMapper;
 
     /**
      * Lista todos los docentes registrados.
@@ -30,8 +40,13 @@ public class DocenteController {
      */
     @GetMapping
     @Operation(summary = "Listar todos los docentes")
-    public ResponseEntity<List<Docente>> listarTodos() {
-        return ResponseEntity.ok(docenteService.listarTodos());
+    public ResponseEntity<List<DocenteResponseDTO>> listarTodos() {
+        List<DocenteResponseDTO> respuesta = docenteService
+            .listarTodos()
+            .stream()
+            .map(docenteMapper::aDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(respuesta);
     }
 
     /**
@@ -42,12 +57,49 @@ public class DocenteController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "Buscar docente por ID")
-    public ResponseEntity<Docente> buscarPorId(
+    public ResponseEntity<DocenteResponseDTO> buscarPorId(
             @Parameter(description = "ID del docente", example = "1")
             @PathVariable Integer id) {
-        return ResponseEntity.ok(docenteService.buscarPorId(id));
+        return ResponseEntity.ok(docenteMapper.aDto(docenteService.buscarPorId(id)));
     }
 
+
+
+    @PostMapping
+    @Operation(summary = "Crear nuevo docente")
+    public ResponseEntity<DocenteResponseDTO> crear(
+        @Valid @RequestBody DocenteRequestDTO requestDTO
+    ) {
+        Usuario usuario = usuarioMapper.desdeSolicitud(requestDTO);
+        Docente docente = new Docente();
+        docente.setEspecialidad(requestDTO.getEspecialidad());
+
+        Docente nuevoDocente = docenteService.crear(
+            usuario,
+            docente,
+            requestDTO.getIdGrado(),
+            requestDTO.getIdTipoDocumento()
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(docenteMapper.aDto(nuevoDocente));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Actualizar docente")
+    public ResponseEntity<DocenteResponseDTO> actualizar(
+        @Parameter(description = "ID del docente a actualizar", example = "1")
+        @PathVariable Integer id,
+        @Valid @RequestBody DocenteRequestDTO requestDTO
+    ) {
+        Docente datos = new Docente();
+        datos.setEspecialidad(requestDTO.getEspecialidad());
+
+        Docente actualizado = docenteService.actualizar(
+            id,
+            datos,
+            requestDTO.getIdGrado()
+        );
+        return ResponseEntity.ok(docenteMapper.aDto(actualizado));
+    }
     /**
      * Busca docentes por especialidad.
      *
@@ -56,10 +108,15 @@ public class DocenteController {
      */
     @GetMapping("/especialidad/{especialidad}")
     @Operation(summary = "Buscar docentes por especialidad")
-    public ResponseEntity<List<Docente>> buscarPorEspecialidad(
+    public ResponseEntity<List<DocenteResponseDTO>> buscarPorEspecialidad(
             @Parameter(description = "Especialidad a buscar", example = "Matemáticas")
             @PathVariable String especialidad) {
-        return ResponseEntity.ok(docenteService.listarPorEspecialidad(especialidad));
+        List<DocenteResponseDTO> respuesta = docenteService
+            .listarPorEspecialidad(especialidad)
+            .stream()
+            .map(docenteMapper::aDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(respuesta);
     }
 
     /**
