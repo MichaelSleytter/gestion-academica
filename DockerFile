@@ -1,0 +1,26 @@
+# Usar una imagen base con JDK 21 para construir la aplicación
+FROM eclipse-temurin:21-jdk as builder
+
+# Enviar al directorio de trabajo
+WORKDIR /app
+
+# Copiar la aplicación al contenedor
+COPY . .
+
+# Dar permisos a mvnw y compilar la aplicación, omitiendo las pruebas para acelerar el proceso
+RUN chmod +x mvnw && ./mvnw clean package -DskipTests
+
+# Correr aplicacion
+FROM eclipse-temurin:21-jre
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Copiar el JAR construido desde la etapa de construcción
+COPY --from=builder /app/target/*.jar app.jar
+
+# Exponer el puerto en el que la aplicación correrá
+EXPOSE 8080
+
+# Comando para ejecutar la aplicación
+ENTRYPOINT ["java", "-jar", "app.jar"]
