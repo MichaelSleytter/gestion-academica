@@ -1,29 +1,23 @@
 package com.example.gestionacademica.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-/**
- * Configuración global de CORS para permitir peticiones desde Angular (puerto 4200).
- */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
-    /**
-     * Registra reglas CORS globales para el API.
-     *
-     * @param registry registro de mapeos CORS de Spring MVC
-     */
+    @Value("${app.cors.allowed-origin}")
+    private String allowedOrigin;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry
             .addMapping("/**")
-            // Angular por defecto corre en http://localhost:4200
-            .allowedOrigins("http://localhost:4200")
+            .allowedOrigins(allowedOrigin.split(","))
             .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
             .allowedHeaders("*")
-            //frontend envía cookies/autenticación, mantener true; si no, puedes poner false
             .allowCredentials(true)
             .maxAge(3600);
     }

@@ -60,9 +60,11 @@ logging:
     org.hibernate.SQL: DEBUG
     com.example.gestionacademica: INFO
 # ============================================
-# Domincio para creacion de correos electrónicos de estudiantes
+# CORS
 # ============================================
 app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
   student:
     email:
       domain: ${STUDENT_EMAIL_DOMAIN:institution.edu.pe}
