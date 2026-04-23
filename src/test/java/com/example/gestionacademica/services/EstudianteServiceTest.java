@@ -6,6 +6,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +40,9 @@ class EstudianteServiceTest {
     @Mock
     private TipoDocumentoRepository tipoDocumentoRepository;
 
+        @Mock
+        private PasswordEncoder codificadorContrasena;
+
     // ── Sistema bajo prueba ──────────────────────────────────────────
     @InjectMocks
     private EstudianteService estudianteService;
@@ -51,6 +55,9 @@ class EstudianteServiceTest {
 
     @BeforeEach
     void setUp() {
+        when(codificadorContrasena.encode(any(CharSequence.class)))
+                .thenReturn("hash123");
+
         // Preparar tipo de documento
         tipoDocumentoBase = new TipoDocumento();
         tipoDocumentoBase.setIdTipoDocumento(1);
@@ -77,7 +84,7 @@ class EstudianteServiceTest {
         estudianteBase.setIdUsuario(1);
         estudianteBase.setCodigoEstudiante("2024-IS-001");
         estudianteBase.setCiclo(4);
-        estudianteBase.setEstadoAcademico("ACTIVO");
+        estudianteBase.setEstadoAcademico(com.example.gestionacademica.enums.EstudianteEstadoAcademico.ACTIVO);
         estudianteBase.setUsuario(usuarioBase);
         estudianteBase.setCarrera(carreraBase);
     }
@@ -232,7 +239,7 @@ class EstudianteServiceTest {
         Estudiante datosNuevos = new Estudiante();
         datosNuevos.setCodigoEstudiante("2024-IS-001");
         datosNuevos.setCiclo(5);
-        datosNuevos.setEstadoAcademico("ACTIVO");
+        datosNuevos.setEstadoAcademico(com.example.gestionacademica.enums.EstudianteEstadoAcademico.ACTIVO);
 
         when(estudianteRepository.findById(1))
                 .thenReturn(Optional.of(estudianteBase));

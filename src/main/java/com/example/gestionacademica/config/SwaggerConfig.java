@@ -17,6 +17,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SwaggerConfig {
 
+        /**
+         * Construye la configuración OpenAPI publicada por la aplicación.
+         *
+         * @return objeto OpenAPI con metadatos de la API
+         */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -32,7 +37,7 @@ public class SwaggerConfig {
                                 - Secciones
                                 - Matrículas
                                 
-                                Base de datos: gestion_academica_universitaria (MySQL)
+                                Base de datos: gestion_academica_universitaria (PostgreSQL)
                                 """)
                         .version("1.0.0")
                         .contact(new Contact()

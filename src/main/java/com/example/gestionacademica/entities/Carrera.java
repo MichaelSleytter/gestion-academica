@@ -6,6 +6,9 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entidad que representa una carrera académica.
+ */
 @Entity
 @Table(name = "carrera")
 @Getter @Setter

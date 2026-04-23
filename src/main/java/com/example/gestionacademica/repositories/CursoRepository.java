@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
+/**
+ * Repositorio JPA para la entidad {@link Curso}.
+ */
 public interface CursoRepository extends JpaRepository<Curso, Integer> {
 
     List<Curso> findByNombreContainingIgnoreCase(String nombre);

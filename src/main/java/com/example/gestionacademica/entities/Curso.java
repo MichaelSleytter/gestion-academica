@@ -6,6 +6,9 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entidad que representa un curso ofertado por la institución.
+ */
 @Entity
 @Table(name = "curso")
 @Getter @Setter

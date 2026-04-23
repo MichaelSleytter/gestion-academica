@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
+/**
+ * Repositorio JPA para la entidad {@link Nota}.
+ */
 public interface NotaRepository extends JpaRepository<Nota, Integer> {
 
     // Notas de un estudiante (navegación correcta según BD)
@@ -13,4 +16,9 @@ public interface NotaRepository extends JpaRepository<Nota, Integer> {
 
     // Notas de una evaluación
     List<Nota> findByEvaluacion_IdEvaluacion(Integer idEvaluacion);
+
+    // Valida duplicado por restricción única (evaluación + estudiante)
+    boolean existsByEvaluacion_IdEvaluacionAndEstudiante_IdUsuario(
+            Integer idEvaluacion,
+            Integer idUsuario);
 }

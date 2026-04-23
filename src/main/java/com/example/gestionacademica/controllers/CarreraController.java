@@ -1,11 +1,12 @@
 package com.example.gestionacademica.controllers;
 
 import com.example.gestionacademica.entities.Carrera;
-import com.example.gestionacademica.repositories.CarreraRepository;
+import com.example.gestionacademica.services.CarreraService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,21 +22,73 @@ import java.util.List;
 @Tag(name = "Carreras", description = "Operaciones para obtener carreras")
 public class CarreraController {
 
-    private final CarreraRepository carreraRepository;
+    private final CarreraService carreraService;
 
+    /**
+     * Lista todas las carreras registradas.
+     *
+     * @return respuesta HTTP con la lista de carreras
+     */
     @GetMapping
     @Operation(summary = "Listar todas las carreras")
     public ResponseEntity<List<Carrera>> listarTodos() {
-        return ResponseEntity.ok(carreraRepository.findAll());
+        return ResponseEntity.ok(carreraService.listarTodas());
     }
 
+    /**
+     * Obtiene una carrera por su identificador.
+     *
+     * @param id identificador de la carrera
+     * @return respuesta HTTP con la carrera encontrada
+     */
     @GetMapping("/{id}")
     @Operation(summary = "Obtener carrera por ID")
     public ResponseEntity<Carrera> buscarPorId(
             @Parameter(description = "ID de la carrera", example = "1")
             @PathVariable Integer id) {
-        Carrera c = carreraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Carrera no encontrada con ID: " + id));
-        return ResponseEntity.ok(c);
+        return ResponseEntity.ok(carreraService.buscarPorId(id));
+    }
+
+    /**
+     * Crea una nueva carrera.
+     *
+     * @param carrera entidad con los datos de la carrera
+     * @return respuesta HTTP con la carrera creada
+     */
+    @PostMapping
+    @Operation(summary = "Crear nueva carrera")
+    public ResponseEntity<Carrera> crear(@RequestBody Carrera carrera) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(carreraService.crear(carrera));
+    }
+
+    /**
+     * Actualiza una carrera existente.
+     *
+     * @param id identificador de la carrera
+     * @param carrera datos actualizados de la carrera
+     * @return respuesta HTTP con la carrera actualizada
+     */
+    @PutMapping("/{id}")
+    @Operation(summary = "Actualizar carrera")
+    public ResponseEntity<Carrera> actualizar(
+            @Parameter(description = "ID de la carrera", example = "1")
+            @PathVariable Integer id,
+            @RequestBody Carrera carrera) {
+        return ResponseEntity.ok(carreraService.actualizar(id, carrera));
+    }
+
+    /**
+     * Elimina una carrera por su identificador.
+     *
+     * @param id identificador de la carrera
+     * @return respuesta HTTP sin contenido
+     */
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Eliminar carrera")
+    public ResponseEntity<Void> eliminar(
+            @Parameter(description = "ID de la carrera", example = "1")
+            @PathVariable Integer id) {
+        carreraService.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

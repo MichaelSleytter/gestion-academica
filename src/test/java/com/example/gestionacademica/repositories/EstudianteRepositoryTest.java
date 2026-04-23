@@ -1,17 +1,17 @@
 package com.example.gestionacademica.repositories;
 
-import com.example.gestionacademica.entities.*;
-import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.transaction.annotation.Transactional;
+import static org.assertj.core.api.Assertions.*;
 
+import com.example.gestionacademica.entities.*;
+import com.example.gestionacademica.enums.EstudianteEstadoAcademico;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Pruebas unitarias para EstudianteRepository.
@@ -63,7 +63,7 @@ class EstudianteRepositoryTest {
         Estudiante estudiante = new Estudiante();
         estudiante.setCodigoEstudiante("COD-" + token);
         estudiante.setCiclo(3);
-        estudiante.setEstadoAcademico("ACTIVO");
+        estudiante.setEstadoAcademico(EstudianteEstadoAcademico.ACTIVO);
         estudiante.setUsuario(usuario);
         estudiante.setCarrera(carrera);
 
@@ -72,7 +72,9 @@ class EstudianteRepositoryTest {
 
     private String generarTokenCorto(String base) {
         String limpio = base.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
-        String tokenBase = limpio + UUID.randomUUID().toString().replace("-", "").toUpperCase();
+        String tokenBase =
+            limpio +
+            UUID.randomUUID().toString().replace("-", "").toUpperCase();
         return tokenBase.substring(0, 8);
     }
 
@@ -85,12 +87,15 @@ class EstudianteRepositoryTest {
     void debeGuardarYRecuperarPorId() {
         Estudiante guardado = crearEstudianteFresco("T1-" + System.nanoTime());
 
-        Optional<Estudiante> resultado = estudianteRepository
-                .findById(guardado.getIdUsuario());
+        Optional<Estudiante> resultado = estudianteRepository.findById(
+            guardado.getIdUsuario()
+        );
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getCiclo()).isEqualTo(3);
-        assertThat(resultado.get().getEstadoAcademico()).isEqualTo("ACTIVO");
+        assertThat(resultado.get().getEstadoAcademico()).isEqualTo(
+            EstudianteEstadoAcademico.ACTIVO
+        );
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -102,12 +107,15 @@ class EstudianteRepositoryTest {
     void debeEncontrarPorCodigoEstudiante() {
         Estudiante guardado = crearEstudianteFresco("T2-" + System.nanoTime());
 
-        Optional<Estudiante> resultado = estudianteRepository
-                .findByCodigoEstudiante(guardado.getCodigoEstudiante());
+        Optional<Estudiante> resultado =
+            estudianteRepository.findByCodigoEstudiante(
+                guardado.getCodigoEstudiante()
+            );
 
         assertThat(resultado).isPresent();
-        assertThat(resultado.get().getIdUsuario())
-                .isEqualTo(guardado.getIdUsuario());
+        assertThat(resultado.get().getIdUsuario()).isEqualTo(
+            guardado.getIdUsuario()
+        );
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -119,12 +127,15 @@ class EstudianteRepositoryTest {
     void debeListarEstudiantesPorCarrera() {
         Estudiante guardado = crearEstudianteFresco("T3-" + System.nanoTime());
 
-        List<Estudiante> resultado = estudianteRepository
-                .findByCarrera_IdCarrera(guardado.getCarrera().getIdCarrera());
+        List<Estudiante> resultado =
+            estudianteRepository.findByCarrera_IdCarrera(
+                guardado.getCarrera().getIdCarrera()
+            );
 
         assertThat(resultado).isNotEmpty();
-        assertThat(resultado.get(0).getCarrera().getIdCarrera())
-                .isEqualTo(guardado.getCarrera().getIdCarrera());
+        assertThat(resultado.get(0).getCarrera().getIdCarrera()).isEqualTo(
+            guardado.getCarrera().getIdCarrera()
+        );
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -151,8 +162,9 @@ class EstudianteRepositoryTest {
     void debeVerificarExistenciaDeCodigoEstudiante() {
         Estudiante guardado = crearEstudianteFresco("T5-" + System.nanoTime());
 
-        boolean existe = estudianteRepository
-                .existsByCodigoEstudiante(guardado.getCodigoEstudiante());
+        boolean existe = estudianteRepository.existsByCodigoEstudiante(
+            guardado.getCodigoEstudiante()
+        );
 
         assertThat(existe).isTrue();
     }
@@ -164,8 +176,9 @@ class EstudianteRepositoryTest {
     @Test
     @DisplayName("Debe retornar false si el codigo de estudiante NO existe")
     void debeRetornarFalseParaCodigoInexistente() {
-        boolean existe = estudianteRepository
-                .existsByCodigoEstudiante("CODIGO-INEXISTENTE-99999");
+        boolean existe = estudianteRepository.existsByCodigoEstudiante(
+            "CODIGO-INEXISTENTE-99999"
+        );
 
         assertThat(existe).isFalse();
     }

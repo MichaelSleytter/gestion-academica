@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 
+/**
+ * Entidad de relación entre docentes y secciones.
+ */
 @Entity
 @Table(name = "docente_seccion")
 @Getter @Setter
@@ -30,6 +33,9 @@ public class DocenteSeccion {
     @Getter @Setter
     @NoArgsConstructor @AllArgsConstructor
     @EqualsAndHashCode
+    /**
+     * Llave compuesta de la relación docente-sección.
+     */
     public static class DocenteSeccionId implements Serializable {
 
         @Column(name = "id_docente")

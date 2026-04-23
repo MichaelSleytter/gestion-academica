@@ -24,12 +24,23 @@ public class SeccionController {
 
     private final SeccionService seccionService;
 
+    /**
+     * Lista todas las secciones registradas.
+     *
+     * @return respuesta HTTP con secciones
+     */
     @GetMapping
     @Operation(summary = "Listar todas las secciones")
     public ResponseEntity<List<Seccion>> listarTodas() {
         return ResponseEntity.ok(seccionService.listarTodas());
     }
 
+    /**
+     * Busca una sección por identificador.
+     *
+     * @param id identificador de la sección
+     * @return respuesta HTTP con la sección encontrada
+     */
     @GetMapping("/{id}")
     @Operation(summary = "Buscar sección por ID")
     public ResponseEntity<Seccion> buscarPorId(
@@ -38,6 +49,12 @@ public class SeccionController {
         return ResponseEntity.ok(seccionService.buscarPorId(id));
     }
 
+    /**
+     * Lista las secciones asociadas a un curso.
+     *
+     * @param idCurso identificador del curso
+     * @return respuesta HTTP con secciones del curso
+     */
     @GetMapping("/curso/{idCurso}")
     @Operation(summary = "Listar secciones por curso")
     public ResponseEntity<List<Seccion>> listarPorCurso(
@@ -46,6 +63,12 @@ public class SeccionController {
         return ResponseEntity.ok(seccionService.listarPorCurso(idCurso));
     }
 
+    /**
+     * Lista las secciones asociadas a un ciclo académico.
+     *
+     * @param idCiclo identificador del ciclo académico
+     * @return respuesta HTTP con secciones del ciclo
+     */
     @GetMapping("/ciclo/{idCiclo}")
     @Operation(summary = "Listar secciones por ciclo academico")
     public ResponseEntity<List<Seccion>> listarPorCiclo(
@@ -54,6 +77,14 @@ public class SeccionController {
         return ResponseEntity.ok(seccionService.listarPorCiclo(idCiclo));
     }
 
+    /**
+     * Crea una nueva sección asociada a curso y ciclo académico.
+     *
+     * @param seccion datos de la sección
+     * @param idCurso identificador del curso
+     * @param idCiclo identificador del ciclo académico
+     * @return respuesta HTTP con la sección creada
+     */
     @PostMapping
     @Operation(summary = "Crear nueva sección",
                description = "Requiere idCurso e idCiclo como parámetros de query")
@@ -68,6 +99,15 @@ public class SeccionController {
                 .body(seccionService.crear(seccion, idCurso, idCiclo));
     }
 
+    /**
+     * Actualiza una sección existente y sus relaciones principales.
+     *
+     * @param id identificador de la sección
+     * @param seccion datos actualizados
+     * @param idCurso identificador del curso
+     * @param idCiclo identificador del ciclo académico
+     * @return respuesta HTTP con la sección actualizada
+     */
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar sección")
     public ResponseEntity<Seccion> actualizar(
@@ -81,6 +121,12 @@ public class SeccionController {
         return ResponseEntity.ok(seccionService.actualizar(id, seccion, idCurso, idCiclo));
     }
 
+    /**
+     * Elimina una sección por su identificador.
+     *
+     * @param id identificador de la sección
+     * @return respuesta HTTP sin contenido
+     */
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar sección")
     public ResponseEntity<Void> eliminar(

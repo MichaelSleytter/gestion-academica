@@ -25,12 +25,23 @@ public class CursoController {
 
     private final CursoService cursoService;
 
+    /**
+     * Lista todos los cursos disponibles.
+     *
+     * @return respuesta HTTP con la lista de cursos
+     */
     @GetMapping
     @Operation(summary = "Listar todos los cursos")
     public ResponseEntity<List<Curso>> listarTodos() {
         return ResponseEntity.ok(cursoService.listarTodos());
     }
 
+    /**
+     * Obtiene un curso por su identificador.
+     *
+     * @param id identificador del curso
+     * @return respuesta HTTP con el curso encontrado
+     */
     @GetMapping("/{id}")
     @Operation(summary = "Buscar curso por ID")
     public ResponseEntity<Curso> buscarPorId(
@@ -39,6 +50,12 @@ public class CursoController {
         return ResponseEntity.ok(cursoService.buscarPorId(id));
     }
 
+    /**
+     * Busca cursos por coincidencia parcial de nombre.
+     *
+     * @param nombre texto a buscar en el nombre del curso
+     * @return respuesta HTTP con cursos coincidentes
+     */
     @GetMapping("/buscar")
     @Operation(summary = "Buscar cursos por nombre")
     public ResponseEntity<List<Curso>> buscarPorNombre(
@@ -47,6 +64,12 @@ public class CursoController {
         return ResponseEntity.ok(cursoService.buscarPorNombre(nombre));
     }
 
+    /**
+     * Crea un nuevo curso.
+     *
+     * @param curso datos del curso
+     * @return respuesta HTTP con el curso creado
+     */
     @PostMapping
     @Operation(summary = "Crear nuevo curso")
     public ResponseEntity<Curso> crear(@Valid @RequestBody Curso curso) {
@@ -55,6 +78,13 @@ public class CursoController {
                 .body(cursoService.crear(curso));
     }
 
+    /**
+     * Actualiza un curso existente.
+     *
+     * @param id identificador del curso
+     * @param curso datos actualizados
+     * @return respuesta HTTP con el curso actualizado
+     */
     @PutMapping("/{id}")
     @Operation(summary = "Actualizar curso")
     public ResponseEntity<Curso> actualizar(
@@ -64,6 +94,12 @@ public class CursoController {
         return ResponseEntity.ok(cursoService.actualizar(id, curso));
     }
 
+    /**
+     * Elimina un curso por su identificador.
+     *
+     * @param id identificador del curso
+     * @return respuesta HTTP sin contenido
+     */
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar curso")
     public ResponseEntity<Void> eliminar(

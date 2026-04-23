@@ -10,6 +10,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
+    /**
+     * Registra reglas CORS globales para el API.
+     *
+     * @param registry registro de mapeos CORS de Spring MVC
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry

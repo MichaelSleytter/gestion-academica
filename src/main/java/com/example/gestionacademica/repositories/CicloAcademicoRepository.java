@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
+/**
+ * Repositorio JPA para la entidad {@link CicloAcademico}.
+ */
 public interface CicloAcademicoRepository extends JpaRepository<CicloAcademico, Integer> {
     java.util.Optional<CicloAcademico> findByNombre(String nombre);
 }

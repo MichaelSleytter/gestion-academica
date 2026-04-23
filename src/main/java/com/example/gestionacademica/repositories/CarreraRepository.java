@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio JPA para la entidad {@link Carrera}.
+ */
 public interface CarreraRepository extends JpaRepository<Carrera, Integer> {
 
     Optional<Carrera> findByNombre(String nombre);

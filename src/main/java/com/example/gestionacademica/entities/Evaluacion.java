@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entidad que representa una evaluación aplicada dentro de una sección.
+ */
 @Entity
 @Table(name = "evaluacion")
 @Getter @Setter

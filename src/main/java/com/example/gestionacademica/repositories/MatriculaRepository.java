@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio JPA para la entidad {@link Matricula}.
+ */
 public interface MatriculaRepository extends JpaRepository<Matricula, Integer> {
 
     List<Matricula> findByEstudiante_IdUsuario(Integer idUsuario);

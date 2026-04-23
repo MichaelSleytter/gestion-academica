@@ -24,12 +24,23 @@ public class MatriculaController {
 
     private final MatriculaService matriculaService;
 
+    /**
+     * Lista todas las matrículas registradas.
+     *
+     * @return respuesta HTTP con matrículas
+     */
     @GetMapping
     @Operation(summary = "Listar todas las matrículas")
     public ResponseEntity<List<Matricula>> listarTodas() {
         return ResponseEntity.ok(matriculaService.listarTodas());
     }
 
+    /**
+     * Busca una matrícula por identificador.
+     *
+     * @param id identificador de la matrícula
+     * @return respuesta HTTP con la matrícula encontrada
+     */
     @GetMapping("/{id}")
     @Operation(summary = "Buscar matrícula por ID")
     public ResponseEntity<Matricula> buscarPorId(
@@ -38,6 +49,12 @@ public class MatriculaController {
         return ResponseEntity.ok(matriculaService.buscarPorId(id));
     }
 
+    /**
+     * Lista matrículas asociadas a un estudiante.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return respuesta HTTP con matrículas del estudiante
+     */
     @GetMapping("/estudiante/{idEstudiante}")
     @Operation(summary = "Listar matrículas de un estudiante")
     public ResponseEntity<List<Matricula>> listarPorEstudiante(
@@ -46,6 +63,12 @@ public class MatriculaController {
         return ResponseEntity.ok(matriculaService.listarPorEstudiante(idEstudiante));
     }
 
+    /**
+     * Lista matrículas asociadas a una sección.
+     *
+     * @param idSeccion identificador de la sección
+     * @return respuesta HTTP con matrículas de la sección
+     */
     @GetMapping("/seccion/{idSeccion}")
     @Operation(summary = "Listar matrículas de una sección")
     public ResponseEntity<List<Matricula>> listarPorSeccion(
@@ -54,6 +77,13 @@ public class MatriculaController {
         return ResponseEntity.ok(matriculaService.listarPorSeccion(idSeccion));
     }
 
+    /**
+     * Registra una nueva matrícula para un estudiante en una sección.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @param idSeccion identificador de la sección
+     * @return respuesta HTTP con la matrícula creada
+     */
     @PostMapping
     @Operation(
         summary = "Registrar nueva matrícula",
@@ -69,6 +99,13 @@ public class MatriculaController {
                 .body(matriculaService.matricular(idEstudiante, idSeccion));
     }
 
+    /**
+     * Cambia el estado de una matrícula existente.
+     *
+     * @param id identificador de la matrícula
+     * @param estado nuevo estado de la matrícula
+     * @return respuesta HTTP con la matrícula actualizada
+     */
     @PatchMapping("/{id}/estado")
     @Operation(
         summary = "Cambiar estado de matrícula",
@@ -82,6 +119,12 @@ public class MatriculaController {
         return ResponseEntity.ok(matriculaService.cambiarEstado(id, estado));
     }
 
+    /**
+     * Elimina una matrícula por su identificador.
+     *
+     * @param id identificador de la matrícula
+     * @return respuesta HTTP sin contenido
+     */
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar matrícula")
     public ResponseEntity<Void> eliminar(

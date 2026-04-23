@@ -1,5 +1,8 @@
-package com.example.gestionacademica.dtos;
+package com.example.gestionacademica.dto;
 
+import com.example.gestionacademica.enums.EstudianteEstadoAcademico;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.*;
 
 /**
@@ -27,7 +30,10 @@ public class EstudianteResponseDTO {
 
     // ── Datos academicos ─────────────────────────────────
     private Integer ciclo;
-    private String estadoAcademico;
+
+    @Enumerated(EnumType.STRING)
+    private EstudianteEstadoAcademico estadoAcademico;
+
     private String nombreCarrera;
     private Integer idCarrera;
 }

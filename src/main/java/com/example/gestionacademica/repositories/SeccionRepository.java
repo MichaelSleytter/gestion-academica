@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
+/**
+ * Repositorio JPA para la entidad {@link Seccion}.
+ */
 public interface SeccionRepository extends JpaRepository<Seccion, Integer> {
 
     Optional<Seccion> findByCodigoSeccion(String codigoSeccion);

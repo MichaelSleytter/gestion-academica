@@ -17,6 +17,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class GestionacademicaApplication {
 
+	/**
+	 * Punto de entrada de la aplicación Spring Boot.
+	 *
+	 * @param args argumentos de línea de comandos
+	 */
 	public static void main(String[] args) {
 		SpringApplication.run(GestionacademicaApplication.class, args);
 	}

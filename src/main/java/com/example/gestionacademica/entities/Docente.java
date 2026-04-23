@@ -6,6 +6,9 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entidad que representa a un docente dentro del sistema académico.
+ */
 @Entity
 @Table(name = "docente")
 @Getter @Setter

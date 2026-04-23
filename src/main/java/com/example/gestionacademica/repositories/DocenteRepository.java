@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
+/**
+ * Repositorio JPA para la entidad {@link Docente}.
+ */
 public interface DocenteRepository extends JpaRepository<Docente, Integer> {
 
     List<Docente> findByGradoAcademico_IdGrado(Integer idGrado);

@@ -23,12 +23,23 @@ public class DocenteController {
 
     private final DocenteService docenteService;
 
+    /**
+     * Lista todos los docentes registrados.
+     *
+     * @return respuesta HTTP con docentes
+     */
     @GetMapping
     @Operation(summary = "Listar todos los docentes")
     public ResponseEntity<List<Docente>> listarTodos() {
         return ResponseEntity.ok(docenteService.listarTodos());
     }
 
+    /**
+     * Busca un docente por su identificador.
+     *
+     * @param id identificador del docente
+     * @return respuesta HTTP con el docente encontrado
+     */
     @GetMapping("/{id}")
     @Operation(summary = "Buscar docente por ID")
     public ResponseEntity<Docente> buscarPorId(
@@ -37,6 +48,12 @@ public class DocenteController {
         return ResponseEntity.ok(docenteService.buscarPorId(id));
     }
 
+    /**
+     * Busca docentes por especialidad.
+     *
+     * @param especialidad especialidad a filtrar
+     * @return respuesta HTTP con docentes coincidentes
+     */
     @GetMapping("/especialidad/{especialidad}")
     @Operation(summary = "Buscar docentes por especialidad")
     public ResponseEntity<List<Docente>> buscarPorEspecialidad(
@@ -45,6 +62,12 @@ public class DocenteController {
         return ResponseEntity.ok(docenteService.listarPorEspecialidad(especialidad));
     }
 
+    /**
+     * Elimina un docente por su identificador.
+     *
+     * @param id identificador del docente
+     * @return respuesta HTTP sin contenido
+     */
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar docente por ID")
     public ResponseEntity<Void> eliminar(
