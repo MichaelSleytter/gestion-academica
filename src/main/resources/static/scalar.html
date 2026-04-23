@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Academica API - Scalar</title>
+    <style>
+        :root {
+            --bg: #0b1220;
+            --text: #e5e7eb;
+            --accent: #22d3ee;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 10% 20%, #101a2f 0%, var(--bg) 45%, #070d18 100%);
+            color: var(--text);
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .header {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.15);
+            backdrop-filter: blur(6px);
+            background: rgba(7, 13, 24, 0.75);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header strong {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <strong>Scalar Docs</strong> - Sistema de Gestion Academica Universitaria
+</div>
+
+<script id="api-reference" data-url="/api-docs"></script>
+<script>
+    const configuration = {
+        theme: "kepler",
+        layout: "modern",
+        showSidebar: true,
+        hideDownloadButton: false,
+        darkMode: true,
+        searchHotKey: "k",
+        metadata: {
+            title: "Gestion Academica API",
+            description: "Documentacion interactiva de la API REST"
+        }
+    };
+
+    document
+        .getElementById("api-reference")
+        .setAttribute("data-configuration", JSON.stringify(configuration));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+</body>
+</html>
