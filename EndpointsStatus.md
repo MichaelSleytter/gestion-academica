@@ -16,72 +16,40 @@ cssclasses:
 
 # Resumen por entidad
 
-## Usuario
-- [ ] GET /usuarios
-  - [ ] GET /usuarios/{id}
-  - [ ] POST /usuarios
-  - [ ] PUT /usuarios/{id}
-  - [ ] DELETE /usuarios/{id}
 
 ## Estudiante
-- [ ] GET /estudiantes
+- [x] GET /estudiantes — Probado OK
   - [x] GET /estudiantes/{id} — Probado OK
-  - [ ] POST /estudiantes
+  - [x] POST /estudiantes — Probado OK
   - [x] PUT /estudiantes/{id} — Probado OK
-  - [ ] DELETE /estudiantes/{id}
+  - [x] DELETE /estudiantes/{id}
 
 ## Docente
-- [ ] GET /docentes
-  - [ ] GET /docentes/{id}
-  - [ ] POST /docentes
-  - [ ] PUT /docentes/{id}
-  - [ ] DELETE /docentes/{id}
+- [x] GET /docentes — Probado OK
+  - [x] GET /docentes/{id} — Probado OK
+  - [x] POST /docentes — Probado OK
+  - [x] PUT /docentes/{id} — Probado OK
+  - [x] DELETE /docentes/{id}
 
 ## Curso
-- [ ] GET /cursos
-  - [ ] GET /cursos/{id}
-  - [ ] POST /cursos
-  - [ ] PUT /cursos/{id}
-  - [ ] DELETE /cursos/{id}
+- [x] GET /cursos — Probado OK
+  - [x] GET /cursos/{id} — Probado OK
+  - [x] POST /cursos — Probado OK
+  - [x] PUT /cursos/{id}
+  - [x] DELETE /cursos/{id}
 
 ## Sección
-- [ ] GET /secciones
-  - [ ] GET /secciones/{id}
-  - [ ] POST /secciones
-  - [ ] PUT /secciones/{id}
-  - [ ] DELETE /secciones/{id}
+- [x] GET /secciones — Probado OK
+  - [x] GET /secciones/{id} — Probado OK
+  - [x] POST /secciones — Probado OK
+  - [x] PUT /secciones/{id}
+  - [x] DELETE /secciones/{id}
 
 ## Matrícula
-- [ ] GET /matriculas
-  - [ ] GET /matriculas/{id}
-  - [ ] POST /matriculas
-  - [ ] PUT /matriculas/{id}
-  - [ ] DELETE /matriculas/{id}
+- [x] GET /matriculas — Probado OK
+  - [x] GET /matriculas/{id} — Probado OK
+  - [x] POST /matriculas — Probado OK
+  - [x] PUT /matriculas/{id}
+  - [x] DELETE /matriculas/{id}
 
 ---
-
-Notes / Instrucciones de prueba
-
-- Estudiante PUT: el endpoint ahora mergea campos no nulos del DTO en el Usuario asociado (nombre, apellido, numeroDocumento, emailPersonal, idTipoDocumento) y actualiza los datos académicos (ciclo, estadoAcademico, idCarrera). Si no se envía codigoEstudiante, no lo sobreescribe.
-- Al marcar una casilla, añadí debajo: fecha, tester y nota breve (ej: "2026-04-25 - arley - PUT /estudiantes/23: OK, actualizó nombre y ciclo").
-
-Ejemplo rápido (PUT /api/v1/estudiantes/23):
-
-```bash
-curl -X PUT 'http://localhost:8080/api/v1/estudiantes/23' \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "nombre": "Maria Josefina",
-    "apellido": "Ramos de La Cruz Fernandez",
-    "numeroDocumento": "71281212",
-    "idTipoDocumento": 1,
-    "ciclo": 1,
-    "estadoAcademico": "ACTIVO",
-    "idCarrera": 1,
-    "emailPersonal": "maria@gmail.com"
-  }'
-```
-
----
-
-Mantengamos este archivo como fuente rápida de estado durante las pruebas.

@@ -39,3 +39,4 @@ build/
 .agents/**
 skills-lock.json
 AGENTS.md
+opencode.json

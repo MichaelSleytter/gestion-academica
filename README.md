@@ -53,12 +53,24 @@ La API proporciona endpoints RESTful para la gestión completa de la informació
 | Spring Boot | 3.5.13 |
 | Spring Data JPA | (incluido en Spring Boot) |
 | Hibernate | (implementación JPA) |
-| PostgreSQL | 15+ |
+| PostgreSQL (InsForge) | 15+ |
 | Maven | 4.x |
 | Lombok | (latest) |
 | Springdoc OpenAPI | 2.8.6 |
 | Spring Security Crypto | 6.x |
 | Jakarta Validation | (incluido) |
+
+---
+
+## Herramientas
+
+| Categoría | Herramienta |
+|----------|------------|
+| **IDE** | IntelliJ IDEA, Visual Studio Code, Zed |
+| **Base de datos** | InsForge (cloud PostgreSQL), pgAdmin |
+| **Documentación API** | Swagger UI, Scalar |
+| **Control de versiones** | Git |
+| **Repositorio remoto** | GitHub |
 
 ---
 
@@ -146,7 +158,7 @@ gestion-academica/
 ## Requisitos Previos
 
 - **Java 21** (JDK)
-- **PostgreSQL 15+** (base de datos)
+- **PostgreSQL 15+** (local o InsForge cloud)
 - **Maven 4.x** (opcional, usar wrapper incluido)
 - **Git** (para clonar el repositorio)
 
@@ -161,18 +173,41 @@ git clone <url-del-repositorio>
 cd gestion-academica
 ```
 
-### 2. Configurar la base de datos
+### 2. Configurar la base de datos (InsForge)
 
-Debes tener una instancia de **PostgreSQL** en ejecución. Crea una base de datos llamada `gestion` (o la que prefieras).
+Este proyecto usa **InsForge** como backend de base de datos PostgreSQL en la nube. También puedes usar una instancia local de PostgreSQL.
+
+#### Opción A: InsForge (Cloud)
+
+1. Crea una cuenta en [insforge.dev](https://insforge.dev)
+2. En el dashboard, obtén las credenciales de conexión:
+   - **Connection URL**: similar a `postgresql://postgres:[password]@tu-proyecto.insforge.app:5432/postgres`
+   - **API Base URL**: `https://tu-proyecto.insforge.app`
+
+#### Opción B: PostgreSQL local
+
+Crea una base de datos llamada `gestion` (o la que prefieras).
 
 ### 3. Configurar variables de entorno
 
 Crea un archivo `.env` en la raíz del proyecto (o en `src/.env`) con las siguientes variables:
 
+#### Para InsForge (Cloud)
+
+```env
+DB_URL=postgresql://postgres:[password]@tu-proyecto.insforge.app:5432/postgres
+DB_USERNAME=postgres
+DB_PASSWORD=tu_password
+CORS_ALLOWED_ORIGIN=http://localhost:4200
+```
+
+#### Para PostgreSQL local
+
 ```env
 DB_URL=jdbc:postgresql://localhost:5432/gestion
 DB_USERNAME=tu_usuario
 DB_PASSWORD=tu_contraseña
+CORS_ALLOWED_ORIGIN=http://localhost:4200
 ```
 
 ### 4. Instalar dependencias
