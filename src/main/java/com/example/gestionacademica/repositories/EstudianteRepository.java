@@ -25,6 +25,15 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Integer>
 
     List<Estudiante> findByCiclo(Integer ciclo);
 
+    @Query("SELECT e FROM Estudiante e WHERE e.usuario.estado = true")
+    List<Estudiante> findAllByUsuario_EstadoTrue();
+
+    @Query("SELECT e FROM Estudiante e WHERE e.idUsuario = :id AND e.usuario.estado = true")
+    Optional<Estudiante> findByIdUsuarioAndUsuario_EstadoTrue(@Param("id") Integer id);
+
+    @Query("SELECT e FROM Estudiante e WHERE e.carrera.idCarrera = :idCarrera AND e.usuario.estado = true")
+    List<Estudiante> findByCarrera_IdCarreraAndUsuario_EstadoTrue(@Param("idCarrera") Integer idCarrera);
+
     @Query("SELECT e FROM Estudiante e WHERE e.carrera.idCarrera = :idCarrera AND e.estadoAcademico = 'ACTIVO'")
     List<Estudiante> findActivosPorCarrera(@Param("idCarrera") Integer idCarrera);
 }

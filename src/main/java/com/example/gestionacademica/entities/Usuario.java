@@ -48,6 +48,9 @@ public class Usuario {
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
+    @Column(name = "fecha_baja")
+    private LocalDateTime fechaBaja;
+
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 

@@ -1,10 +1,10 @@
 package com.example.gestionacademica.controllers;
 
+import com.example.gestionacademica.dto.EstudianteCrearDTO;
 import com.example.gestionacademica.dto.EstudianteRequestDTO;
 import com.example.gestionacademica.dto.EstudianteResponseDTO;
 import com.example.gestionacademica.entities.Estudiante;
-import com.example.gestionacademica.entities.Usuario;
-import com.example.gestionacademica.services.EstudianteService;
+import com.example.gestionacademica.services.estudiante.EstudianteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -136,19 +136,23 @@ public class EstudianteController {
     public ResponseEntity<EstudianteResponseDTO> crear(
         @Valid @RequestBody EstudianteRequestDTO requestDTO
     ) {
-        Usuario usuario = usuarioMapper.desdeSolicitud(requestDTO);
-        Estudiante estudiante = new Estudiante();
-        estudiante.setCiclo(requestDTO.getCiclo());
+        // Construir el comando de creación a partir del DTO de solicitud
+        EstudianteCrearDTO comando = EstudianteCrearDTO.builder()
+            .nombre(requestDTO.getNombre())
+            .apellido(requestDTO.getApellido())
+            .numeroDocumento(requestDTO.getNumeroDocumento())
+            .idTipoDocumento(requestDTO.getIdTipoDocumento())
+            .emailPersonal(requestDTO.getEmailPersonal())
+            .password(null)
+            .ciclo(requestDTO.getCiclo())
+            .idCarrera(requestDTO.getIdCarrera())
+            .estadoAcademico(requestDTO.getEstadoAcademico())
+            .build();
 
-        Estudiante creado = estudianteService.crear(
-            usuario,
-            estudiante,
-            requestDTO.getIdCarrera(),
-            requestDTO.getIdTipoDocumento()
-        );
-
+        EstudianteService.ResultadoCreacion resultado =
+            estudianteService.crearConCredenciales(comando);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            estudianteMapper.aDto(creado)
+            estudianteMapper.aDto(resultado.estudianteCreado())
         );
     }
 
@@ -188,16 +192,10 @@ public class EstudianteController {
         ) @PathVariable Integer id,
         @Valid @RequestBody EstudianteRequestDTO requestDTO
     ) {
-        // Solo actualizamos datos academicos del estudiante
-        Estudiante datos = new Estudiante();
-        // codigo no se modifica desde el DTO
-        datos.setCiclo(requestDTO.getCiclo());
-        datos.setEstadoAcademico(requestDTO.getEstadoAcademico());
-
-        Estudiante actualizado = estudianteService.actualizar(
+        // Actualizamos usuario y estudiante a partir del DTO (merge de campos no nulos)
+        Estudiante actualizado = estudianteService.actualizarDesdeDto(
             id,
-            datos,
-            requestDTO.getIdCarrera()
+            requestDTO
         );
         return ResponseEntity.ok(estudianteMapper.aDto(actualizado));
     }
