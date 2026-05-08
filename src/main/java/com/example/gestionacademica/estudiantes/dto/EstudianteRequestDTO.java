@@ -9,7 +9,8 @@ import lombok.*;
 /**
  * DTO de entrada para crear o actualizar un Estudiante.
  *
- * <p>Contiene los datos necesarios para crear o actualizar la parte academica
+ * <p>
+ * Contiene los datos necesarios para crear o actualizar la parte academica
  * del estudiante y los campos básicos del usuario. No incluye campos que el
  * servidor genera (código, email institucional, contraseña).
  *
@@ -35,10 +36,7 @@ public class EstudianteRequestDTO {
     // No deben ser proporcionados por el frontend en la petición de creación.
 
     @NotBlank(message = "El número de documento es obligatorio")
-    @Size(
-        max = 30,
-        message = "El número de documento no puede superar 30 caracteres"
-    )
+    @Size(max = 30, message = "El número de documento no puede superar 30 caracteres")
     private String numeroDocumento;
 
     @NotNull(message = "El tipo de documento es obligatorio")
@@ -51,8 +49,6 @@ public class EstudianteRequestDTO {
     @Max(value = 12, message = "El ciclo máximo es 12")
     private Integer ciclo;
 
-
-    @NotNull(message = "El estado académico es obligatorio")
     @Enumerated(EnumType.STRING)
     private EstudianteEstadoAcademico estadoAcademico;
 
@@ -64,9 +60,6 @@ public class EstudianteRequestDTO {
      * Si se envía, se almacenará en el campo {@code emailPersonal} del Usuario.
      */
     @Email(message = "El email personal no tiene un formato válido")
-    @Size(
-        max = 120,
-        message = "El email personal no puede superar 120 caracteres"
-    )
+    @Size(max = 120, message = "El email personal no puede superar 120 caracteres")
     private String emailPersonal;
 }

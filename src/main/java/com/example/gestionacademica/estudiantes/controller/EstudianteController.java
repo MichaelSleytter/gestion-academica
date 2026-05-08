@@ -107,10 +107,8 @@ public class EstudianteController {
                 .numeroDocumento(requestDTO.getNumeroDocumento())
                 .idTipoDocumento(requestDTO.getIdTipoDocumento())
                 .emailPersonal(requestDTO.getEmailPersonal())
-                .password(null)
                 .ciclo(requestDTO.getCiclo())
                 .idCarrera(requestDTO.getIdCarrera())
-                .estadoAcademico(requestDTO.getEstadoAcademico())
                 .build();
 
         EstudianteService.ResultadoCreacion resultado = estudianteService.crearConCredenciales(comando);

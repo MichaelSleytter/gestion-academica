@@ -10,8 +10,8 @@ public class EstudianteFactory {
     public Estudiante crearDesdeComando(EstudianteCrearDTO comando) {
         Estudiante e = new Estudiante();
         e.setCiclo(comando.getCiclo());
-        e.setEstadoAcademico(comando.getEstadoAcademico());
-        e.setCodigoEstudiante(comando.getCodigoEstudiante()); // puede ser null y se asegura en el servicio
+        // El código de estudiante se genera automáticamente en el servicio
+        // El estado académico se define como ACTIVO al crear
         return e;
     }
 }

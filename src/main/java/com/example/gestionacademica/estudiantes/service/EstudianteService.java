@@ -23,7 +23,8 @@ import org.springframework.stereotype.Service;
 /**
  * Servicio de lógica de negocio para operaciones sobre {@link Estudiante}.
  *
- * <p>Proporciona operaciones CRUD, validaciones de negocio y la generación de
+ * <p>
+ * Proporciona operaciones CRUD, validaciones de negocio y la generación de
  * datos derivados (correo institucional, contraseña y código de estudiante)
  * cuando corresponde.
  *
@@ -35,13 +36,12 @@ public class EstudianteService {
 
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder codificadorContrasena;
-
-    // New collaborators
+    private final PasswordEncoder passwordEncoder;
     private final CatalogoService catalogoService;
     private final UsuarioFactory usuarioFactory;
     private final EstudianteFactory estudianteFactory;
     private final EstudianteValidator estudianteValidator;
+    private final EstudianteUtil estudianteUtil;
 
     @Value("${app.student.email.domain:institution.edu.pe}")
     private String dominioCorreoInstitucional;
@@ -64,10 +64,8 @@ public class EstudianteService {
      */
     public Estudiante buscarPorId(Integer id) {
         return estudianteRepository
-            .findByIdUsuarioAndUsuario_EstadoTrue(id)
-            .orElseThrow(() ->
-                new RuntimeException("Estudiante no encontrado con ID: " + id)
-            );
+                .findByIdUsuarioAndUsuario_EstadoTrue(id)
+                .orElseThrow(() -> new RuntimeException("Estudiante no encontrado con ID: " + id));
     }
 
     /**
@@ -79,12 +77,9 @@ public class EstudianteService {
      */
     public Estudiante buscarPorCodigo(String codigoEstudiante) {
         return estudianteRepository
-            .findByCodigoEstudiante(codigoEstudiante)
-            .orElseThrow(() ->
-                new RuntimeException(
-                    "Estudiante no encontrado con codigo: " + codigoEstudiante
-                )
-            );
+                .findByCodigoEstudiante(codigoEstudiante)
+                .orElseThrow(() -> new RuntimeException(
+                        "Estudiante no encontrado con codigo: " + codigoEstudiante));
     }
 
     /**
@@ -95,8 +90,7 @@ public class EstudianteService {
      */
     public List<Estudiante> listarPorCarrera(Integer idCarrera) {
         return estudianteRepository.findByCarrera_IdCarreraAndUsuario_EstadoTrue(
-            idCarrera
-        );
+                idCarrera);
     }
 
     /**
@@ -110,15 +104,15 @@ public class EstudianteService {
     }
 
     /**
-     * Crea estudiante y retorna estudiante + contraseña en texto plano para uso interno.
+     * Crea estudiante y retorna estudiante + contraseña en texto plano para uso
+     * interno.
      * La contraseña en texto plano no debe exponerse en respuestas HTTP.
      */
     @Transactional
     public ResultadoCreacion crearConCredenciales(EstudianteCrearDTO comando) {
         // Validaciones de negocio
         estudianteValidator.validarDocumentoNoDuplicado(
-            comando.getNumeroDocumento()
-        );
+                comando.getNumeroDocumento());
 
         // Mapear entidades desde el comando
         Usuario usuario = usuarioFactory.crearDesdeComando(comando);
@@ -127,27 +121,25 @@ public class EstudianteService {
         // Asegurar código y correo
         estudianteValidator.asegurarCodigoEstudiante(estudiante);
         String correoGenerado = EstudianteUtil.generarCorreoDesdeCodigo(
-            estudiante.getCodigoEstudiante(),
-            dominioCorreoInstitucional
-        );
+                estudiante.getCodigoEstudiante(),
+                dominioCorreoInstitucional);
         estudianteValidator.validarCorreoNoDuplicado(correoGenerado);
 
-        // Contraseña en texto plano y codificación
-        String contrasenaPlano = obtenerContrasenaPlanoDesdeComando(comando);
-        usuario.setPassword(codificadorContrasena.encode(contrasenaPlano));
+        // GENERAR CONTRASEÑA TEMPORAL usando EstudianteUtil
+        String contrasenaTemporal = EstudianteUtil.generarContrasenaSegura(8);
+        String contrasenaHash = passwordEncoder.encode(contrasenaTemporal);
 
         // Resolver referencias mediante CatalogoService
         TipoDocumento tipoDocumento = catalogoService.buscarTipoDocumentoPorId(
-            comando.getIdTipoDocumento()
-        );
+                comando.getIdTipoDocumento());
         Carrera carrera = catalogoService.buscarCarreraPorId(
-            comando.getIdCarrera()
-        );
+                comando.getIdCarrera());
 
         usuario.setTipoDocumento(tipoDocumento);
         usuario.setEstado(true);
         usuario.setEmail(correoGenerado);
         usuario.setEmailPersonal(comando.getEmailPersonal());
+        usuario.setPassword(contrasenaHash);
 
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
 
@@ -156,53 +148,77 @@ public class EstudianteService {
         estudiante.setEstadoAcademico(EstudianteEstadoAcademico.ACTIVO);
 
         Estudiante estudianteGuardado = estudianteRepository.save(estudiante);
-        return new ResultadoCreacion(estudianteGuardado, contrasenaPlano);
-    }
-
-    private String obtenerContrasenaPlanoDesdeComando(
-        EstudianteCrearDTO comando
-    ) {
-        String p = comando.getPassword();
-        if (p == null || p.trim().isEmpty()) {
-            return EstudianteUtil.generarContrasenaSegura(12);
-        }
-        return p;
+        return new ResultadoCreacion(estudianteGuardado, contrasenaTemporal);
     }
 
     /**
-     * Resultado interno de creación que incluye contraseña en texto plano para envío seguro.
+     * Envía la contraseña temporal al correo personal del estudiante.
+     *
+     * POR IMPLEMENTAR: Requiere configurar JavaMail/Spring Mail en el proyecto.
+     *
+     * Pasos para implementar:
+     * 1. Agregar dependencia spring-boot-starter-mail en pom.xml
+     * 2. Configurar properties de mail en application.yaml
+     * 3. Crear un EmailService con JavaMailSender
+     * 4. Llamar a este método después de crear el estudiante
+     *
+     * @param emailPersonal      correo personal del estudiante
+     * @param contrasenaTemporal contraseña temporal generada
+     * @param nombre             nombre del estudiante para el saludo
+     * @param apellido           apellido del estudiante
+     */
+    public void enviarContrasenaTemporal(String emailPersonal, String contrasenaTemporal,
+            String nombre, String apellido) {
+        // TODO: Implementar cuando se configure JavaMail
+        // Ejemplo de implementación:
+        // emailService.sendEmail(
+        // emailPersonal,
+        // "Credenciales de Acceso - Sistema Académico",
+        // "Hola " + nombre + " " + apellido + ",\n\n" +
+        // "Tu contraseña temporal es: " + contrasenaTemporal + "\n\n" +
+        // "Por favor, cambia tu contraseña al iniciar sesión.\n\n" +
+        // "Saludos,\nAdministración Académica"
+        // );
+
+        // Por ahora solo logueamos
+        System.out.println("===== EMAIL POR ENVIAR =====");
+        System.out.println("Para: " + emailPersonal);
+        System.out.println("Asunto: Credenciales de Acceso");
+        System.out.println("Cuerpo: Hola " + nombre + " " + apellido);
+        System.out.println("Tu contraseña temporal es: " + contrasenaTemporal);
+        System.out.println("===========================");
+    }
+
+    /**
+     * Resultado interno de creación que incluye contraseña en texto plano para
+     * envío seguro.
      */
     public static record ResultadoCreacion(
-        Estudiante estudianteCreado,
-        String contrasenaPlano
-    ) {}
+            Estudiante estudianteCreado,
+            String contrasenaPlano) {
+    }
 
     /**
      * Actualiza los datos academicos de un estudiante existente.
      *
-     * @param id ID del estudiante (id_usuario)
-     * @param datos objeto con los nuevos datos
+     * @param id        ID del estudiante (id_usuario)
+     * @param datos     objeto con los nuevos datos
      * @param idCarrera nueva carrera (puede ser la misma)
      * @return estudiante actualizado
      */
     @Transactional
     public Estudiante actualizar(
-        Integer id,
-        Estudiante datos,
-        Integer idCarrera
-    ) {
+            Integer id,
+            Estudiante datos,
+            Integer idCarrera) {
         Estudiante existente = buscarPorId(id);
 
-        // Validar y actualizar codigo solo si el cliente lo provee (evita sobreescritura con NULL)
         String nuevoCodigo = datos.getCodigoEstudiante();
         if (nuevoCodigo != null && !nuevoCodigo.trim().isEmpty()) {
-            if (
-                !Objects.equals(existente.getCodigoEstudiante(), nuevoCodigo) &&
-                estudianteRepository.existsByCodigoEstudiante(nuevoCodigo)
-            ) {
+            if (!Objects.equals(existente.getCodigoEstudiante(), nuevoCodigo) &&
+                    estudianteRepository.existsByCodigoEstudiante(nuevoCodigo)) {
                 throw new RuntimeException(
-                    "Ya existe un estudiante con el codigo: " + nuevoCodigo
-                );
+                        "Ya existe un estudiante con el codigo: " + nuevoCodigo);
             }
             existente.setCodigoEstudiante(nuevoCodigo);
         }
@@ -210,7 +226,6 @@ public class EstudianteService {
         // Resolver nueva carrera
         Carrera carrera = catalogoService.buscarCarreraPorId(idCarrera);
 
-        // Actualizar campos (codigo ya fue manejado arriba si aplica)
         existente.setCiclo(datos.getCiclo());
         existente.setEstadoAcademico(datos.getEstadoAcademico());
         existente.setCarrera(carrera);
@@ -229,24 +244,19 @@ public class EstudianteService {
         // Actualizar usuario asociado si existe
         Usuario usuario = existente.getUsuario();
         if (usuario != null) {
-            if (dto.getNombre() != null) usuario.setNombre(dto.getNombre());
-            if (dto.getApellido() != null) usuario.setApellido(
-                dto.getApellido()
-            );
+            if (dto.getNombre() != null)
+                usuario.setNombre(dto.getNombre());
+            if (dto.getApellido() != null)
+                usuario.setApellido(
+                        dto.getApellido());
 
-            if (
-                dto.getNumeroDocumento() != null &&
-                !dto.getNumeroDocumento().equals(usuario.getNumeroDocumento())
-            ) {
-                if (
-                    usuarioRepository.existsByNumeroDocumento(
-                        dto.getNumeroDocumento()
-                    )
-                ) {
+            if (dto.getNumeroDocumento() != null &&
+                    !dto.getNumeroDocumento().equals(usuario.getNumeroDocumento())) {
+                if (usuarioRepository.existsByNumeroDocumento(
+                        dto.getNumeroDocumento())) {
                     throw new RuntimeException(
-                        "Ya existe un usuario con el documento: " +
-                            dto.getNumeroDocumento()
-                    );
+                            "Ya existe un usuario con el documento: " +
+                                    dto.getNumeroDocumento());
                 }
                 usuario.setNumeroDocumento(dto.getNumeroDocumento());
             }
@@ -257,8 +267,7 @@ public class EstudianteService {
 
             if (dto.getIdTipoDocumento() != null) {
                 TipoDocumento tipo = catalogoService.buscarTipoDocumentoPorId(
-                    dto.getIdTipoDocumento()
-                );
+                        dto.getIdTipoDocumento());
                 usuario.setTipoDocumento(tipo);
             }
 
@@ -281,22 +290,18 @@ public class EstudianteService {
     @Transactional
     public void eliminar(Integer id) {
         Estudiante estudiante = estudianteRepository
-            .findById(id)
-            .orElseThrow(() ->
-                new RuntimeException(
-                    "No se puede eliminar. Estudiante no encontrado con ID: " +
-                        id
-                )
-            );
+                .findById(id)
+                .orElseThrow(() -> new RuntimeException(
+                        "No se puede eliminar. Estudiante no encontrado con ID: " +
+                                id));
 
         Usuario usuario = estudiante.getUsuario();
         if (usuario == null) {
             throw new RuntimeException(
-                "Estudiante sin usuario asociado: " + id
-            );
+                    "Estudiante sin usuario asociado: " + id);
         }
 
-        //Desactivar usuario y marcar estado académico como INACTIVO
+        // Desactivar usuario y marcar estado académico como INACTIVO
         usuario.setEstado(false);
         usuario.setFechaBaja(LocalDateTime.now());
         usuarioRepository.save(usuario);

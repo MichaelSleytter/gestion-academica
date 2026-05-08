@@ -29,29 +29,27 @@ public class EstudianteMapper {
      * @return DTO de respuesta o {@code null} si la entrada es nula
      */
     public EstudianteResponseDTO aDto(Estudiante estudiante) {
-        if (estudiante == null) return null;
+        if (estudiante == null)
+            return null;
 
-        EstudianteResponseDTO.EstudianteResponseDTOBuilder constructorRespuesta =
-            EstudianteResponseDTO.builder()
+        EstudianteResponseDTO.EstudianteResponseDTOBuilder constructorRespuesta = EstudianteResponseDTO.builder()
                 .idUsuario(estudiante.getIdUsuario())
                 .codigoEstudiante(estudiante.getCodigoEstudiante())
                 .ciclo(estudiante.getCiclo())
+                .emailPersonal(estudiante.getUsuario().getEmailPersonal())
                 .estadoAcademico(estudiante.getEstadoAcademico())
                 .idCarrera(
-                    estudiante.getCarrera() != null
-                        ? estudiante.getCarrera().getIdCarrera()
-                        : null
-                )
+                        estudiante.getCarrera() != null
+                                ? estudiante.getCarrera().getIdCarrera()
+                                : null)
                 .nombreCarrera(
-                    estudiante.getCarrera() != null
-                        ? estudiante.getCarrera().getNombre()
-                        : null
-                );
+                        estudiante.getCarrera() != null
+                                ? estudiante.getCarrera().getNombre()
+                                : null);
 
         usuarioMapper.mapearUsuarioAConstructorRespuesta(
-            estudiante.getUsuario(),
-            constructorRespuesta
-        );
+                estudiante.getUsuario(),
+                constructorRespuesta);
 
         return constructorRespuesta.build();
     }
