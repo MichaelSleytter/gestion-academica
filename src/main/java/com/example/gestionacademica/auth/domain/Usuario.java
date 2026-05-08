@@ -16,7 +16,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = { "roles", "estudiante", "docente" })
+@ToString(exclude = { "roles", "estudiante", "docente", "tipoDocumento" })
 public class Usuario {
 
     @Id
@@ -40,12 +40,7 @@ public class Usuario {
     @JsonIgnore
     private String password;
 
-    @Column(
-        name = "numero_documento",
-        nullable = false,
-        unique = true,
-        length = 30
-    )
+    @Column(name = "numero_documento", nullable = false, unique = true, length = 30)
     private String numeroDocumento;
 
     @Column(name = "estado", nullable = false)
@@ -57,17 +52,20 @@ public class Usuario {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
+    @PrePersist
+    protected void onCreate() {
+        if (this.fechaCreacion == null) {
+            this.fechaCreacion = LocalDateTime.now();
+        }
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_tipo_documento", nullable = false)
     @JsonIgnore
     private TipoDocumento tipoDocumento;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "usuario_rol",
-        joinColumns = @JoinColumn(name = "id_usuario"),
-        inverseJoinColumns = @JoinColumn(name = "id_rol")
-    )
+    @JoinTable(name = "usuario_rol", joinColumns = @JoinColumn(name = "id_usuario"), inverseJoinColumns = @JoinColumn(name = "id_rol"))
     @JsonIgnore
     private List<Rol> roles = new ArrayList<>();
 

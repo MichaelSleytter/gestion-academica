@@ -40,9 +40,25 @@ public class UsuarioService {
     }
 
     /**
+     * Busca un usuario por email.
+     * Alias de {@link #obtenerPorEmail(String)} para consistencia.
+     */
+    public Usuario findByEmail(String email) {
+        return obtenerPorEmail(email);
+    }
+
+    /**
+     * Busca un usuario por ID.
+     * Alias de {@link #buscarPorId(Integer)} para compatibilidad con JwtAuthenticationFilter.
+     */
+    public Usuario findById(Integer id) {
+        return buscarPorId(id);
+    }
+
+    /**
      * Crea un usuario asociado a un tipo de documento.
      *
-     * @param usuario datos del usuario
+     * @param usuario         datos del usuario
      * @param idTipoDocumento identificador de tipo de documento
      * @return usuario creado
      */
@@ -63,8 +79,8 @@ public class UsuarioService {
     /**
      * Actualiza un usuario existente.
      *
-     * @param id identificador de usuario
-     * @param datos nuevos datos
+     * @param id              identificador de usuario
+     * @param datos           nuevos datos
      * @param idTipoDocumento identificador de tipo de documento
      * @return usuario actualizado
      */
@@ -138,5 +154,11 @@ public class UsuarioService {
     private TipoDocumento obtenerTipoDocumento(Integer idTipoDocumento) {
         return tipoDocumentoRepository.findById(idTipoDocumento)
                 .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado con ID: " + idTipoDocumento));
+    }
+
+    public Usuario obtenerPorEmail(String email) {
+        // Usar el método que carga los roles (fetch join)
+        return usuarioRepository.findByEmailWithRoles(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
     }
 }

@@ -48,50 +48,48 @@ public class UsuarioMapper {
     /**
      * Copia datos del {@link Usuario} al builder del {@link EstudianteResponseDTO}.
      *
-     * @param usuario usuario fuente
+     * @param usuario              usuario fuente
      * @param constructorRespuesta constructor del DTO destino
      */
     public void mapearUsuarioAConstructorRespuesta(
-        Usuario usuario,
-        EstudianteResponseDTO.EstudianteResponseDTOBuilder constructorRespuesta
-    ) {
-        if (usuario == null) return;
+            Usuario usuario,
+            EstudianteResponseDTO.EstudianteResponseDTOBuilder constructorRespuesta) {
+        if (usuario == null)
+            return;
         constructorRespuesta
-            .nombre(usuario.getNombre())
-            .apellido(usuario.getApellido())
-            .email(usuario.getEmail())
-            .numeroDocumento(usuario.getNumeroDocumento())
-            .estado(usuario.getEstado());
+                .nombre(usuario.getNombre())
+                .apellido(usuario.getApellido())
+                .emailPersonal(usuario.getEmailPersonal())
+                .numeroDocumento(usuario.getNumeroDocumento())
+                .estado(usuario.getEstado());
 
         if (usuario.getTipoDocumento() != null) {
             constructorRespuesta.tipoDocumento(
-                usuario.getTipoDocumento().getNombre()
-            );
+                    usuario.getTipoDocumento().getNombre());
         }
     }
 
     /**
      * Copia datos del {@link Usuario} al builder del {@link DocenteResponseDTO}.
      *
-     * @param usuario usuario fuente
+     * @param usuario              usuario fuente
      * @param constructorRespuesta constructor del DTO destino
      */
     public void mapearUsuarioAConstructorRespuesta(
-        Usuario usuario,
-        DocenteResponseDTO.DocenteResponseDTOBuilder constructorRespuesta
-    ) {
-        if (usuario == null) return;
+            Usuario usuario,
+            DocenteResponseDTO.DocenteResponseDTOBuilder constructorRespuesta) {
+        if (usuario == null)
+            return;
         constructorRespuesta
-            .nombre(usuario.getNombre())
-            .apellido(usuario.getApellido())
-            .email(usuario.getEmail())
-            .numeroDocumento(usuario.getNumeroDocumento())
-            .estado(usuario.getEstado());
+                .nombre(usuario.getNombre())
+                .apellido(usuario.getApellido())
+                .email(usuario.getEmail())
+                .numeroDocumento(usuario.getNumeroDocumento())
+                .estado(usuario.getEstado());
 
         if (usuario.getTipoDocumento() != null) {
             constructorRespuesta.tipoDocumento(
-                usuario.getTipoDocumento().getNombre()
-            );
+                    usuario.getTipoDocumento().getNombre());
         }
     }
 }

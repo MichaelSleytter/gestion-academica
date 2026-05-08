@@ -2,6 +2,7 @@ package com.example.gestionacademica.auth.repository;
 
 import com.example.gestionacademica.auth.domain.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
@@ -12,6 +13,13 @@ import java.util.Optional;
 public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
     Optional<Usuario> findByEmail(String email);
+
+    /**
+     * Busca usuario por email Y carga los roles con fetch join.
+     * Esto evita el problema de LAZY loading en la relación con Roles.
+     */
+    @Query("SELECT u FROM Usuario u LEFT JOIN FETCH u.roles WHERE u.email = :email")
+    Optional<Usuario> findByEmailWithRoles(String email);
 
     Optional<Usuario> findByNumeroDocumento(String numeroDocumento);
 
