@@ -3,15 +3,18 @@ package com.example.gestionacademica.estudiantes.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 import com.example.gestionacademica.auth.repository.UsuarioRepository;
 import com.example.gestionacademica.catalogos.domain.Carrera;
 import com.example.gestionacademica.catalogos.domain.TipoDocumento;
 import com.example.gestionacademica.catalogos.repository.CarreraRepository;
 import com.example.gestionacademica.catalogos.repository.TipoDocumentoRepository;
+import com.example.gestionacademica.catalogos.service.CatalogoService;
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.estudiantes.domain.EstudianteEstadoAcademico;
 import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
+import com.example.gestionacademica.estudiantes.util.EstudianteUtil;
 import com.example.gestionacademica.auth.domain.Usuario;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +50,22 @@ class EstudianteServiceTest {
     private TipoDocumentoRepository tipoDocumentoRepository;
 
     @Mock
-    private PasswordEncoder codificadorContrasena;
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private CatalogoService catalogoService;
+
+    @Mock
+    private EstudianteUtil estudianteUtil;
+
+    @Mock
+    private UsuarioFactory usuarioFactory;
+
+    @Mock
+    private EstudianteFactory estudianteFactory;
+
+    @Mock
+    private EstudianteValidator estudianteValidator;
 
     // ── Sistema bajo prueba ──────────────────────────────────────────
     @InjectMocks
@@ -61,10 +79,9 @@ class EstudianteServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(codificadorContrasena.encode(any(CharSequence.class))).thenReturn(
-            "hash123"
-        );
-
+        // Los métodos estáticos de EstudianteUtil se ejecutan directamente
+        // Solo mockeamos el PasswordEncoder (si se usa en el servicio)
+        
         // Preparar tipo de documento
         tipoDocumentoBase = new TipoDocumento();
         tipoDocumentoBase.setIdTipoDocumento(1);
@@ -104,7 +121,7 @@ class EstudianteServiceTest {
     @DisplayName("listarTodos: debe retornar lista de todos los estudiantes")
     void listarTodos_debeRetornarLista() {
         // Arrange
-        when(estudianteRepository.findAll()).thenReturn(
+        when(estudianteRepository.findAllByUsuario_EstadoTrue()).thenReturn(
             List.of(estudianteBase)
         );
 
@@ -118,18 +135,18 @@ class EstudianteServiceTest {
             "2024-IS-001"
         );
 
-        verify(estudianteRepository, times(1)).findAll();
+        verify(estudianteRepository, times(1)).findAllByUsuario_EstadoTrue();
     }
 
     // ────────────────────────────────────────────────────────────────
     // TEST 2: buscarPorId — estudiante existe
     // ────────────────────────────────────────────────────────────────
 
-    @Test
+@Test
     @DisplayName("buscarPorId: debe retornar el estudiante cuando existe")
     void buscarPorId_cuandoExiste_debeRetornarEstudiante() {
         // Arrange
-        when(estudianteRepository.findById(1)).thenReturn(
+        when(estudianteRepository.findByIdUsuarioAndUsuario_EstadoTrue(1)).thenReturn(
             Optional.of(estudianteBase)
         );
 
@@ -141,7 +158,25 @@ class EstudianteServiceTest {
         assertThat(resultado.getIdUsuario()).isEqualTo(1);
         assertThat(resultado.getCiclo()).isEqualTo(4);
 
-        verify(estudianteRepository, times(1)).findById(1);
+        verify(estudianteRepository, times(1)).findByIdUsuarioAndUsuario_EstadoTrue(1);
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // TEST 3: buscarPorId — estudiante NO existe → excepción
+    // ───────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("buscarPorId: debe lanzar excepción cuando el ID no existe")
+    void buscarPorId_cuandoNoExiste_debeLanzarExcepcion() {
+        // Arrange
+        when(estudianteRepository.findByIdUsuarioAndUsuario_EstadoTrue(999)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> estudianteService.buscarPorId(999))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("999");
+
+        verify(estudianteRepository, times(1)).findByIdUsuarioAndUsuario_EstadoTrue(999);
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -247,7 +282,7 @@ class EstudianteServiceTest {
         datosNuevos.setCiclo(5);
         datosNuevos.setEstadoAcademico(EstudianteEstadoAcademico.ACTIVO);
 
-        when(estudianteRepository.findById(1)).thenReturn(
+        when(estudianteRepository.findByIdUsuarioAndUsuario_EstadoTrue(1)).thenReturn(
             Optional.of(estudianteBase)
         );
         when(carreraRepository.findById(1)).thenReturn(
@@ -269,19 +304,64 @@ class EstudianteServiceTest {
     // TEST 8: eliminar — estudiante existe → elimina correctamente
     // ────────────────────────────────────────────────────────────────
 
-    @Test
+@Test
     @DisplayName("eliminar: debe eliminar el estudiante cuando el ID existe")
     void eliminar_cuandoExiste_debeEliminarCorrectamente() {
         // Arrange
-        when(estudianteRepository.existsById(1)).thenReturn(true);
-        doNothing().when(estudianteRepository).deleteById(1);
+        when(estudianteRepository.findById(1)).thenReturn(
+            Optional.of(estudianteBase)
+        );
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuarioBase);
+        when(estudianteRepository.save(any(Estudiante.class))).thenReturn(estudianteBase);
 
         // Act
         estudianteService.eliminar(1);
 
         // Assert
-        verify(estudianteRepository, times(1)).existsById(1);
-        verify(estudianteRepository, times(1)).deleteById(1);
+        verify(estudianteRepository, times(1)).findById(1);
+        verify(estudianteRepository, times(1)).save(any(Estudiante.class));
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // TEST 9: eliminar — ID no existe → excepción
+    // ───────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("eliminar: debe lanzar excepción cuando el ID no existe")
+    void eliminar_cuandoNoExiste_debeLanzarExcepcion() {
+        // Arrange
+        when(estudianteRepository.findById(999)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThatThrownBy(() -> estudianteService.eliminar(999))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("999");
+
+        verify(estudianteRepository, never()).save(any());
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // TEST 10: listarPorCarrera — retorna lista filtrada
+    // ───────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName(
+        "listarPorCarrera: debe retornar estudiantes de la carrera indicada"
+    )
+    void listarPorCarrera_debeRetornarListaFiltrada() {
+        // Arrange
+        when(estudianteRepository.findByCarrera_IdCarreraAndUsuario_EstadoTrue(1)).thenReturn(
+            List.of(estudianteBase)
+        );
+
+        // Act
+        List<Estudiante> resultado = estudianteService.listarPorCarrera(1);
+
+        // Assert
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).getCarrera().getIdCarrera()).isEqualTo(1);
+
+        verify(estudianteRepository, times(1)).findByCarrera_IdCarreraAndUsuario_EstadoTrue(1);
     }
 
     // ────────────────────────────────────────────────────────────────

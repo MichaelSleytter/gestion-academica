@@ -71,3 +71,17 @@ app:
   student:
     email:
       domain: ${STUDENT_EMAIL_DOMAIN:institution.edu.pe}
+
+# ============================================
+# JWT CONFIGURATION
+# ============================================
+# Clave secreta para firmar tokens JWT
+# En producción: usa una clave de mínimo 256 bits
+# Genera una con: openssl rand -base64 32
+jwt:
+  secret: ${JWT_SECRET:miSuperSecretKeyQueDebeSerMuyLargaYSeguraParaProduccion2024!}
+  # Tiempo de expiración del Access Token en milisegundos
+  # 15 minutos = 15 * 60 * 1000 = 900000 ms
+  access-token-expiration: ${JWT_ACCESS_EXPIRATION:900000}
+  # Tiempo de expiración del Refresh Token en días
+  refresh-token-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
