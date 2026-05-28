@@ -1,0 +1,244 @@
+<div tuiPlatform="web" class="card flex flex-col gap-3 p-2.5">
+  <div appearance="floating" tuiCardLarge>
+    <header tuiHeader class="flex justify-between items-center h-full">
+      <div class="flex flex-col justify-center">
+        <h2 tuiTitle>Estudiantes</h2>
+        <span class="subtitle text-lg font-semibold text-text-secondary"
+          >Gestiona y administra 10 de 10 estudiantes registrados</span
+        >
+      </div>
+
+      <button
+        appearance="secondary"
+        size="m"
+        tuiButton
+        type="button"
+        (click)="openNuevoEstudianteModal()"
+      >
+        + Nuevo Estudiante
+      </button>
+    </header>
+    <section>
+      <div class="flex justify-between"></div>
+    </section>
+  </div>
+  <div appearance="floating" tuiCardLarge>
+    <section>
+      <div class="flex items-center gap-4">
+        <div class="flex-1">
+          <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
+            <input placeholder="Buscar por nombre, código o carrera" tuiInput />
+          </tui-textfield>
+        </div>
+
+        <div class="w-48">
+          <tui-textfield tuiTextfieldSize="m">
+            <input tuiInput placeholder="Filtrar..." />
+          </tui-textfield>
+        </div>
+
+        <tui-segmented
+          [size]="'m'"
+          [activeItemIndex]="viewMode() === 'grid' ? 0 : 1"
+          (activeItemIndexChange)="setViewMode($event)"
+        >
+          <button title="Grid" type="button">
+            <tui-icon icon="@tui.grid-2x2" />
+          </button>
+          <button title="Fila" type="button">
+            <tui-icon icon="@tui.list" />
+          </button>
+        </tui-segmented>
+      </div>
+    </section>
+  </div>
+
+  @if (viewMode() === 'grid') { @if (isLoading()) {
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+    @for(item of [1,2,3,4,5,6]; track item) {
+    <div appearance="floating" tuiCardLarge class="p-4" [tuiSkeleton]="true"></div>
+    }
+  </div>
+  } @else if ((estudiantesQuery.data() ?? []).length === 0) {
+  <div
+    appearance="floating"
+    tuiCardLarge
+    class="flex flex-col items-center justify-center py-16 gap-4"
+  >
+    <tui-icon icon="@tui.users" class="text-text-muted" [style.font-size]="'3rem'" />
+    <p class="text-text-secondary text-center">No hay estudiantes registrados</p>
+    <button appearance="secondary" tuiButton (click)="openNuevoEstudianteModal()">
+      Crear primer estudiante
+    </button>
+  </div>
+  } @else {
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+    @for(estudiante of estudiantesQuery.data(); track estudiante.codigoEstudiante) {
+    <app-card-estudiante
+      [estudiante]="estudiante"
+      (editar)="openEditarEstudianteModal($event)"
+      (eliminar)="openEliminarEstudianteModal($event)"
+      (historial)="onVerHistorial($event)"
+    />
+    }
+  </div>
+  } } @else {
+  <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+    <table tuiTable class="w-full border-separate border-spacing-0 table-auto" [columns]="columns">
+      <thead tuiThead class="bg-surface-hover" [tuiSkeleton]="isLoading()">
+        <tr
+          tuiThGroup
+          class="h-12 border-b border-border text-xs font-bold uppercase tracking-[0.05em] text-text-secondary"
+        >
+          <th *tuiHead="'estudiante'" tuiTh class="px-6 text-left">Estudiante</th>
+          <th *tuiHead="'codigo'" tuiTh class="px-6 text-left">Código</th>
+          <th *tuiHead="'carrera'" tuiTh class="px-6 text-left">Carrera</th>
+          <th *tuiHead="'ciclo'" tuiTh class="px-6 text-center">Ciclo</th>
+          <th *tuiHead="'estado'" tuiTh class="px-6 text-left">Estado</th>
+          <th *tuiHead="'acciones'" tuiTh class="px-6 text-right">Acciones</th>
+        </tr>
+      </thead>
+      @if (isLoading()) {
+      <tbody>
+        @for(item of [1,2,3,4,5]; track item) {
+        <tr class="border-b border-border px-6 py-4">
+          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'200px'"></span></td>
+          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'100px'"></span></td>
+          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'150px'"></span></td>
+          <td class="px-6 py-4 text-center">
+            <span [tuiSkeleton]="true" [style.width]="'32px'" class="mx-auto"></span>
+          </td>
+          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'80px'"></span></td>
+          <td class="px-6 py-4 text-right">
+            <span [tuiSkeleton]="true" [style.width]="'80px'"></span>
+          </td>
+        </tr>
+        }
+      </tbody>
+      } @else {
+      <tbody tuiTbody [data]="estudiantesQuery.data() ?? []">
+        @for(estudiante of estudiantesQuery.data(); track estudiante.codigoEstudiante) { @let estado =
+        getEstado(estudiante);
+        <tr tuiTr class="group hover:bg-surface-hover focus-within:bg-surface-hover">
+          <td *tuiCell="'estudiante'" tuiTd class="border-b border-border px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="flex size-11 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface-hover text-xs font-bold text-text-secondary"
+              >
+                {{ getIniciales(estudiante.nombre) }}
+              </div>
+              <div class="flex min-w-0 flex-col">
+                <span class="truncate text-base font-bold leading-6 text-text-primary"
+                  >{{ estudiante.nombre }} {{ estudiante.apellido }}</span
+                >
+                <span class="truncate text-xs font-medium leading-4 text-text-secondary"
+                  >{{ estudiante.emailPersonal }}</span
+                >
+              </div>
+            </div>
+          </td>
+
+          <td
+            *tuiCell="'codigo'"
+            tuiTd
+            class="border-b border-border px-6 py-4 text-sm font-semibold text-text-secondary"
+          >
+            {{ estudiante.codigoEstudiante }}
+          </td>
+
+          <td
+            *tuiCell="'carrera'"
+            tuiTd
+            class="border-b border-border px-6 py-4 text-sm font-medium text-text-secondary"
+          >
+            {{ estudiante.nombreCarrera }}
+          </td>
+
+          <td *tuiCell="'ciclo'" tuiTd class="border-b border-border px-6 py-4 text-center">
+            <span
+              class="inline-flex size-8 items-center justify-center rounded-xl bg-surface-hover text-sm font-bold text-text-secondary"
+            >
+              {{estudiante.ciclo }}
+            </span>
+          </td>
+
+          <td *tuiCell="'estado'" tuiTd class="border-b border-border px-6 py-4">
+            <span
+              class="inline-flex items-center gap-1.5 rounded-xl px-3 py-1 text-xs font-bold uppercase tracking-[0.03em]"
+              [class]="estado.classes"
+            >
+              <span class="inline-flex size-1.5 rounded-full" [class]="estado.dotClasses"></span>
+              {{ estado.label }}
+            </span>
+          </td>
+
+          <td *tuiCell="'acciones'" tuiTd class="border-b border-border px-6 py-4 text-right">
+            <div
+              class="inline-flex items-center gap-1 opacity-0 pointer-events-none transition duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+            >
+              <button
+                appearance="action"
+                iconStart="@tui.pencil"
+                size="xs"
+                tuiIconButton
+                type="button"
+                aria-label="Editar estudiante"
+                (click)="openEditarEstudianteModal(estudiante)"
+              ></button>
+              <button
+                appearance="action"
+                iconStart="@tui.trash-2"
+                size="xs"
+                tuiIconButton
+                type="button"
+                aria-label="Eliminar estudiante"
+                (click)="openEliminarEstudianteModal(estudiante)"
+              ></button>
+              <button
+                appearance="action"
+                iconStart="@tui.history"
+                size="xs"
+                tuiIconButton
+                type="button"
+                aria-label="Ver historial"
+                (click)="onVerHistorial(estudiante)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+      }
+    </table>
+  </div>
+  }
+
+  <ng-template
+    let-observer
+    [tuiDialogOptions]="{ label: modoFormulario() === 'crear' ? 'Nuevo estudiante' : 'Editar estudiante', size: 'm' }"
+    [(tuiDialog)]="estudianteModalAbierto"
+  >
+    <app-estudiante-form
+      [form]="estudianteForm"
+      [modo]="modoFormulario()"
+      [tiposDocumento]="tiposDocumentoQuery.data() ?? []"
+      [carreras]="carrerasQuery.data() ?? []"
+      [isGuardando]="isGuardandoEstudiante()"
+      (guardar)="guardarEstudiante(observer)"
+      (cancelar)="closeEstudianteModal(); observer.complete()"
+    />
+  </ng-template>
+
+  <ng-template
+    let-observer
+    [tuiDialogOptions]="{ label: 'Eliminar estudiante', size: 's' }"
+    [(tuiDialog)]="eliminarModalAbierto"
+  >
+    <app-estudiante-delete-dialog
+      [nombre]="estudianteSeleccionado()?.nombre ?? ''"
+      [isEliminando]="isEliminandoEstudiante()"
+      (confirmar)="confirmarEliminarEstudiante(observer)"
+      (cancelar)="closeEliminarModal(); observer.complete()"
+    />
+  </ng-template>
+</div>

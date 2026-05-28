@@ -1,0 +1,48 @@
+/* Header styles using Taiga UI CSS variables so light/dark themes work */
+.header-root {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem; // 2.5 * 0.25rem
+  background: var(--tui-background-base-alt);
+  color: var(--tui-text-primary);
+}
+
+.header-title {
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--tui-text-primary);
+}
+
+.header-user {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  color: var(--tui-text-secondary);
+}
+
+.header-user .name {
+  font-weight: 700;
+  color: var(--tui-text-primary);
+  line-height: 1.3;
+}
+
+.header-user .role {
+  font-size: 0.75rem;
+  color: var(--tui-text-tertiary);
+  line-height: 1.2;
+}
+
+.header-user img {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.04);
+}
+
+/* Ensure Tailwind utility classes still valid when used alongside Less */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-3 { gap: 0.75rem; }

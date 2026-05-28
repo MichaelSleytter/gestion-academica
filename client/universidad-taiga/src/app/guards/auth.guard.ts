@@ -1,0 +1,119 @@
+import { inject } from '@angular/core';
+import { Router, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, take, timeout, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { AuthService } from '../services/auth.service';
+import type { AuthStatus } from '../models/auth.model';
+
+/**
+ * =============================================================================
+ * AUTH GUARD - Protege rutas que requieren autenticación
+ * =============================================================================
+ *
+ * Usa el `authStatus` signal del AuthService para decidir:
+ *   - 'authenticated': permite el acceso inmediatamente
+ *   - 'loading': espera a que termine la verificación con el backend
+ *                 (refresh token cookie) antes de decidir
+ *   - 'unauthenticated': redirige al login
+ *
+ * Esto resuelve el problema de recarga de página cuando el access token
+ * expiró pero el refresh token cookie sigue vivo: el guard espera a que
+ * AuthService intente el refresh antes de redirigir a login.
+ */
+export const requiresAuth: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  const status = authService.authStatus();
+
+  // ─── Autenticado → permitir ──────────────────────────────────────────
+  if (status === 'authenticated') {
+    return true;
+  }
+
+  // ─── Cargando (refresh en progreso) → esperar ────────────────────────
+  if (status === 'loading') {
+    return toObservable(authService.authStatus).pipe(
+      filter((s: AuthStatus) => s !== 'loading'),
+      take(1),
+      timeout(8000),
+      map((s: AuthStatus) => {
+        if (s === 'authenticated') return true;
+        return redirectToLogin(router, route);
+      }),
+      catchError(() => of(redirectToLogin(router, route))),
+    );
+  }
+
+  // ─── No autenticado → redirigir a login ──────────────────────────────
+  return redirectToLogin(router, route);
+};
+
+
+/**
+ * =============================================================================
+ * GUARD 2: requiresRole
+ * =============================================================================
+ *
+ * Protección por roles: requiere estar autenticado Y tener rol específico.
+ *
+ * @param allowedRoles - Roles que pueden acceder (OR logic: cualquiera de ellos)
+ */
+export const requiresRole = (...allowedRoles: string[]): CanActivateFn => {
+  return (route: ActivatedRouteSnapshot) => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
+
+    // ─── Verificar que esté autenticado ────────────────────────────
+    if (authService.authStatus() !== 'authenticated') {
+      return redirectToLogin(router, route);
+    }
+
+    // ─── Verificar que tenga al menos un rol permitido ─────────────
+    const userRoles = authService.getRoles();
+    const hasRequiredRole = allowedRoles.some(role => userRoles.includes(role));
+
+    if (hasRequiredRole) {
+      return true;
+    }
+
+    console.warn(
+      `RoleGuard: User lacks required roles. ` +
+      `Has: ${userRoles.join(', ')}, Needs: ${allowedRoles.join(', ')}`
+    );
+
+    return router.createUrlTree(['/access-denied']);
+  };
+};
+
+
+/**
+ * =============================================================================
+ * GUARD 3: requiresNoAuth
+ * =============================================================================
+ *
+ * Protección inversa: solo permite acceder si NO está autenticado.
+ * Útil para rutas como /login y /register.
+ */
+export const requiresNoAuth: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isAuthenticated()) {
+    return router.createUrlTree(['/dashboard']);
+  }
+
+  return true;
+};
+
+
+// ─── Helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Crea un UrlTree de redirección a /login preservando la URL original.
+ */
+function redirectToLogin(router: Router, route?: ActivatedRouteSnapshot) {
+  const returnUrl = route?.url.map(s => s.path).join('/') || '/';
+  return router.createUrlTree(['/login'], { queryParams: { returnUrl } });
+}

@@ -1,0 +1,45 @@
+[tuiTh],
+[tuiTd] {
+  border-inline-start: none;
+  border-inline-end: none;
+}
+
+[tuiTable][data-size='s'] [tuiTitle] {
+  flex-direction: row;
+  gap: 0.375rem;
+}
+
+.card {
+  background-color: var(--tui-background-base-alt);
+  block-size: auto;
+}
+
+/*
+ * Taiga UI textfield overrides — solo para componente Estudiantes.
+ * Usa variables del design system para mantener consistencia global.
+ */
+:host {
+  /* Borde en estado normal */
+  --est-field-border: var(--tui-border-hover);
+  /* Borde cuando el campo tiene focus */
+  --est-field-border-focus: var(--tui-border-focus);
+  /* Fondo de input/select */
+  --est-field-bg: var(--tui-background-surface);
+  /* Radio de esquinas */
+  --est-field-radius: 0.75rem;
+  /* Grosor de borde interno en focus */
+  --est-field-focus-ring-width: 1px;
+}
+
+/* Base visual para textfield que envuelve tuiInput y tuiSelect */
+:host [tuiAppearance][data-appearance='textfield'] {
+  border: 1px solid var(--est-field-border);
+  border-radius: var(--est-field-radius);
+  background: var(--est-field-bg);
+}
+
+/* Estado focus */
+:host [tuiAppearance][data-appearance='textfield'][data-focus='true'] {
+  border-color: var(--est-field-border-focus);
+  box-shadow: 0 0 0 var(--est-field-focus-ring-width) var(--est-field-border-focus) inset;
+}

@@ -1,10 +1,13 @@
+# =====================
+# SERVER — Spring Boot / Maven / Java
+# =====================
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+### STS (Spring Tool Suite / Eclipse) ###
 .apt_generated
 .classpath
 .factorypath
@@ -29,14 +32,76 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+# =====================
+# CLIENT — Angular / Node / pnpm
+# =====================
+node_modules/
+dist/
+tmp/
+/out-tsc
+/bazel-out
+
+# pnpm lock is tracked — keep it
+# pnpm-lock.yaml
+
+# Angular cache
+/.angular/cache
+
+# CSS pre-processor
+.sass-cache/
+
+# Test output
+/coverage
+testem.log
+
+# Debug / system
+npm-debug.log
+yarn-error.log
+*.log
+libpeerconnection.log
+
+# TypeScript
+/typings
+__screenshots__/
+
+# =====================
+# IDE / Editor (cross-tech)
+# =====================
 ### VS Code ###
 .vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/*
 
-## .env files ##
+### Sublime Text ###
+*.sublime-workspace
+
+### Coda / C9 ###
+.c9/
+
+# =====================
+# OS files
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Environment files
+# =====================
 .env
+.env.*
 
-### Skills ###
+# =====================
+# OpenCode
+# =====================
 .agents/**
 skills-lock.json
 AGENTS.md
 opencode.json
+.atl/**
+*.atl
+#Grafica
+graphify-out/**

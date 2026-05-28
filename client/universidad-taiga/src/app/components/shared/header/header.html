@@ -1,0 +1,20 @@
+<header tuiNavigationHeader class="header-root">
+  <div>
+    <h2 class="header-title">{{ title() }}</h2>
+  </div>
+
+  <!-- User info + Avatar -->
+  <div class="header-user">
+    <div class="flex flex-col text-right mr-3">
+      <span class="name">{{ userName() }}</span>
+      <span class="role">{{ roleLabel() }}</span>
+    </div>
+    <div
+      tuiAvatar
+      [size]="'m'"
+      [style.background]="'var(--tui-background-accent-1)'"
+    >
+      <span class="text-white font-semibold">{{ userInitials() }}</span>
+    </div>
+  </div>
+</header>

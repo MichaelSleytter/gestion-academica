@@ -1,0 +1,5 @@
+/* ── Touch targets: icon buttons need ≥ 44×44px ──────────────── */
+[tuiIconButton] {
+  min-width: 44px;
+  min-height: 44px;
+}

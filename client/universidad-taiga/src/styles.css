@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════
+   DESIGN SYSTEM — Design Tokens (Tailwind v4)
+   Fuente de verdad: design-system/MASTER.md
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Design Tokens (@theme Tailwind v4) ────────────────── */
+@theme {
+  --color-primary: #4F46E5;
+  --color-primary-hover: #4338CA;
+  --color-secondary: #64748B;
+  --color-secondary-hover: #475569;
+  --color-background: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-border: #E2E8F0;
+  --color-text-strong: #0F172A;
+  --color-text-default: #334155;
+  --color-text-muted: #64748B;
+  --color-success: #16A34A;
+  --color-warning: #CA8A04;
+  --color-danger: #DC2626;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* ── 2. Taiga UI — Override de variables de tema ─────────── */
+/* Sin @layer para que tenga prioridad sobre taiga-ui-theme.less */
+:root {
+  --tui-background-accent-1: #4F46E5;
+  --tui-background-accent-1-hover: #4338CA;
+  --tui-background-accent-2: #64748B;
+  --tui-background-accent-2-hover: #475569;
+  --tui-background-neutral-1: #F8FAFC;
+  --tui-background-neutral-2: #F1F5F9;
+  --tui-background-surface: #FFFFFF;
+  --tui-background-base: #FFFFFF;
+  --tui-background-base-alt: #F8FAFC;
+  --tui-text-primary: #0F172A;
+  --tui-text-secondary: #334155;
+  --tui-text-tertiary: #64748B;
+  --tui-text-action: #4F46E5;
+  --tui-border-normal: #E2E8F0;
+  --tui-border-hover: #94A3B8;
+  --tui-border-focus: #4F46E5;
+  --tui-status-positive: #16A34A;
+  --tui-status-negative: #DC2626;
+  --tui-status-warning: #CA8A04;
+  --tui-status-info: #2563EB;
+  --tui-radius-m: 0.375rem;
+  --tui-radius-l: 0.5rem;
+  --tui-height-m: 2.75rem;
+  --tui-padding-m: 0.75rem;
+}
+
+/* ── 3. Estilos base ─────────────────────────────────────── */
+@layer base {
+  body {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
