@@ -43,6 +43,23 @@ spring:
     serialization:
       FAIL_ON_EMPTY_BEANS: false
 
+  # ============================================
+  # Java Mail (para enviar correos electrónicos)
+  # ============================================
+  mail:
+    host: smtp.resend.com
+    port: 587
+    username: resend
+    password: ${RESEND_API_KEY}
+    from: ${MAIL_FROM:onboarding@resend.dev}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
 # ============================================
 # SWAGGER / OPENAPI
 # ============================================
@@ -71,6 +88,12 @@ app:
   student:
     email:
       domain: ${STUDENT_EMAIL_DOMAIN:institution.edu.pe}
+  password-reset:
+    # Minutos de validez del token de recuperación de contraseña
+    expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:30}
+  # URL base del frontend (Angular) usada para construir enlaces de reset
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
 
 # ============================================
 # JWT CONFIGURATION

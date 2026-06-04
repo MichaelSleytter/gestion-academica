@@ -7,6 +7,7 @@ import com.example.gestionacademica.auth.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
@@ -18,6 +19,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Lista todos los usuarios.
@@ -66,6 +68,8 @@ public class UsuarioService {
     public Usuario crear(Usuario usuario, Integer idTipoDocumento) {
         validarCamposBasicos(usuario);
         validarUnicidad(usuario.getEmail(), usuario.getNumeroDocumento());
+
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
         TipoDocumento tipoDocumento = obtenerTipoDocumento(idTipoDocumento);
         usuario.setTipoDocumento(tipoDocumento);

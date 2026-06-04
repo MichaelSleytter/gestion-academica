@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
+import { AuthService } from '../../../services/auth.service';
 
 /**
  * Forgot password page — two-panel split layout (image + form).
@@ -334,6 +335,7 @@ import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
   ],
 })
 export class ForgotPasswordComponent {
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   form = new FormGroup({
@@ -342,10 +344,12 @@ export class ForgotPasswordComponent {
 
   isLoading = signal(false);
   sent = signal(false);
+  error = signal('');
 
   /**
-   * Envía la solicitud de restablecimiento de contraseña.
-   * Por ahora simula el envío; el endpoint del backend está pendiente.
+   * Envía la solicitud de restablecimiento de contraseña al backend.
+   * Siempre muestra el mismo mensaje de éxito por seguridad
+   * (no revela si el email existe o no).
    */
   onSubmit(): void {
     if (this.form.invalid) {
@@ -354,12 +358,20 @@ export class ForgotPasswordComponent {
     }
 
     this.isLoading.set(true);
+    this.error.set('');
 
-    // TODO: Call auth service forgot-password endpoint when available
-    // Simulate network request
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.sent.set(true);
-    }, 1500);
+    const email = this.form.get('email')!.value!;
+
+    this.authService.forgotPassword(email).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.sent.set(true);
+      },
+      error: () => {
+        // Siempre mostrar éxito por seguridad (no revelar existencia del email)
+        this.isLoading.set(false);
+        this.sent.set(true);
+      },
+    });
   }
 }

@@ -30,30 +30,20 @@ export const routes: Routes = [
    * Solo accesible si NO está autenticado.
    */
   {
-    path: '',
-    loadComponent: () => import('./components/shared/login/login.component').then((m) => m.LoginComponent),
-    canActivate: [requiresNoAuth],
-  },
-
-  {
-    path: 'login',
-    loadComponent: () => import('./components/shared/login/login.component').then((m) => m.LoginComponent),
-    canActivate: [requiresNoAuth],
-  },
-
-  /**
-   * Página Olvidé mi contraseña
-   * Solo accesible si NO está autenticado.
-   */
-  {
     path: 'forgot-password',
     loadComponent: () => import('./components/shared/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
     canActivate: [requiresNoAuth],
   },
 
   /**
-   * Página 404 - Not Found
+   * Página Restablecer contraseña
+   * Accesible con o sin autenticación (el token decide).
    */
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./components/shared/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+  },
+
   {
     path: 'page404',
     loadComponent: () => import('./components/shared/page404/page404').then((m) => m.Page404),

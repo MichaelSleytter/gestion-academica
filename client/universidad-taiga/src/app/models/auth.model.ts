@@ -273,3 +273,31 @@ export const REFRESH_BEFORE_EXPIRY = 60;
 export const SESSION_KEYS = {
   RETURN_URL: 'auth_return_url'
 } as const;
+
+/**
+ * =============================================================================
+ * FORGOT / RESET PASSWORD DTOs
+ * =============================================================================
+ */
+
+/**
+ * Solicitud de restablecimiento de contraseña.
+ */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/**
+ * Restablecimiento de contraseña con token.
+ */
+export interface ResetPasswordRequest {
+  token: string;
+  nuevaPassword: string;
+}
+
+/**
+ * Respuesta genérica del backend con mensaje.
+ */
+export interface MessageResponse {
+  message: string;
+}

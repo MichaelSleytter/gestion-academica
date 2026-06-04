@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { APP_API_URL } from '../tokens/api.tokens';
-import { AuthStatus } from '../models/auth.model';
+import { AuthStatus, ForgotPasswordRequest, ResetPasswordRequest, MessageResponse } from '../models/auth.model';
 
 /**
  * =============================================================================
@@ -351,6 +351,33 @@ export class AuthService {
     );
   }
   
+  // ===========================================================================
+  // FORGOT PASSWORD
+  // ===========================================================================
+
+  /**
+   * Solicita un enlace de restablecimiento de contraseña.
+   *
+   * @param email - Email del usuario que olvidó su contraseña
+   * @returns Observable con mensaje de confirmación
+   */
+  forgotPassword(email: string): Observable<MessageResponse> {
+    const body: ForgotPasswordRequest = { email };
+    return this.http.post<MessageResponse>(`${this.apiUrl}/forgot-password`, body);
+  }
+
+  /**
+   * Restablece la contraseña usando el token recibido por email.
+   *
+   * @param token - Token UUID recibido en el email
+   * @param nuevaPassword - Nueva contraseña (mínimo 8 caracteres)
+   * @returns Observable con mensaje de confirmación
+   */
+  resetPassword(token: string, nuevaPassword: string): Observable<MessageResponse> {
+    const body: ResetPasswordRequest = { token, nuevaPassword };
+    return this.http.post<MessageResponse>(`${this.apiUrl}/reset-password`, body);
+  }
+
   // ===========================================================================
   // LOGOUT
   // ===========================================================================

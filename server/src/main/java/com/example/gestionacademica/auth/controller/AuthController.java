@@ -4,12 +4,23 @@ import com.example.gestionacademica.auth.domain.RefreshToken;
 import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.auth.dto.AuthRequest;
 import com.example.gestionacademica.auth.dto.AuthResponse;
+import com.example.gestionacademica.auth.dto.ForgotPasswordRequest;
+import com.example.gestionacademica.auth.dto.ResetPasswordRequest;
 import com.example.gestionacademica.auth.service.JwtService;
+import com.example.gestionacademica.auth.service.PasswordResetService;
 import com.example.gestionacademica.auth.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -67,11 +78,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Slf4j
+@Tag(name = "Autenticación", description = "Login, refresh, logout y recuperación de contraseña")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UsuarioService usuarioService;
+    private final PasswordResetService passwordResetService;
 
     /**
      * LOGIN - Autentica usuario y retorna tokens.
@@ -250,6 +264,60 @@ public class AuthController {
         response.addCookie(emptyCookie);
 
         return ResponseEntity.ok(Map.of("message", "Sesión cerrada correctamente"));
+    }
+
+    /**
+     * FORGOT PASSWORD - Inicia el proceso de recuperación de contraseña.
+     *
+     * <p>Por seguridad, SIEMPRE retorna el mismo mensaje de éxito
+     * independientemente de si el email existe en el sistema. Esto evita
+     * que un atacante pueda enumerar usuarios válidos.</p>
+     *
+     * <p>Si el email existe, se genera un token, se persiste y se envía un
+     * correo con el enlace de recuperación. El token expira en 30 minutos.</p>
+     */
+    @PostMapping("/forgot-password")
+    @Operation(
+            summary = "Solicitar recuperación de contraseña",
+            description = "Envía un correo con un enlace para restablecer la contraseña. "
+                    + "Por seguridad, siempre retorna el mismo mensaje.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Mensaje genérico de éxito"),
+            @ApiResponse(responseCode = "400", description = "Email inválido",
+                    content = @Content(schema = @Schema(implementation = Map.class)))
+    })
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        try {
+            passwordResetService.solicitarReset(
+                    request.email(),
+                    "http://localhost:4200/reset-password");
+        } catch (RuntimeException ex) {
+            log.warn("Fallo controlado en forgot-password para {}: {}", request.email(), ex.getMessage());
+        }
+        return ResponseEntity.ok(Map.of(
+                "message",
+                "Si el email existe, recibirá instrucciones para restablecer su contraseña"));
+    }
+
+    /**
+     * RESET PASSWORD - Restablece la contraseña usando un token válido.
+     *
+     * <p>El token llega al usuario por correo. Si es válido, no está usado
+     * y no está expirado, se actualiza la contraseña (codificada con BCrypt)
+     * y se marca el token como consumido. Se envía un correo de confirmación.</p>
+     */
+    @PostMapping("/reset-password")
+    @Operation(
+            summary = "Restablecer contraseña con token",
+            description = "Consume un token de reset y actualiza la contraseña del usuario.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Contraseña actualizada"),
+            @ApiResponse(responseCode = "400", description = "Token inválido, usado o expirado",
+                    content = @Content(schema = @Schema(implementation = Map.class)))
+    })
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetearPassword(request.token(), request.nuevaPassword());
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada exitosamente"));
     }
 
     // ==========================================================================
