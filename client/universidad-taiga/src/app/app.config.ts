@@ -33,10 +33,10 @@ import {
   tablerUser,
 } from '@ng-icons/tabler-icons';
 import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { APP_API_URL } from './tokens/api.tokens';
+import { APP_API_URL } from './core/tokens/api.tokens';
 import { environment } from '../environments/environment';
 import { routes } from './app.routes';
-import { authInterceptor } from './services/auth.interceptor';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 /**
  * QueryClient con opciones por defecto para la app.

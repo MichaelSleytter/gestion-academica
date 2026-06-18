@@ -4,7 +4,7 @@ import {
   EstudianteCreateRequest,
   EstudianteUpdateRequest,
 } from '../models/estudiante/estudiante.request';
-import { EstudianteService } from '../services/estudiante-service';
+import { EstudianteService } from '../core/services/estudiante.service';
 import {
   ESTUDIANTE_ACTUALIZAR_MUTATION_KEY,
   ESTUDIANTE_CREAR_MUTATION_KEY,

@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="../README.md">⬆ Volver al README principal</a>
+</p>
+
 <h1 align="center">
   <img src="https://img.shields.io/badge/Java-21-blue?logo=java&logoColor=white" alt="Java 21">
   <img src="https://img.shields.io/badge/Spring%20Boot-3.5.13-green?logo=spring&logoColor=white" alt="Spring Boot 3.5.13">
@@ -6,7 +10,7 @@
 </h1>
 
 <p align="center">
-  <strong>Gestión Académica</strong> — Sistema de Gestión Académica Universitaria
+  <strong>Gestión Académica</strong> — API REST del Sistema de Gestión Académica Universitaria
 </p>
 
 <p align="center">
@@ -357,7 +361,7 @@ Este proyecto está bajo la licencia **MIT**. Consulta el archivo `LICENSE` para
 ---
 
 <p align="center">
-  <strong>TechNova Solutions</strong> — Sistema de Gestión Académica Universitaria
+  <a href="../README.md">⬆ Volver al README principal</a>
 </p>
 
 <p align="center">

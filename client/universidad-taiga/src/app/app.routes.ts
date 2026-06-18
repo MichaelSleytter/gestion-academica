@@ -13,7 +13,7 @@
  */
 
 import { Routes } from '@angular/router';
-import { requiresAuth, requiresRole, requiresNoAuth } from './guards/auth.guard';
+import { requiresAuth, requiresRole, requiresNoAuth } from './core/guards/auth.guard';
 
 /**
  * =============================================================================
@@ -31,7 +31,7 @@ export const routes: Routes = [
    */
   {
     path: 'forgot-password',
-    loadComponent: () => import('./components/shared/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+    loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
     canActivate: [requiresNoAuth],
   },
 
@@ -41,12 +41,12 @@ export const routes: Routes = [
    */
   {
     path: 'reset-password',
-    loadComponent: () => import('./components/shared/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
   },
 
   {
     path: 'page404',
-    loadComponent: () => import('./components/shared/page404/page404').then((m) => m.Page404),
+    loadComponent: () => import('./shared/components/page404/page404.component').then((m) => m.Page404),
   },
 
   // =========================================================================
@@ -60,114 +60,114 @@ export const routes: Routes = [
    */
   {
     path: 'app',
-    loadComponent: () => import('./components/shared/layout/layout').then((m) => m.AppLayout),
+    loadComponent: () => import('./shared/components/layout/layout.component').then((m) => m.AppLayout),
     canActivate: [requiresAuth],
     canActivateChild: [requiresAuth],
     children: [
       // ─── Dashboard (SOLO ADMIN) ───────────────────────────────────────
       {
         path: 'dashboard',
-        loadComponent: () => import('./components/admin/dashboard/dashboard').then((m) => m.Dashboard),
+        loadComponent: () => import('./features/admin/dashboard/dashboard.component').then((m) => m.Dashboard),
         canActivate: [requiresRole('ADMIN')],
       },
 
       // ─── Estudiantes (ADMIN + DOCENTE) ────────────────────────────────
       {
         path: 'estudiantes',
-        loadComponent: () => import('./components/admin/estudiantes/estudiantes').then((m) => m.Estudiantes),
+        loadComponent: () => import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
       {
         path: 'estudiante/:id',
-        loadComponent: () => import('./components/admin/estudiantes/estudiantes').then((m) => m.Estudiantes),
+        loadComponent: () => import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── Docentes (SOLO ADMIN) ────────────────────────────────────────
       {
         path: 'docentes',
-        loadComponent: () => import('./components/admin/docentes/docentes').then((m) => m.Docentes),
+        loadComponent: () => import('./features/admin/docentes/docentes.component').then((m) => m.Docentes),
         canActivate: [requiresRole('ADMIN')],
       },
       {
         path: 'docente/:id',
-        loadComponent: () => import('./components/admin/docentes/docentes').then((m) => m.Docentes),
+        loadComponent: () => import('./features/admin/docentes/docentes.component').then((m) => m.Docentes),
         canActivate: [requiresRole('ADMIN')],
       },
 
       // ─── Cursos ───────────────────────────────────────────────────────
       {
         path: 'cursos',
-        loadComponent: () => import('./components/admin/cursos/cursos').then((m) => m.Cursos),
+        loadComponent: () => import('./features/admin/cursos/cursos.component').then((m) => m.Cursos),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
       {
         path: 'cursos/:id',
-        loadComponent: () => import('./components/admin/cursos/cursos').then((m) => m.Cursos),
+        loadComponent: () => import('./features/admin/cursos/cursos.component').then((m) => m.Cursos),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── Secciones (ADMIN + DOCENTE) ──────────────────────────────────
       {
         path: 'secciones',
-        loadComponent: () => import('./components/admin/secciones/secciones').then((m) => m.Secciones),
+        loadComponent: () => import('./features/admin/secciones/secciones.component').then((m) => m.Secciones),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
       {
         path: 'secciones/:id',
-        loadComponent: () => import('./components/admin/secciones/secciones').then((m) => m.Secciones),
+        loadComponent: () => import('./features/admin/secciones/secciones.component').then((m) => m.Secciones),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── Horarios (ADMIN + DOCENTE) ───────────────────────────────────
       {
         path: 'horarios',
-        loadComponent: () => import('./components/admin/horarios/horarios').then((m) => m.Horarios),
+        loadComponent: () => import('./features/admin/horarios/horarios.component').then((m) => m.Horarios),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── Evaluaciones (ADMIN + DOCENTE) ───────────────────────────────
       {
         path: 'evaluaciones',
-        loadComponent: () => import('./components/admin/evaluaciones/evaluaciones').then((m) => m.Evaluaciones),
+        loadComponent: () => import('./features/admin/evaluaciones/evaluaciones.component').then((m) => m.Evaluaciones),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── DOCENTE: Mis cursos (SOLO DOCENTE) ───────────────────────────
       {
         path: 'docente/mis-cursos',
-        loadComponent: () => import('./components/role-docente/mis-cursos/mis-cursos').then((m) => m.MisCursos),
+        loadComponent: () => import('./features/docente/mis-cursos/mis-cursos.component').then((m) => m.MisCursos),
         canActivate: [requiresRole('DOCENTE')],
       },
       {
         path: 'docente/mis-cursos/:id/notas',
-        loadComponent: () => import('./components/role-docente/carga-notas/carga-notas').then((m) => m.CargaNotas),
+        loadComponent: () => import('./features/docente/carga-notas/carga-notas.component').then((m) => m.CargaNotas),
         canActivate: [requiresRole('DOCENTE')],
       },
 
       // ─── ESTUDIANTE: Mis cursos (SOLO ESTUDIANTE) ────────────────────
       {
         path: 'estudiante/mis-cursos',
-        loadComponent: () => import('./components/role-estudiante/mis-notas/mis-notas').then((m) => m.MisNotas),
+        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
         canActivate: [requiresRole('ESTUDIANTE')],
       },
       {
         path: 'estudiante/mis-cursos/:id/notas',
-        loadComponent: () => import('./components/role-estudiante/mis-notas/mis-notas').then((m) => m.MisNotas),
+        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
         canActivate: [requiresRole('ESTUDIANTE')],
       },
 
       // ─── ESTUDIANTE: Historial (SOLO ESTUDIANTE) ─────────────────────
       {
         path: 'estudiante/historial',
-        loadComponent: () => import('./components/role-estudiante/historial/historial').then((m) => m.Historial),
+        loadComponent: () => import('./features/estudiante/historial/historial.component').then((m) => m.Historial),
         canActivate: [requiresRole('ESTUDIANTE')],
       },
 
       // ─── Perfil (TODOS los roles) ────────────────────────────────────
       {
         path: 'perfil',
-        loadComponent: () => import('./components/shared/perfil/perfil').then((m) => m.Perfil),
+        loadComponent: () => import('./shared/components/perfil/perfil.component').then((m) => m.Perfil),
       },
 
       // ─── Default: el layout redirige al home según el rol ────────────
@@ -202,7 +202,7 @@ export const routes: Routes = [
 
   {
     path: '**',
-    loadComponent: () => import('./components/shared/page404/page404').then((m) => m.Page404),
+    loadComponent: () => import('./shared/components/page404/page404.component').then((m) => m.Page404),
   },
 ];
 
@@ -240,7 +240,7 @@ export const routes: Routes = [
  *
  * {
  *   path: 'nombre-ruta',
- *   loadComponent: () => import('./components/mi-componente/mi-componente').then(m => m.MiComponente),
+ *   loadComponent: () => import('./components/mi-componente/mi-componente.component').then(m => m.MiComponente),
  *   canActivate: [requiresAuth]  // o el guard que necesites
  * }
  */

@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CatalogoService } from '../services/catalogo-service';
+import { CatalogoService } from '../core/services/catalogo.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
 import { CATALOGO_CARRERAS_KEY, CATALOGO_TIPOS_DOCUMENTO_KEY } from './query-keys';
 
