@@ -1,9 +1,11 @@
-import { inject } from '@angular/core';
+import { inject, Signal } from '@angular/core';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import {
   EstudianteCreateRequest,
   EstudianteUpdateRequest,
 } from '../models/estudiante/estudiante.request';
+import { EstudianteResponse } from '../models/estudiante/estudiante.response';
+import { PageResponse } from '../models/shared/page.response';
 import { EstudianteService } from '../core/services/estudiante.service';
 import {
   ESTUDIANTE_ACTUALIZAR_MUTATION_KEY,
@@ -11,6 +13,7 @@ import {
   ESTUDIANTE_ELIMINAR_MUTATION_KEY,
   ESTUDIANTE_KEY,
   ESTUDIANTES_KEY,
+  ESTUDIANTES_PAGINADOS_KEY,
 } from './query-keys';
 
 interface ActualizarEstudianteVariables {
@@ -19,28 +22,45 @@ interface ActualizarEstudianteVariables {
 }
 
 /**
- * Hook reutilizable para obtener la lista de estudiantes usando TanStack Query.
- *
- * - Separa la lógica de red en EstudianteService.
- * - Devuelve el objeto de query con data(), isPending(), error(), etc.
+ * Hook reutilizable para obtener la lista completa de estudiantes.
  *
  * @returns Resultado de la query de estudiantes
  */
 export function useEstudiantesQuery() {
   const service = inject(EstudianteService);
 
-  /*
-   * queryKey: Clave única para la query, usada para cache y invalidación.
-   * queryFn: Función que realiza la petición al servicio.
-   * staleTime: Tiempo en ms antes de considerar la data como "stale" (que no está actualizada) y refrescar.
-   * cacheTime: Tiempo en ms que la data se mantiene en caché después de que no haya suscriptores.
-   * retry: Número de veces que se reintenta la petición en caso de error.
-   */
   return injectQuery(() => ({
     queryKey: ESTUDIANTES_KEY,
     queryFn: () => service.getEstudiantes(),
-    staleTime: 1000 * 30, // 30 segundos
-    cacheTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 5,
+    retry: 1,
+  }));
+}
+
+/**
+ * Hook para obtener estudiantes con paginación y búsqueda opcional.
+ *
+ * Recibe señales (signal) en lugar de valores para que TanStack Query
+ * se reactive automáticamente cuando cambien página, tamaño o búsqueda.
+ *
+ * @param pagina   signal con el número de página (0-based)
+ * @param tamaño   signal con elementos por página
+ * @param busqueda signal con el texto de búsqueda (opcional)
+ * @returns query con PageResponse<EstudianteResponse>
+ */
+export function useEstudiantesPaginadosQuery(
+  pagina: Signal<number>,
+  tamaño: Signal<number>,
+  busqueda: Signal<string>,
+) {
+  const service = inject(EstudianteService);
+
+  return injectQuery<PageResponse<EstudianteResponse>, Error>(() => ({
+    queryKey: ESTUDIANTES_PAGINADOS_KEY(pagina(), tamaño(), busqueda()),
+    queryFn: () => service.getEstudiantesPaginado(pagina(), tamaño(), busqueda()),
+    staleTime: 1000 * 30,
+    gcTime: 1000 * 60 * 5,
     retry: 1,
   }));
 }

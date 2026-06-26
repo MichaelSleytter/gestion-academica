@@ -104,3 +104,12 @@ opencode.json
 *.atl
 #Grafica
 graphify-out/**
+# Local Pi runtime state
+.atl/
+
+# =====================
+# AI / Agent / Memory files
+# =====================
+.pi/
+openspec/
+context.md

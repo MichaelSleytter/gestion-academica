@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { TuiButton, TuiIcon } from '@taiga-ui/core';
 import { EstudianteResponse } from '../../../../models/estudiante/estudiante.response';
+import { getIniciales, getEstadoEstudiante } from '../../../../shared/utils/estudiante.util';
 
 @Component({
   selector: 'app-card-estudiante',
@@ -27,43 +28,14 @@ export class CardEstudiante {
   readonly historial = output<EstudianteResponse>();
 
   /** Iniciales del estudiante (máx 2 caracteres) */
-  readonly iniciales = computed(() => {
-    const nombre = this.estudiante().nombre.trim();
-    const partes = nombre.split(/\s+/).filter(Boolean);
+  readonly iniciales = computed(() => getIniciales(this.estudiante().nombre));
 
-    if (partes.length === 0) {
-      return 'NA';
-    }
-
-    if (partes.length === 1) {
-      return partes[0].slice(0, 2).toUpperCase();
-    }
-
-    return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
-  });
-
-
-
-readonly estado = computed(() => {
-    const valor = (this.estudiante().estadoAcademico ?? 'INACTIVO').toUpperCase();
-
-    if (valor === 'ACTIVO') {
-      return {
-        etiqueta: 'REGULAR',
-        clases: 'bg-success-bg text-success',
-      };
-    }
-
-    if (valor === 'SUSPENDIDO') {
-      return {
-        etiqueta: 'SUSPENDIDO',
-        clases: 'bg-warning-bg text-warning',
-      };
-    }
-
+  /** Estado formateado del estudiante con clases CSS. */
+  readonly estado = computed(() => {
+    const result = getEstadoEstudiante(this.estudiante().estadoAcademico);
     return {
-      etiqueta: 'INACTIVO',
-      clases: 'bg-danger-bg text-danger',
+      etiqueta: result.label,
+      clases: result.classes,
     };
   });
 

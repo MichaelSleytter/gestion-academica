@@ -1,5 +1,12 @@
-/* ── Touch targets: icon buttons need ≥ 44×44px ──────────────── */
-[tuiIconButton] {
-  min-width: 44px;
-  min-height: 44px;
+.btn-historial {
+  height: 2.75rem;
+  width: 100%;
+  justify-content: center;
+  border-radius: 0.75rem;
+  border: 1px solid var(--tui-border-normal);
+  background: var(--tui-background-neutral-1);
+  font-weight: 700;
+  color: var(--tui-text-primary);
 }
+
+

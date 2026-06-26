@@ -23,6 +23,7 @@ public class EstudianteResponseDTO {
     // ── Datos personales (del Usuario) ───────────────────
     private String nombre;
     private String apellido;
+    private String email;
     private String emailPersonal;
     private String numeroDocumento;
     private String tipoDocumento;

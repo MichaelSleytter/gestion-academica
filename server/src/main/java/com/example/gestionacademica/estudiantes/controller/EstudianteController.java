@@ -15,6 +15,8 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,19 +46,29 @@ public class EstudianteController {
     // ─────────────────────────────────────────────────────────────────
 
     @GetMapping
-    @Operation(summary = "Listar todos los estudiantes", description = "Retorna la lista completa de estudiantes registrados en el sistema")
-    @ApiResponse(responseCode = "200", description = "Lista obtenida correctamente")
+    @Operation(summary = "Listar estudiantes con paginación", description = "Retorna una página de estudiantes con filtro de búsqueda opcional")
+    @ApiResponse(responseCode = "200", description = "Página obtenida correctamente")
     /**
-     * Obtiene todos los estudiantes registrados en el sistema.
+     * Obtiene todos los estudiantes registrados con paginación y búsqueda opcional.
+     * <p>
+     * La búsqueda se aplica sobre: código, nombre, apellido, documento,
+     * correo institucional y nombre de carrera.
      *
-     * @return respuesta HTTP con la lista de estudiantes mapeados a DTO
+     * @param pagina número de página (empieza en 0)
+     * @param tamaño cantidad de elementos por página
+     * @param busqueda texto para filtrar resultados (opcional)
+     * @return página de estudiantes mapeados a DTO
      */
-    public ResponseEntity<List<EstudianteResponseDTO>> listarTodos() {
-        List<EstudianteResponseDTO> respuesta = estudianteService
-                .listarTodos()
-                .stream()
-                .map(estudianteMapper::aDto)
-                .collect(Collectors.toList());
+    public ResponseEntity<Page<EstudianteResponseDTO>> listarPaginado(
+            @Parameter(description = "Número de página (empieza en 0)", example = "0")
+            @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Elementos por página", example = "10")
+            @RequestParam(defaultValue = "10") int tamaño,
+            @Parameter(description = "Texto de búsqueda (opcional)", example = "Juan")
+            @RequestParam(required = false) String busqueda) {
+        Page<EstudianteResponseDTO> respuesta = estudianteService
+                .listarPaginado(busqueda, PageRequest.of(pagina, tamaño))
+                .map(estudianteMapper::aDto);
         return ResponseEntity.ok(respuesta);
     }
 

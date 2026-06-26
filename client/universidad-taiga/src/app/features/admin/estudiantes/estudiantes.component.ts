@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { FormBuilder, Validators } from '@angular/forms';
 import {
@@ -12,7 +13,7 @@ import {
   TuiTitle,
 } from '@taiga-ui/core';
 import { TuiTable } from '@taiga-ui/addon-table';
-import { TuiCardLarge, TuiHeader, TuiSearch } from '@taiga-ui/layout';
+import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
 import { TuiSegmented, TuiSkeleton } from '@taiga-ui/kit';
 import { CardEstudiante } from './card-estudiante/card-estudiante.component';
 import { EstudianteForm } from './estudiante-form/estudiante-form.component';
@@ -22,12 +23,12 @@ import {
   useActualizarEstudianteMutation,
   useCrearEstudianteMutation,
   useEliminarEstudianteMutation,
-  useEstudiantesQuery,
+  useEstudiantesPaginadosQuery,
 } from '../../../queries/estudiante.query';
-import { TuiBlockStatus } from '@taiga-ui/layout';
 import { useCarrerasQuery, useTiposDocumentoQuery } from '../../../queries/catalogo.query';
 import type { Carrera, TipoDocumento } from '../../../models/catalogos/catalogo.response';
 import { EstudianteCreateRequest } from '../../../models/estudiante/estudiante.request';
+import { getIniciales, getEstadoEstudiante } from '../../../shared/utils/estudiante.util';
 
 type ModoFormulario = 'crear' | 'editar';
 
@@ -48,14 +49,12 @@ interface DialogObserver {
   TuiTextfield,
     TuiTable,
     TuiTitle,
-    TuiSearch,
     TuiSegmented,
     TuiIcon,
     TuiSkeleton,
     CardEstudiante,
     EstudianteForm,
     EstudianteDeleteDialog,
-    TuiBlockStatus,
   ],
   templateUrl: './estudiantes.html',
   styleUrl: './estudiantes.less',
@@ -74,6 +73,30 @@ export class Estudiantes {
 
   /** Modo de visualización: grilla de tarjetas o filas de tabla. */
   readonly viewMode = signal<'grid' | 'row'>('grid');
+
+  // ─── Paginación y búsqueda ───────────────────────────────────────────
+
+  /** Página actual (0-based). */
+  readonly pagina = signal(0);
+  /** Elementos por página. */
+  readonly tamaño = signal(10);
+  /** Texto de búsqueda actual. */
+  readonly busqueda = signal('');
+  /** Timer para debounce del search. */
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Query paginada que se refresca al cambiar página, tamaño o búsqueda. */
+  readonly estudiantesQuery = useEstudiantesPaginadosQuery(
+    this.pagina,
+    this.tamaño,
+    this.busqueda,
+  );
+
+  /** Total de elementos (de la respuesta paginada). */
+  readonly totalEstudiantes = computed(() => this.estudiantesQuery.data()?.totalElements ?? 0);
+
+  /** Total de páginas. */
+  readonly totalPaginas = computed(() => this.estudiantesQuery.data()?.totalPages ?? 0);
 
   /** Controla la apertura/cierre del modal de formulario (crear/editar). */
   readonly estudianteModalAbierto = signal(false);
@@ -100,8 +123,6 @@ export class Estudiantes {
     carrera: this.formBuilder.control<Carrera | null>(null, Validators.required),
   });
 
-  /** Query de estudiantes gestionada por TanStack Query. */
-  readonly estudiantesQuery = useEstudiantesQuery();
   /** Query de tipos de documento. */
   readonly tiposDocumentoQuery = useTiposDocumentoQuery();
   /** Query de carreras. */
@@ -293,67 +314,65 @@ export class Estudiantes {
 
   /**
    * Obtiene las iniciales a partir de un nombre completo.
-   *
-   * @param nombre Nombre completo del estudiante.
-   * @returns Máximo 2 caracteres en mayúscula.
+   * Delega a la utility compartida.
    */
   getIniciales(nombre: string): string {
-    const partes = (nombre ?? '').trim().split(/\s+/).filter(Boolean);
-
-    if (partes.length === 0) {
-      return 'NA';
-    }
-
-    if (partes.length === 1) {
-      return partes[0].slice(0, 2).toUpperCase();
-    }
-
-    return `${partes[0][0]}${partes[1][0]}`.toUpperCase();
-  }
-
-  /**
-   * Extrae solo los dígitos de un ciclo académico.
-   *
-   * @param ciclo Representación del ciclo (ej: "5to Ciclo").
-   * @returns Solo los dígitos, o el valor original si no hay dígitos.
-   */
-  getCicloNumero(ciclo: string): string {
-    const soloDigitos = ciclo.replace(/\D+/g, '');
-
-    return soloDigitos || ciclo;
+    return getIniciales(nombre);
   }
 
   /**
    * Obtiene el estado formateado del estudiante con clases CSS asociadas.
-   *
-   * @param estudiante Datos del estudiante.
-   * @returns Objeto con label, clases de texto/fondo y clases del indicador.
+   * Delega a la utility compartida.
    */
   getEstado(estudiante: EstudianteResponse): { label: string; classes: string; dotClasses: string } {
-    const estado = (estudiante.estadoAcademico ?? 'INACTIVO').toUpperCase();
-
-    if (estado === 'ACTIVO') {
-      return {
-        label: 'REGULAR',
-        classes: 'bg-success-bg text-success',
-        dotClasses: 'bg-success',
-      };
-    }
-
-    if (estado === 'SUSPENDIDO') {
-      return {
-        label: 'SUSPENDIDO',
-        classes: 'bg-warning-bg text-warning',
-        dotClasses: 'bg-warning',
-      };
-    }
-
-    return {
-      label: 'INACTIVO',
-      classes: 'bg-danger-bg text-danger',
-      dotClasses: 'bg-danger',
-    };
+    return getEstadoEstudiante(estudiante.estadoAcademico);
   }
+
+  /**
+   * Maneja el cambio en el input de búsqueda con debounce de 300ms.
+   * Al escribir, vuelve a la página 0 para mostrar resultados desde el inicio.
+   */
+  onBusquedaChange(texto: string): void {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => {
+      this.busqueda.set(texto.trim());
+      this.pagina.set(0);
+    }, 300);
+  }
+
+  /** Navega a la página anterior si no es la primera. */
+  paginaAnterior(): void {
+    if (this.pagina() > 0) {
+      this.pagina.update(p => p - 1);
+    }
+  }
+
+  /** Navega a la página siguiente si no es la última. */
+  paginaSiguiente(): void {
+    if (this.pagina() < this.totalPaginas() - 1) {
+      this.pagina.update(p => p + 1);
+    }
+  }
+
+  /** Indica si hay una página anterior. */
+  readonly hayPaginaAnterior = computed(() => this.pagina() > 0);
+
+  /** Indica si hay una página siguiente. */
+  readonly hayPaginaSiguiente = computed(() => this.pagina() < this.totalPaginas() - 1);
+
+  /** Rango mostrado: "1–10 de 150" */
+  readonly infoPaginacion = computed(() => {
+    const data = this.estudiantesQuery.data();
+    if (!data || data.totalElements === 0) return '0 estudiantes';
+    const desde = data.number * data.size + 1;
+    const hasta = Math.min((data.number + 1) * data.size, data.totalElements);
+    return `${desde}–${hasta} de ${data.totalElements}`;
+  });
+
+  /** Array de números de página para iterar en el template. */
+  readonly paginasArray = computed(() =>
+    Array.from({ length: this.totalPaginas() }, (_, i) => i),
+  );
 
   protected readonly String = String;
 

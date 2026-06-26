@@ -3,13 +3,13 @@
     <header tuiHeader class="flex justify-between items-center h-full">
       <div class="flex flex-col justify-center">
         <h2 tuiTitle>Estudiantes</h2>
-        <span class="subtitle text-lg font-semibold text-text-secondary"
-          >Gestiona y administra 10 de 10 estudiantes registrados</span
+        <span class="subtitle text-sm font-medium text-text-secondary"
+          >Gestiona y administra {{ totalEstudiantes() }} estudiantes registrados</span
         >
       </div>
 
       <button
-        appearance="secondary"
+        appearance="primary"
         size="m"
         tuiButton
         type="button"
@@ -27,7 +27,11 @@
       <div class="flex items-center gap-4">
         <div class="flex-1">
           <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
-            <input placeholder="Buscar por nombre, código o carrera" tuiInput />
+            <input
+              placeholder="Buscar por nombre, código o carrera"
+              tuiInput
+              (input)="onBusquedaChange($any($event).target.value)"
+            />
           </tui-textfield>
         </div>
 
@@ -59,21 +63,23 @@
     <div appearance="floating" tuiCardLarge class="p-4" [tuiSkeleton]="true"></div>
     }
   </div>
-  } @else if ((estudiantesQuery.data() ?? []).length === 0) {
+  } @else if ((estudiantesQuery.data()?.content ?? []).length === 0) {
   <div
     appearance="floating"
     tuiCardLarge
     class="flex flex-col items-center justify-center py-16 gap-4"
   >
     <tui-icon icon="@tui.users" class="text-text-muted" [style.font-size]="'3rem'" />
-    <p class="text-text-secondary text-center">No hay estudiantes registrados</p>
+    <p class="text-text-secondary text-center">
+      {{ busqueda() ? 'No hay resultados para "' + busqueda() + '"' : 'No hay estudiantes registrados' }}
+    </p>
     <button appearance="secondary" tuiButton (click)="openNuevoEstudianteModal()">
       Crear primer estudiante
     </button>
   </div>
   } @else {
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-    @for(estudiante of estudiantesQuery.data(); track estudiante.codigoEstudiante) {
+    @for(estudiante of estudiantesQuery.data()?.content ?? []; track estudiante.codigoEstudiante) {
     <app-card-estudiante
       [estudiante]="estudiante"
       (editar)="openEditarEstudianteModal($event)"
@@ -116,8 +122,8 @@
         }
       </tbody>
       } @else {
-      <tbody tuiTbody [data]="estudiantesQuery.data() ?? []">
-        @for(estudiante of estudiantesQuery.data(); track estudiante.codigoEstudiante) { @let estado
+      <tbody tuiTbody [data]="estudiantesQuery.data()?.content ?? []">
+        @for(estudiante of estudiantesQuery.data()?.content ?? []; track estudiante.codigoEstudiante) { @let estado
         = getEstado(estudiante);
         <tr tuiTr class="group hover:bg-surface-hover focus-within:bg-surface-hover">
           <td *tuiCell="'estudiante'" tuiTd class="border-b border-border px-6 py-4">
@@ -132,7 +138,7 @@
                   >{{ estudiante.nombre }} {{ estudiante.apellido }}</span
                 >
                 <span class="truncate text-xs font-medium leading-4 text-text-secondary"
-                  >{{ estudiante.emailPersonal }}</span
+                  >{{ estudiante.email }}</span
                 >
               </div>
             </div>
@@ -211,6 +217,56 @@
       }
     </table>
   </div>
+
+  <!-- ─── Paginación ──────────────────────────────────────── -->
+  @if (totalPaginas() > 0) {
+  <div appearance="floating" tuiCardLarge>
+    <section>
+      <div class="flex items-center justify-between gap-4">
+        <span class="text-sm font-medium text-text-secondary">
+          {{ infoPaginacion() }}
+        </span>
+
+        <div class="flex items-center gap-2">
+          <button
+            appearance="action"
+            iconStart="@tui.chevron-left"
+            size="s"
+            tuiIconButton
+            type="button"
+            aria-label="Página anterior"
+            [disabled]="!hayPaginaAnterior()"
+            (click)="paginaAnterior()"
+          ></button>
+
+          @for (p of paginasArray(); track p) {
+          <button
+            appearance="flat"
+            size="s"
+            tuiButton
+            type="button"
+            [class]="$index === pagina() ? 'bg-primary text-on-primary' : 'text-text-secondary'"
+            (click)="pagina.set($index)"
+          >
+            {{ $index + 1 }}
+          </button>
+          }
+
+          <button
+            appearance="action"
+            iconStart="@tui.chevron-right"
+            size="s"
+            tuiIconButton
+            type="button"
+            aria-label="Página siguiente"
+            [disabled]="!hayPaginaSiguiente()"
+            (click)="paginaSiguiente()"
+          ></button>
+        </div>
+      </div>
+    </section>
+  </div>
+  }
   }
 
   <ng-template

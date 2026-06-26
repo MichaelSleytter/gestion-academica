@@ -2,6 +2,7 @@ package com.example.gestionacademica.estudiantes.repository;
 
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,7 @@ import java.util.Optional;
  * PK: Integer (id_usuario)
  */
 @Repository
-public interface EstudianteRepository extends JpaRepository<Estudiante, Integer> {
+public interface EstudianteRepository extends JpaRepository<Estudiante, Integer>, JpaSpecificationExecutor<Estudiante> {
 
     Optional<Estudiante> findByCodigoEstudiante(String codigoEstudiante);
 

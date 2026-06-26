@@ -12,9 +12,8 @@
         <label tuiLabel>Nombre</label>
         <input formControlName="nombre" placeholder="Ej. Juan" tuiInput />
       </tui-textfield>
-      @let nombreError = getFieldError('nombre');
-      @if (nombreError) {
-        <span class="mt-3 text-xs text-danger">{{ nombreError }}</span>
+      @let nombreError = getFieldError('nombre'); @if (nombreError) {
+      <span class="mt-3 text-xs text-danger">{{ nombreError }}</span>
       }
     </div>
 
@@ -23,9 +22,8 @@
         <label tuiLabel>Apellido</label>
         <input formControlName="apellido" placeholder="Ej. Pérez" tuiInput />
       </tui-textfield>
-      @let apellidoError = getFieldError('apellido');
-      @if (apellidoError) {
-        <span class="mt-3 text-xs text-danger">{{ apellidoError }}</span>
+      @let apellidoError = getFieldError('apellido'); @if (apellidoError) {
+      <span class="mt-3 text-xs text-danger">{{ apellidoError }}</span>
       }
     </div>
   </div>
@@ -37,9 +35,8 @@
         <label tuiLabel>Ciclo</label>
         <input formControlName="ciclo" placeholder="Ej. 5" tuiInput type="number" />
       </tui-textfield>
-      @let cicloError = getFieldError('ciclo');
-      @if (cicloError) {
-        <span class="mt-3 text-xs text-danger">{{ cicloError }}</span>
+      @let cicloError = getFieldError('ciclo'); @if (cicloError) {
+      <span class="mt-3 text-xs text-danger">{{ cicloError }}</span>
       }
     </div>
   </div>
@@ -48,12 +45,11 @@
   <div class="grid grid-cols-2 gap-x-4 gap-y-5">
     <div class="flex flex-col col-span-2">
       <tui-textfield class="w-full">
-        <label tuiLabel>Correo electrónico</label>
+        <label tuiLabel>Correo electrónico personal</label>
         <input formControlName="email" placeholder="ejemplo@correo.com" tuiInput type="email" />
       </tui-textfield>
-      @let emailError = getFieldError('email');
-      @if (emailError) {
-        <span class="mt-3 text-xs text-danger">{{ emailError }}</span>
+      @let emailError = getFieldError('email'); @if (emailError) {
+      <span class="mt-3 text-xs text-danger">{{ emailError }}</span>
       }
     </div>
   </div>
@@ -66,9 +62,8 @@
         <input formControlName="tipoDocumento" placeholder="Selecciona" tuiSelect />
         <tui-data-list-wrapper *tuiDropdown [items]="tiposDocumento()" />
       </tui-textfield>
-      @let tipoDocError = getFieldError('tipoDocumento');
-      @if (tipoDocError) {
-        <span class="mt-3 text-xs text-danger">{{ tipoDocError }}</span>
+      @let tipoDocError = getFieldError('tipoDocumento'); @if (tipoDocError) {
+      <span class="mt-3 text-xs text-danger">{{ tipoDocError }}</span>
       }
     </div>
 
@@ -77,9 +72,8 @@
         <label tuiLabel>Número de documento</label>
         <input formControlName="numeroDocumento" placeholder="Ej. 75896324" tuiInput />
       </tui-textfield>
-      @let numDocError = getFieldError('numeroDocumento');
-      @if (numDocError) {
-        <span class="mt-3 text-xs text-danger">{{ numDocError }}</span>
+      @let numDocError = getFieldError('numeroDocumento'); @if (numDocError) {
+      <span class="mt-3 text-xs text-danger">{{ numDocError }}</span>
       }
     </div>
   </div>
@@ -92,24 +86,16 @@
         <input formControlName="carrera" placeholder="Selecciona carrera" tuiSelect />
         <tui-data-list-wrapper *tuiDropdown [items]="carreras()" />
       </tui-textfield>
-      @let carreraError = getFieldError('carrera');
-      @if (carreraError) {
-        <span class="mt-3 text-xs text-danger">{{ carreraError }}</span>
+      @let carreraError = getFieldError('carrera'); @if (carreraError) {
+      <span class="mt-3 text-xs text-danger">{{ carreraError }}</span>
       }
     </div>
   </div>
 
   <footer class="flex items-center justify-end gap-3 border-t border-border pt-4">
-    <button
-      appearance="secondary"
-      tuiButton
-      type="button"
-      (click)="cancelar.emit()"
-    >
+    <button appearance="secondary" tuiButton type="button" (click)="cancelar.emit()">
       Cancelar
     </button>
-    <button tuiButton type="submit" [disabled]="isGuardando()">
-      {{ getTextoBotonGuardar() }}
-    </button>
+    <button tuiButton type="submit" [disabled]="isGuardando()">{{ getTextoBotonGuardar() }}</button>
   </footer>
 </form>

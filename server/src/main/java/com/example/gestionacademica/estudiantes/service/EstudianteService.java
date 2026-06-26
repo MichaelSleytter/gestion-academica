@@ -13,6 +13,7 @@ import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
 import com.example.gestionacademica.auth.repository.UsuarioRepository;
 import com.example.gestionacademica.catalogos.service.CatalogoService;
 import com.example.gestionacademica.estudiantes.util.EstudianteUtil;
+import jakarta.persistence.criteria.Join;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,9 @@ import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +61,41 @@ public class EstudianteService {
      */
     public List<Estudiante> listarTodos() {
         return estudianteRepository.findAllByUsuario_EstadoTrue();
+    }
+
+    /**
+     * Busca estudiantes con paginación y filtro de búsqueda opcional.
+     * <p>
+     * La búsqueda se aplica sobre: código de estudiante, nombre, apellido,
+     * número de documento, correo institucional y nombre de carrera.
+     *
+     * @param busqueda texto para filtrar (opcional, busca en múltiples campos)
+     * @param paginacion objeto con página, tamaño y ordenamiento
+     * @return página de estudiantes que coinciden con el filtro
+     */
+    public Page<Estudiante> listarPaginado(String busqueda, Pageable paginacion) {
+        Specification<Estudiante> especificacion = (root, query, cb) -> {
+            if (busqueda == null || busqueda.isBlank()) {
+                return cb.conjunction();
+            }
+
+            String patron = "%" + busqueda.toLowerCase() + "%";
+            Join<Estudiante, com.example.gestionacademica.auth.domain.Usuario> usuario =
+                    root.join("usuario");
+            Join<Estudiante, com.example.gestionacademica.catalogos.domain.Carrera> carrera =
+                    root.join("carrera");
+
+            return cb.or(
+                    cb.like(cb.lower(usuario.get("nombre")), patron),
+                    cb.like(cb.lower(usuario.get("apellido")), patron),
+                    cb.like(cb.lower(root.get("codigoEstudiante")), patron),
+                    cb.like(cb.lower(usuario.get("numeroDocumento")), patron),
+                    cb.like(cb.lower(usuario.get("email")), patron),
+                    cb.like(cb.lower(carrera.get("nombre")), patron)
+            );
+        };
+
+        return estudianteRepository.findAll(especificacion, paginacion);
     }
 
     /**

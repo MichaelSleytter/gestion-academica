@@ -59,6 +59,7 @@ public class UsuarioMapper {
         constructorRespuesta
                 .nombre(usuario.getNombre())
                 .apellido(usuario.getApellido())
+                .email(usuario.getEmail())
                 .emailPersonal(usuario.getEmailPersonal())
                 .numeroDocumento(usuario.getNumeroDocumento())
                 .estado(usuario.getEstado());

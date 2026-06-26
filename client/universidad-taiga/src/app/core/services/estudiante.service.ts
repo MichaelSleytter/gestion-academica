@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { APP_API_URL } from '../tokens/api.tokens';
 import { lastValueFrom } from 'rxjs';
 import { EstudianteResponse } from '../../models/estudiante/estudiante.response';
+import { PageResponse } from '../../models/shared/page.response';
 import {
   EstudianteCreateRequest,
   EstudianteUpdateRequest,
@@ -27,6 +28,31 @@ export class EstudianteService {
   getEstudiantes(): Promise<EstudianteResponse[]> {
     const url = `${this.apiBaseUrl}/estudiantes`;
     return lastValueFrom(this.http.get<EstudianteResponse[]>(url));
+  }
+
+  /**
+   * Obtiene estudiantes con paginación y búsqueda opcional.
+   *
+   * @param pagina  número de página (0-based)
+   * @param tamaño  elementos por página
+   * @param busqueda texto de búsqueda (opcional)
+   * @returns página de estudiantes
+   */
+  getEstudiantesPaginado(
+    pagina: number,
+    tamaño: number,
+    busqueda?: string,
+  ): Promise<PageResponse<EstudianteResponse>> {
+    const url = `${this.apiBaseUrl}/estudiantes`;
+    let params = new HttpParams()
+      .set('pagina', pagina.toString())
+      .set('tamaño', tamaño.toString());
+
+    if (busqueda?.trim()) {
+      params = params.set('busqueda', busqueda.trim());
+    }
+
+    return lastValueFrom(this.http.get<PageResponse<EstudianteResponse>>(url, { params }));
   }
 
   crearEstudiante(estudiante: EstudianteCreateRequest): Promise<EstudianteResponse> {
