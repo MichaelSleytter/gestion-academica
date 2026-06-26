@@ -228,10 +228,6 @@ export class Secciones {
 
   // ─── Guardar (crear/editar) ──────────────────────────────────────────
 
-  /**
-   * Guarda sección según modo actual (crear o editar).
-   * Marca controles como tocados cuando formulario es inválido.
-   */
   guardarSeccion(observer: DialogObserver): void {
     if (this.seccionForm.invalid) {
       this.seccionForm.markAllAsTouched();
@@ -239,13 +235,11 @@ export class Secciones {
     }
 
     const payload = this.construirPayload();
+    if (!payload) return;
 
-    if (!payload) {
-      return;
-    }
-
-    const idCurso = this.seccionForm.getRawValue().idCurso!;
-    const idCiclo = this.seccionForm.getRawValue().idCiclo!;
+    const raw = this.seccionForm.getRawValue();
+    const idCurso = raw.idCurso!;
+    const idCiclo = raw.idCiclo!;
 
     if (this.modoFormulario() === 'crear') {
       this.crearSeccionMutation.mutate(
@@ -253,22 +247,14 @@ export class Secciones {
         {
           onSuccess: () => {
             this.notifications
-              .open('Sección creada exitosamente', {
-                label: 'Éxito',
-                appearance: 'success',
-                autoClose: 3000,
-              })
+              .open('Sección creada exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
               .subscribe();
             observer.complete();
             this.closeSeccionModal();
           },
           onError: (error) => {
             this.notifications
-              .open(error?.message ?? 'Error al crear sección', {
-                label: 'Error',
-                appearance: 'error',
-                autoClose: 5000,
-              })
+              .open(error?.message ?? 'Error al crear sección', { label: 'Error', appearance: 'error', autoClose: 5000 })
               .subscribe();
           },
         },
@@ -277,32 +263,21 @@ export class Secciones {
     }
 
     const seleccionada = this.seccionSeleccionada();
-
-    if (!seleccionada) {
-      return;
-    }
+    if (!seleccionada) return;
 
     this.actualizarSeccionMutation.mutate(
       { id: seleccionada.idSeccion, seccion: payload, idCurso, idCiclo },
       {
         onSuccess: () => {
           this.notifications
-            .open('Sección actualizada exitosamente', {
-              label: 'Éxito',
-              appearance: 'success',
-              autoClose: 3000,
-            })
+            .open('Sección actualizada exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
             .subscribe();
           observer.complete();
           this.closeSeccionModal();
         },
         onError: (error) => {
           this.notifications
-            .open(error?.message ?? 'Error al actualizar sección', {
-              label: 'Error',
-              appearance: 'error',
-              autoClose: 5000,
-            })
+            .open(error?.message ?? 'Error al actualizar sección', { label: 'Error', appearance: 'error', autoClose: 5000 })
             .subscribe();
         },
       },
@@ -311,33 +286,21 @@ export class Secciones {
 
   // ─── Eliminar ────────────────────────────────────────────────────────
 
-  /** Ejecuta eliminación confirmada de la sección seleccionada. */
   confirmarEliminar(observer: DialogObserver): void {
     const seleccionada = this.seccionSeleccionada();
-
-    if (!seleccionada) {
-      return;
-    }
+    if (!seleccionada) return;
 
     this.eliminarSeccionMutation.mutate(seleccionada.idSeccion, {
       onSuccess: () => {
         this.notifications
-          .open('Sección eliminada exitosamente', {
-            label: 'Eliminada',
-            appearance: 'success',
-            autoClose: 3000,
-          })
+          .open('Sección eliminada exitosamente', { label: 'Eliminada', appearance: 'success', autoClose: 3000 })
           .subscribe();
         observer.complete();
         this.closeEliminarModal();
       },
       onError: (error) => {
         this.notifications
-          .open(error?.message ?? 'Error al eliminar sección', {
-            label: 'Error',
-            appearance: 'error',
-            autoClose: 5000,
-          })
+          .open(error?.message ?? 'Error al eliminar sección', { label: 'Error', appearance: 'error', autoClose: 5000 })
           .subscribe();
       },
     });
@@ -345,34 +308,22 @@ export class Secciones {
 
   // ─── Estado de carga ─────────────────────────────────────────────────
 
-  /**
-   * Indica si hay una operación de guardado en curso.
-   */
   isGuardando(): boolean {
     return this.crearSeccionMutation.isPending() || this.actualizarSeccionMutation.isPending();
   }
 
-  /**
-   * Indica si hay una operación de eliminación en curso.
-   */
   isEliminando(): boolean {
     return this.eliminarSeccionMutation.isPending();
   }
 
   // ─── Navegación de páginas ───────────────────────────────────────────
 
-  /** Navega a la página anterior si no es la primera. */
   paginaAnterior(): void {
-    if (this.pagina() > 0) {
-      this.pagina.update(p => p - 1);
-    }
+    if (this.pagina() > 0) this.pagina.update(p => p - 1);
   }
 
-  /** Navega a la página siguiente si no es la última. */
   paginaSiguiente(): void {
-    if (this.pagina() < this.totalPaginas() - 1) {
-      this.pagina.update(p => p + 1);
-    }
+    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update(p => p + 1);
   }
 
   // ─── Métodos privados ────────────────────────────────────────────────
@@ -403,7 +354,6 @@ export class Secciones {
 
   private construirPayload(): SeccionCreateRequest | null {
     const value = this.seccionForm.getRawValue();
-
     return {
       codigoSeccion: value.codigoSeccion.trim(),
       vacantes: Number(value.vacantes),
