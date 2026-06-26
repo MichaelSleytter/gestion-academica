@@ -188,6 +188,7 @@ export class Sidebar {
         { label: 'Cursos', route: 'cursos', icon: 'tablerBook' },
         { label: 'Secciones', route: 'secciones', icon: 'tablerStackBack' },
         { label: 'Horarios', route: 'horarios', icon: 'tablerClipboardList' },
+        { label: 'Evaluaciones', route: 'evaluaciones', icon: 'tablerClipboardCheck' },
       ];
     }
 
