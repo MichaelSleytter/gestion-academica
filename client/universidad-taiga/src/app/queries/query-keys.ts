@@ -28,3 +28,13 @@ export const CURSO_KEY = (id: number) => ['curso', id] as const;
 export const CURSO_CREAR_MUTATION_KEY = ['cursos', 'crear'] as const;
 export const CURSO_ACTUALIZAR_MUTATION_KEY = ['cursos', 'actualizar'] as const;
 export const CURSO_ELIMINAR_MUTATION_KEY = ['cursos', 'eliminar'] as const;
+
+export const SECCIONES_PAGINADOS_KEY = (pagina: number, tamaño: number, busqueda?: string) =>
+  ['secciones', 'pagina', pagina, tamaño, busqueda ?? ''] as const;
+export const SECCIONES_KEY = ['secciones'] as const;
+export const SECCION_KEY = (id: number) => ['seccion', id] as const;
+export const SECCION_CREAR_MUTATION_KEY = ['secciones', 'crear'] as const;
+export const SECCION_ACTUALIZAR_MUTATION_KEY = ['secciones', 'actualizar'] as const;
+export const SECCION_ELIMINAR_MUTATION_KEY = ['secciones', 'eliminar'] as const;
+
+export const CICLOS_ACADEMICOS_KEY = ['ciclos-academicos'] as const;

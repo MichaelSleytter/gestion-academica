@@ -2,6 +2,7 @@ package com.example.gestionacademica.cursos.repository;
 
 import com.example.gestionacademica.cursos.domain.Seccion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,7 @@ import java.util.Optional;
 /**
  * Repositorio JPA para la entidad {@link Seccion}.
  */
-public interface SeccionRepository extends JpaRepository<Seccion, Integer> {
+public interface SeccionRepository extends JpaRepository<Seccion, Integer>, JpaSpecificationExecutor<Seccion> {
 
     Optional<Seccion> findByCodigoSeccion(String codigoSeccion);
 

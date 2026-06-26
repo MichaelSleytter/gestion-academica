@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,14 +27,25 @@ public class SeccionController {
     private final SeccionService seccionService;
 
     /**
-     * Lista todas las secciones registradas.
+     * Lista las secciones con paginación y búsqueda opcional.
+     * <p>
+     * La búsqueda se aplica sobre: código de sección y nombre del ciclo académico.
      *
-     * @return respuesta HTTP con secciones
+     * @param pagina   número de página (empieza en 0)
+     * @param tamaño   elementos por página
+     * @param busqueda texto para filtrar (opcional)
+     * @return página de secciones
      */
     @GetMapping
-    @Operation(summary = "Listar todas las secciones")
-    public ResponseEntity<List<Seccion>> listarTodas() {
-        return ResponseEntity.ok(seccionService.listarTodas());
+    @Operation(summary = "Listar secciones con paginación")
+    public ResponseEntity<Page<Seccion>> listarPaginado(
+            @Parameter(description = "Número de página (empieza en 0)", example = "0")
+            @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Elementos por página", example = "10")
+            @RequestParam(defaultValue = "10") int tamaño,
+            @Parameter(description = "Texto de búsqueda (opcional)", example = "2024-01")
+            @RequestParam(required = false) String busqueda) {
+        return ResponseEntity.ok(seccionService.listarPaginado(busqueda, PageRequest.of(pagina, tamaño)));
     }
 
     /**

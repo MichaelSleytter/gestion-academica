@@ -1,1 +1,333 @@
-<p>secciones works!</p>
+<div tuiPlatform="web" class="card flex flex-col gap-3 p-2.5">
+  <!-- ─── Header ──────────────────────────────────────────────── -->
+  <div appearance="floating" tuiCardLarge>
+    <header tuiHeader class="flex justify-between items-center h-full">
+      <div class="flex flex-col justify-center">
+        <h2 tuiTitle>Secciones</h2>
+        <span class="subtitle text-sm font-medium text-text-secondary"
+          >Gestiona y administra {{ totalSecciones() }} secciones registradas</span
+        >
+      </div>
+      <button
+        appearance="primary"
+        size="m"
+        tuiButton
+        type="button"
+        (click)="openNuevaSeccionModal()"
+      >
+        + Nueva Sección
+      </button>
+    </header>
+  </div>
+
+  <!-- ─── Búsqueda ────────────────────────────────────────────── -->
+  <div appearance="floating" tuiCardLarge>
+    <section>
+      <div class="flex items-center gap-4">
+        <div class="flex-1">
+          <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
+            <input
+              placeholder="Buscar por código o ciclo académico"
+              tuiInput
+              (input)="onBusquedaChange($any($event).target.value)"
+            />
+          </tui-textfield>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ─── Tabla ───────────────────────────────────────────────── -->
+  <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+    <table tuiTable class="w-full border-separate border-spacing-0 table-auto" [columns]="columns">
+      <thead tuiThead class="bg-surface-hover" [tuiSkeleton]="isLoading()">
+        <tr
+          tuiThGroup
+          class="h-12 border-b border-border text-xs font-bold uppercase tracking-wider text-text-secondary"
+        >
+          <th *tuiHead="'codigo'" tuiTh class="px-6 text-left">Código</th>
+          <th *tuiHead="'curso'" tuiTh class="px-6 text-left">Curso</th>
+          <th *tuiHead="'ciclo'" tuiTh class="px-6 text-left">Ciclo Académico</th>
+          <th *tuiHead="'vacantes'" tuiTh class="px-6 text-center">Vacantes</th>
+          <th *tuiHead="'acciones'" tuiTh class="px-6 text-right">Acciones</th>
+        </tr>
+      </thead>
+      @if (isLoading()) {
+      <tbody>
+        @for(item of [1,2,3,4,5]; track item) {
+        <tr class="border-b border-border px-6 py-4">
+          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'120px'"></span></td>
+          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'200px'"></span></td>
+          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'150px'"></span></td>
+          <td class="px-6 py-4 text-center">
+            <span [tuiSkeleton]="true" [style.width]="'60px'" class="mx-auto"></span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <span [tuiSkeleton]="true" [style.width]="'80px'"></span>
+          </td>
+        </tr>
+        }
+      </tbody>
+      } @else if ((seccionesQuery.data()?.content ?? []).length === 0) {
+      <tbody>
+        <tr>
+          <td [attr.colspan]="columns.length" class="px-6 py-16">
+            <div class="flex flex-col items-center justify-center gap-4">
+              <tui-icon icon="@tui.layout-list" class="text-text-muted" [style.fontSize]="'3rem'" />
+              <p class="text-text-secondary text-center">
+                {{ busqueda() ? 'No hay resultados para "' + busqueda() + '"' : 'No hay secciones registradas' }}
+              </p>
+              <button appearance="secondary" tuiButton (click)="openNuevaSeccionModal()">
+                Crear primera sección
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+      } @else {
+      <tbody tuiTbody [data]="seccionesQuery.data()?.content ?? []">
+        @for(seccion of seccionesQuery.data()?.content ?? []; track seccion.idSeccion) {
+        <tr tuiTr class="group hover:bg-surface-hover focus-within:bg-surface-hover">
+          <td *tuiCell="'codigo'" tuiTd class="border-b border-border px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="flex size-11 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface-hover text-xs font-bold text-text-secondary"
+              >
+                <tui-icon icon="@tui.hash" />
+              </div>
+              <span class="truncate text-base font-bold leading-6 text-text-primary"
+                >{{ seccion.codigoSeccion }}</span
+              >
+            </div>
+          </td>
+
+          <td *tuiCell="'curso'" tuiTd class="border-b border-border px-6 py-4">
+            <span class="text-sm font-medium text-text-primary">
+              {{ seccion.curso.nombre }}
+            </span>
+          </td>
+
+          <td *tuiCell="'ciclo'" tuiTd class="border-b border-border px-6 py-4">
+            <span class="text-sm font-medium text-text-secondary">
+              {{ seccion.cicloAcademico.nombre }}
+            </span>
+          </td>
+
+          <td *tuiCell="'vacantes'" tuiTd class="border-b border-border px-6 py-4 text-center">
+            <span
+              class="inline-flex size-8 items-center justify-center rounded-xl bg-surface-hover text-sm font-bold text-text-secondary"
+            >
+              {{ seccion.vacantes }}
+            </span>
+          </td>
+
+          <td *tuiCell="'acciones'" tuiTd class="border-b border-border px-6 py-4 text-right">
+            <div
+              class="inline-flex items-center gap-1 opacity-0 pointer-events-none transition duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+            >
+              <button
+                appearance="action"
+                iconStart="@tui.pencil"
+                size="xs"
+                tuiIconButton
+                type="button"
+                aria-label="Editar sección"
+                (click)="openEditarSeccionModal(seccion)"
+              ></button>
+              <button
+                appearance="action"
+                iconStart="@tui.trash-2"
+                size="xs"
+                tuiIconButton
+                type="button"
+                aria-label="Eliminar sección"
+                (click)="openEliminarSeccionModal(seccion)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+      }
+    </table>
+  </div>
+
+  <!-- ─── Paginación ──────────────────────────────────────────── -->
+  @if (totalPaginas() > 0) {
+  <div appearance="floating" tuiCardLarge>
+    <section>
+      <div class="flex items-center justify-between gap-4">
+        <span class="text-sm font-medium text-text-secondary">
+          {{ infoPaginacion() }}
+        </span>
+
+        <div class="flex items-center gap-2">
+          <button
+            appearance="action"
+            iconStart="@tui.chevron-left"
+            size="s"
+            tuiIconButton
+            type="button"
+            aria-label="Página anterior"
+            [disabled]="!hayPaginaAnterior()"
+            (click)="paginaAnterior()"
+          ></button>
+
+          @for (p of paginasArray(); track p) {
+          <button
+            appearance="flat"
+            size="s"
+            tuiButton
+            type="button"
+            [class]="$index === pagina() ? 'bg-primary text-on-primary' : 'text-text-secondary'"
+            (click)="pagina.set($index)"
+          >
+            {{ $index + 1 }}
+          </button>
+          }
+
+          <button
+            appearance="action"
+            iconStart="@tui.chevron-right"
+            size="s"
+            tuiIconButton
+            type="button"
+            aria-label="Página siguiente"
+            [disabled]="!hayPaginaSiguiente()"
+            (click)="paginaSiguiente()"
+          ></button>
+        </div>
+      </div>
+    </section>
+  </div>
+  }
+
+  <!-- ─── Modal: Crear / Editar Sección ───────────────────────── -->
+  <ng-template
+    let-observer
+    [tuiDialogOptions]="{ label: modoFormulario() === 'crear' ? 'Nueva sección' : 'Editar sección', size: 'm' }"
+    [(tuiDialog)]="seccionModalAbierto"
+  >
+    <form [formGroup]="seccionForm" class="flex flex-col gap-4 p-4">
+      <!-- Código de sección -->
+      <tui-textfield tuiTextfieldSize="m">
+        <label tuiLabel>Código de sección</label>
+        <input tuiInput placeholder="Ej: SEC-001" formControlName="codigoSeccion" />
+      </tui-textfield>
+      @if (seccionForm.controls.codigoSeccion.touched && seccionForm.controls.codigoSeccion.invalid) {
+      <p class="text-xs text-red-500 -mt-3">
+        @if (seccionForm.controls.codigoSeccion.errors?.['required']) { El código es obligatorio }
+        @else if (seccionForm.controls.codigoSeccion.errors?.['minlength']) { Mínimo 2 caracteres }
+      </p>
+      }
+
+      <!-- Curso (select) -->
+      <tui-textfield tuiTextfieldSize="m">
+        <label tuiLabel>Curso</label>
+        <select tuiInput formControlName="idCurso">
+          <option [ngValue]="null" disabled>Seleccionar curso</option>
+          @for (curso of cursosList(); track curso.idCurso) {
+          <option [ngValue]="curso.idCurso">{{ curso.nombre }}</option>
+          }
+        </select>
+      </tui-textfield>
+      @if (seccionForm.controls.idCurso.touched && seccionForm.controls.idCurso.invalid) {
+      <p class="text-xs text-red-500 -mt-3">El curso es obligatorio</p>
+      }
+
+      <!-- Ciclo Académico (select) -->
+      <tui-textfield tuiTextfieldSize="m">
+        <label tuiLabel>Ciclo académico</label>
+        <select tuiInput formControlName="idCiclo">
+          <option [ngValue]="null" disabled>Seleccionar ciclo</option>
+          @for (ciclo of ciclosList(); track ciclo.idCiclo) {
+          <option [ngValue]="ciclo.idCiclo">{{ ciclo.nombre }}</option>
+          }
+        </select>
+      </tui-textfield>
+      @if (seccionForm.controls.idCiclo.touched && seccionForm.controls.idCiclo.invalid) {
+      <p class="text-xs text-red-500 -mt-3">El ciclo académico es obligatorio</p>
+      }
+
+      <!-- Vacantes -->
+      <tui-textfield tuiTextfieldSize="m">
+        <label tuiLabel>Vacantes</label>
+        <input tuiInput type="number" placeholder="Ej: 30" formControlName="vacantes" />
+      </tui-textfield>
+      @if (seccionForm.controls.vacantes.touched && seccionForm.controls.vacantes.invalid) {
+      <p class="text-xs text-red-500 -mt-3">
+        @if (seccionForm.controls.vacantes.errors?.['required']) { Las vacantes son obligatorias }
+        @else if (seccionForm.controls.vacantes.errors?.['min']) { Mínimo 1 vacante }
+      </p>
+      }
+
+      <!-- Nombre del ciclo académico (texto directo) -->
+      <tui-textfield tuiTextfieldSize="m">
+        <label tuiLabel>Nombre del ciclo (texto)</label>
+        <input tuiInput placeholder="Ej: 2024-I" formControlName="cicloAcademicoNombre" />
+      </tui-textfield>
+      @if (seccionForm.controls.cicloAcademicoNombre.touched && seccionForm.controls.cicloAcademicoNombre.invalid) {
+      <p class="text-xs text-red-500 -mt-3">El nombre del ciclo es obligatorio</p>
+      }
+
+      <!-- Acciones -->
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          appearance="secondary"
+          size="m"
+          tuiButton
+          type="button"
+          (click)="closeSeccionModal(); observer.complete()"
+        >
+          Cancelar
+        </button>
+        <button
+          appearance="primary"
+          size="m"
+          tuiButton
+          type="submit"
+          [disabled]="isGuardando()"
+          (click)="guardarSeccion(observer)"
+        >
+          {{ modoFormulario() === 'crear' ? 'Crear' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
+  </ng-template>
+
+  <!-- ─── Modal: Confirmar Eliminación ────────────────────────── -->
+  <ng-template
+    let-observer
+    [tuiDialogOptions]="{ label: 'Eliminar sección', size: 's' }"
+    [(tuiDialog)]="eliminarModalAbierto"
+  >
+    <div class="flex flex-col gap-6 p-4">
+      <p class="text-text-primary text-sm leading-relaxed">
+        ¿Estás seguro de que deseas eliminar la sección
+        <strong>{{ seccionSeleccionada()?.codigoSeccion ?? '' }}</strong
+        >? Esta acción no se puede deshacer.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button
+          appearance="secondary"
+          size="m"
+          tuiButton
+          type="button"
+          (click)="closeEliminarModal(); observer.complete()"
+        >
+          Cancelar
+        </button>
+        <button
+          appearance="accent"
+          size="m"
+          tuiButton
+          type="button"
+          [disabled]="isEliminando()"
+          (click)="confirmarEliminar(observer)"
+        >
+          {{ isEliminando() ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</div>

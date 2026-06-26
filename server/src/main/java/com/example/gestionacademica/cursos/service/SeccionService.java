@@ -9,6 +9,9 @@ import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
 import com.example.gestionacademica.cursos.repository.SeccionRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +33,29 @@ public class SeccionService {
      */
     public List<Seccion> listarTodas() {
         return seccionRepository.findAll();
+    }
+
+    /**
+     * Busca secciones con paginación y filtro de búsqueda opcional.
+     * <p>
+     * La búsqueda se aplica sobre: código de sección y nombre del ciclo académico.
+     *
+     * @param busqueda   texto para filtrar (opcional)
+     * @param paginacion objeto con página, tamaño y ordenamiento
+     * @return página de secciones que coinciden con el filtro
+     */
+    public Page<Seccion> listarPaginado(String busqueda, Pageable paginacion) {
+        Specification<Seccion> spec = (root, query, cb) -> {
+            if (busqueda == null || busqueda.isBlank()) {
+                return cb.conjunction();
+            }
+            String patron = "%" + busqueda.toLowerCase() + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.get("codigoSeccion")), patron),
+                    cb.like(cb.lower(root.get("cicloAcademicoNombre")), patron)
+            );
+        };
+        return seccionRepository.findAll(spec, paginacion);
     }
 
     /**

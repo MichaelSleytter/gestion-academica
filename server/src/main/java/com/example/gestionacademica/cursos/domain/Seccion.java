@@ -5,6 +5,7 @@ import com.example.gestionacademica.historial.domain.HistorialAcademico;
 import com.example.gestionacademica.matriculas.domain.Matricula;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.ArrayList;
@@ -35,12 +36,12 @@ public class Seccion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_curso", nullable = false)
-    @JsonIgnore
+    @JsonIgnoreProperties({"secciones"})
     private Curso curso;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ciclo", nullable = false)
-    @JsonIgnore
+    @JsonIgnoreProperties({"secciones"})
     private CicloAcademico cicloAcademico;
 
     @OneToMany(mappedBy = "seccion", cascade = CascadeType.ALL)
