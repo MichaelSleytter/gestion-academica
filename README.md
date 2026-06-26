@@ -118,7 +118,7 @@ gestion-academica/
 | Login / Forgot / Reset Password | ✅ Completo |
 | Dashboard Admin | ⏳ Pendiente |
 | Gestión de Estudiantes | ✅ Completo |
-| Gestión de Cursos | ⏳ Pendiente |
+| Gestión de Cursos | ✅ Completo |
 | Gestión de Docentes | ✅ Completo |
 | Gestión de Secciones | ⏳ Pendiente |
 | Gestión de Horarios | ⏳ Pendiente |

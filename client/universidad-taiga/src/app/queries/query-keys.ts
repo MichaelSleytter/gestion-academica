@@ -20,3 +20,11 @@ export const DOCENTES_PAGINADOS_KEY = (pagina: number, tamaño: number, busqueda
   ['docentes', 'pagina', pagina, tamaño, busqueda ?? ''] as const;
 export const DOCENTES_KEY = ['docentes'] as const;
 export const DOCENTE_KEY = (id: number) => ['docente', id] as const;
+
+export const CURSOS_PAGINADOS_KEY = (pagina: number, tamaño: number, busqueda?: string) =>
+  ['cursos', 'pagina', pagina, tamaño, busqueda ?? ''] as const;
+export const CURSOS_KEY = ['cursos'] as const;
+export const CURSO_KEY = (id: number) => ['curso', id] as const;
+export const CURSO_CREAR_MUTATION_KEY = ['cursos', 'crear'] as const;
+export const CURSO_ACTUALIZAR_MUTATION_KEY = ['cursos', 'actualizar'] as const;
+export const CURSO_ELIMINAR_MUTATION_KEY = ['cursos', 'eliminar'] as const;
