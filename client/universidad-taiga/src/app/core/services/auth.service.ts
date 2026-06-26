@@ -31,6 +31,9 @@ export class AuthService {
     if (storedToken) {
       const roles = this.tokenService.extractRolesFromToken(storedToken);
       this.roleService.setRoles(roles);
+      // El token del localStorage es válido — el refreshSession() es un intento
+      // silencioso de renovar el token. Si falla, no destruimos la sesión,
+      // el token actual sigue sirviendo hasta que expire naturalmente.
     }
     this.refreshSession();
   }
@@ -60,8 +63,14 @@ export class AuthService {
         this.isVerifying = false;
       },
       error: () => {
-        this.tokenService.clearToken();
-        this.roleService.clearRoles();
+        // Solo limpiamos la sesión si no hay token vigente. Si el token
+        // almacenado sigue siendo válido (no expiró), el refresh fallido
+        // no debe destruir la sesión — el token se usará hasta que expire
+        // naturalmente y el interceptor maneje el 401 en ese momento.
+        if (!this.tokenService.getToken()) {
+          this.tokenService.clearToken();
+          this.roleService.clearRoles();
+        }
         this.isVerifying = false;
       },
     });

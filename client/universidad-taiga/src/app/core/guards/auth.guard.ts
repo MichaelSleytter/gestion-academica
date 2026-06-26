@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
-import { Router, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
+import { Router, UrlTree, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, map, take, timeout, catchError } from 'rxjs/operators';
+import { filter, map, take, timeout, catchError, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { TokenService } from '../services/token.service';
@@ -68,27 +68,55 @@ export const requiresRole = (...allowedRoles: string[]): CanActivateFn => {
     const roleService = inject(RoleService);
     const router = inject(Router);
 
-    // ─── Verificar que esté autenticado ────────────────────────────
-    if (tokenService.authStatus() !== 'authenticated') {
+    const status = tokenService.authStatus();
+
+    // ─── Esperar si está cargando ──────────────────────────────────
+    if (status === 'loading') {
+      return toObservable(tokenService.authStatus).pipe(
+        filter((s: AuthStatus) => s !== 'loading'),
+        take(1),
+        timeout(8000),
+        switchMap((s: AuthStatus) => {
+          if (s !== 'authenticated') return of(redirectToLogin(router, route));
+          return of(checkRoles(router, route, roleService, allowedRoles));
+        }),
+        catchError(() => of(redirectToLogin(router, route))),
+      );
+    }
+
+    // ─── No autenticado → redirigir ────────────────────────────────
+    if (status !== 'authenticated') {
       return redirectToLogin(router, route);
     }
 
-    // ─── Verificar que tenga al menos un rol permitido ─────────────
-    const userRoles = roleService.getRoles();
-    const hasRequiredRole = allowedRoles.some(role => userRoles.includes(role));
-
-    if (hasRequiredRole) {
-      return true;
-    }
-
-    console.warn(
-      `RoleGuard: User lacks required roles. ` +
-      `Has: ${userRoles.join(', ')}, Needs: ${allowedRoles.join(', ')}`
-    );
-
-    return router.createUrlTree(['/access-denied']);
+    // ─── Autenticado → verificar roles ─────────────────────────────
+    return checkRoles(router, route, roleService, allowedRoles);
   };
 };
+
+/**
+ * Verifica si el usuario tiene al menos uno de los roles permitidos.
+ */
+function checkRoles(
+  router: Router,
+  route: ActivatedRouteSnapshot,
+  roleService: RoleService,
+  allowedRoles: string[],
+): boolean | UrlTree {
+  const userRoles = roleService.getRoles();
+  const hasRequiredRole = allowedRoles.some(role => userRoles.includes(role));
+
+  if (hasRequiredRole) {
+    return true;
+  }
+
+  console.warn(
+    `RoleGuard: User lacks required roles. ` +
+    `Has: ${userRoles.join(', ')}, Needs: ${allowedRoles.join(', ')}`
+  );
+
+  return router.createUrlTree(['/access-denied']);
+}
 
 
 /**

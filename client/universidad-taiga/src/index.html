@@ -12,5 +12,14 @@
 </head>
 <body>
   <app-root></app-root>
+
+  <script>
+    (function () {
+      const theme = localStorage.getItem('tuiTheme');
+      if (theme === 'dark' || (!theme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.setAttribute('tuiTheme', 'dark');
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -11,8 +11,9 @@
  * - Cualquier otro provider global
  */
 
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, inject, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { AuthService } from './core/services/auth.service';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideTaiga } from '@taiga-ui/core';
@@ -80,6 +81,22 @@ export const appConfig: ApplicationConfig = {
     // ZONE CHANGE DETECTION
     // =======================================================================
     provideZoneChangeDetection({ eventCoalescing: true }),
+
+    // =======================================================================
+    // EAGER AUTH SERVICE — debe construirse ANTES que los guards del router
+    // =======================================================================
+    // Sin esto, AuthService nunca se instancia a tiempo para que los guards
+    // lo usen, porque solo se inyecta en componentes lazy (layout, header).
+    // El APP_INITIALIZER forza su construcción durante el bootstrap, antes
+    // de que el router evalúe cualquier guard.
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      useFactory: () => {
+        inject(AuthService);
+        return () => {};
+      },
+    },
 
     // =======================================================================
     // TANSTACK QUERY

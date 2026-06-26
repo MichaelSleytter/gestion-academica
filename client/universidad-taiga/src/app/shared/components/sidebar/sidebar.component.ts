@@ -84,24 +84,24 @@ type MenuItem = {
         }
       </nav>
 
-      <!-- Bottom actions -->
-      <div class="p-3 flex flex-col items-center gap-1">
-        <button
-          class="action-btn"
-          aria-label="Perfil"
-          [routerLink]="['perfil']"
-          routerLinkActive="active"
-        >
-          <ng-icon name="tablerUser" color="white" size="24" />
-        </button>
-        <button
-          class="action-btn"
-          aria-label="Cerrar sesión"
-          (click)="onLogout()"
-        >
-          <ng-icon name="tablerLogout" color="white" size="24" />
-        </button>
-      </div>
+       <!-- Bottom actions: configuración + salir -->
+       <div class="p-3 flex flex-col items-center gap-3">
+         <button
+           class="action-btn"
+           aria-label="Configuración de perfil"
+           [routerLink]="['perfil']"
+           routerLinkActive="active"
+         >
+           <ng-icon name="tablerSettings" size="24" />
+         </button>
+         <button
+           class="action-btn"
+           aria-label="Cerrar sesión"
+           (click)="onLogout()"
+         >
+           <ng-icon name="tablerLogout" size="24" />
+         </button>
+       </div>
     </aside>
   `,
   styles: [`
@@ -111,32 +111,32 @@ type MenuItem = {
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #FFFFFF;
+      color: var(--tui-text-primary-on-accent-1, #FFFFFF);
       border-radius: 0.5rem;
-      transition: background-color 0.15s, color 0.15s;
+      transition: background-color 0.15s ease-out, color 0.15s ease-out;
       margin: 0.5rem 0;
       position: relative;
     }
 
-    /* Active (router-link-active) — bg blanco + color brand */
+    /* Active (router-link-active) — fondo claro + color primario */
     .nav-item.active {
-      background-color: #FFFFFF;
-      color: var(--color-primary, #4F46E5);
+      background-color: var(--tui-background-neutral-0, #FFFFFF);
+      color: var(--tui-text-accent-1, var(--color-primary, #4F46E5));
     }
 
     .nav-item.active .nav-icon {
-      color: var(--color-primary, #4F46E5);
+      color: inherit;
     }
 
     /* Hover — solo cuando NO está activo */
     .nav-item:hover:not(.active) {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: var(--color-primary, #4F46E5);
+      background-color: var(--tui-background-neutral-1-hover, rgba(255, 255, 255, 0.1));
+      color: var(--tui-text-primary-on-accent-1, #FFFFFF);
     }
 
     .nav-item:focus-visible {
-      outline: none;
-      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+      outline: 2px solid var(--tui-background-accent-1, rgba(255, 255, 255, 0.5));
+      outline-offset: 2px;
     }
 
     /* Icon inherits color from .nav-item */
@@ -152,21 +152,21 @@ type MenuItem = {
       align-items: center;
       justify-content: center;
       border-radius: 0.5rem;
-      color: rgba(255, 255, 255, 0.7);
-      transition: background-color 0.15s, color 0.15s;
+      color: var(--tui-text-primary-on-accent-1, rgba(255, 255, 255, 0.7));
+      transition: background-color 0.15s ease-out, color 0.15s ease-out;
       cursor: pointer;
       background: none;
       border: none;
     }
 
     .action-btn:hover {
-      color: #FFFFFF;
-      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--tui-text-primary-on-accent-1, #FFFFFF);
+      background-color: var(--tui-background-neutral-1-hover, rgba(255, 255, 255, 0.1));
     }
 
     .action-btn:focus-visible {
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+      outline: 2px solid var(--tui-background-accent-1, rgba(255, 255, 255, 0.5));
+      outline-offset: 2px;
     }
   `],
 })

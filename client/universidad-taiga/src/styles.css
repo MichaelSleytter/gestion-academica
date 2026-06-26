@@ -14,9 +14,13 @@
   --color-background: #FFFFFF;
   --color-surface: #F8FAFC;
   --color-border: #E2E8F0;
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #334155;
+  --color-text-muted: #64748B;
+  --color-surface-hover: #F1F5F9;
+  /* Aliases para compatibilidad con componentes que usan nombres viejos */
   --color-text-strong: #0F172A;
   --color-text-default: #334155;
-  --color-text-muted: #64748B;
   --color-success: #16A34A;
   --color-warning: #CA8A04;
   --color-danger: #DC2626;
@@ -70,11 +74,81 @@
   --tui-padding-m: 0.75rem;
 }
 
-/* ── 3. Estilos base ─────────────────────────────────────── */
+/* ── 3. Dark mode — Override de tokens Taiga UI y Tailwind ── */
+/* Usamos body[tuiTheme='dark'] para mayor especificidad que [tuiTheme='dark'] de Taiga (0,1,1 vs 0,1,0) */
+body[tuiTheme='dark'] {
+  /* ── Taiga UI tokens ── */
+  --tui-background-neutral-1: #1E293B;
+  --tui-background-neutral-1-hover: #334155;
+  --tui-background-neutral-1-pressed: #475569;
+  --tui-background-neutral-2: #334155;
+  --tui-background-neutral-2-hover: #475569;
+  --tui-background-neutral-2-pressed: #64748B;
+  --tui-background-surface: #0F172A;
+  --tui-background-base: #0F172A;
+  --tui-background-base-alt: #1E293B;
+  --tui-background-elevation-1: #1E293B;
+  --tui-background-elevation-2: #1E293B;
+  --tui-background-elevation-3: #334155;
+  --tui-background-accent-1: #6366F1;
+  --tui-background-accent-1-hover: #818CF8;
+  --tui-background-accent-2: #94A3B8;
+  --tui-background-accent-2-hover: #CBD5E1;
+  --tui-text-primary: #F1F5F9;
+  --tui-text-secondary: #CBD5E1;
+  --tui-text-tertiary: #94A3B8;
+  --tui-text-action: #818CF8;
+  --tui-text-action-hover: #A5B4FC;
+  --tui-border-normal: rgba(255, 255, 255, 0.12);
+  --tui-border-hover: rgba(255, 255, 255, 0.24);
+  --tui-border-focus: #818CF8;
+  --tui-status-positive: #22C55E;
+  --tui-status-negative: #EF4444;
+  --tui-status-warning: #EAB308;
+  --tui-status-info: #3B82F6;
+  --tui-shadow-small: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --tui-shadow-small-hover: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --tui-shadow-medium: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --tui-shadow-medium-hover: 0 10px 40px rgba(0, 0, 0, 0.6);
+  --tui-shadow-popup: 0 8px 28px rgba(0, 0, 0, 0.6);
+
+  /* ── Tailwind tokens (custom) ── */
+  --color-primary: #818CF8;
+  --color-primary-hover: #A5B4FC;
+  --color-secondary: #94A3B8;
+  --color-secondary-hover: #CBD5E1;
+  --color-background: #0F172A;
+  --color-surface: #1E293B;
+  --color-surface-hover: #334155;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #CBD5E1;
+  --color-text-muted: #64748B;
+  /* Alias para compatibilidad */
+  --color-text-strong: #F1F5F9;
+  --color-text-default: #CBD5E1;
+  --color-success: #22C55E;
+  --color-warning: #EAB308;
+  --color-danger: #EF4444;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.6);
+
+  /* SVG ilustraciones decorativas: bajar brillo para que los fondos blancos
+     no griten sobre fondo oscuro. Sin invert para no distorsionar colores. */
+  img[aria-hidden='true'] {
+    filter: brightness(0.3);
+    opacity: 0.55;
+  }
+}
+
+/* ── 4. Estilos base ─────────────────────────────────────── */
 @layer base {
   body {
-    background-color: #F8FAFC;
-    color: #0F172A;
+    background-color: var(--color-background, #F8FAFC);
+    color: var(--color-text-primary, #0F172A);
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
