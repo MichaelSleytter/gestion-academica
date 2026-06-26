@@ -17,3 +17,13 @@ export interface Carrera {
   /** Nombre de la carrera */
   nombre: string;
 }
+
+/**
+ * Grado académico (ej: Licenciatura, Maestría, Doctorado).
+ */
+export interface GradoAcademico {
+  /** ID único del grado académico */
+  idGrado: number;
+  /** Nombre del grado académico */
+  nombre: string;
+}

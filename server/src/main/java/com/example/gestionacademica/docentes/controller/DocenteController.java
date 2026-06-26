@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,18 +36,27 @@ public class DocenteController {
     private final DocenteMapper docenteMapper;
 
     /**
-     * Lista todos los docentes registrados.
+     * Lista todos los docentes registrados con paginación y búsqueda opcional.
+     * <p>
+     * La búsqueda se aplica sobre: nombre, apellido, documento, correo y especialidad.
      *
-     * @return respuesta HTTP con docentes
+     * @param pagina   número de página (empieza en 0)
+     * @param tamaño   elementos por página
+     * @param busqueda texto para filtrar (opcional)
+     * @return página de docentes
      */
     @GetMapping
-    @Operation(summary = "Listar todos los docentes")
-    public ResponseEntity<List<DocenteResponseDTO>> listarTodos() {
-        List<DocenteResponseDTO> respuesta = docenteService
-            .listarTodos()
-            .stream()
-            .map(docenteMapper::aDto)
-            .collect(Collectors.toList());
+    @Operation(summary = "Listar docentes con paginación")
+    public ResponseEntity<Page<DocenteResponseDTO>> listarPaginado(
+            @Parameter(description = "Número de página (empieza en 0)", example = "0")
+            @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Elementos por página", example = "10")
+            @RequestParam(defaultValue = "10") int tamaño,
+            @Parameter(description = "Texto de búsqueda (opcional)", example = "Juan")
+            @RequestParam(required = false) String busqueda) {
+        Page<DocenteResponseDTO> respuesta = docenteService
+                .listarPaginado(busqueda, PageRequest.of(pagina, tamaño))
+                .map(docenteMapper::aDto);
         return ResponseEntity.ok(respuesta);
     }
 

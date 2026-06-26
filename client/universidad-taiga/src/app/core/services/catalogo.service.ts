@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { APP_API_URL } from '../tokens/api.tokens';
-import { Carrera, TipoDocumento } from '../../models/catalogos/catalogo.response';
+import { Carrera, GradoAcademico, TipoDocumento } from '../../models/catalogos/catalogo.response';
 import { lastValueFrom } from 'rxjs';
 
 /**
@@ -31,5 +31,16 @@ export class CatalogoService {
    */
   getCarreras(): Promise<Carrera[]> {
     return lastValueFrom(this.http.get<Carrera[]>(`${this.apiBaseUrl}/carreras`));
+  }
+
+  /**
+   * Obtiene la lista de grados académicos disponibles.
+   *
+   * @returns Promesa con el listado de grados académicos.
+   */
+  getGradosAcademicos(): Promise<GradoAcademico[]> {
+    return lastValueFrom(
+      this.http.get<GradoAcademico[]>(`${this.apiBaseUrl}/grados-academicos`),
+    );
   }
 }

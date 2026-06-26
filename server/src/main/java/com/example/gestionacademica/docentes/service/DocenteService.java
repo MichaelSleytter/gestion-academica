@@ -10,8 +10,12 @@ import com.example.gestionacademica.auth.repository.RolRepository;
 import com.example.gestionacademica.auth.repository.UsuarioRepository;
 import com.example.gestionacademica.catalogos.repository.GradoAcademicoRepository;
 import com.example.gestionacademica.catalogos.repository.TipoDocumentoRepository;
+import jakarta.persistence.criteria.Join;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +41,38 @@ public class DocenteService {
      */
     public List<Docente> listarTodos() {
         return docenteRepository.findAll();
+    }
+
+    /**
+     * Busca docentes con paginación y filtro de búsqueda opcional.
+     * <p>
+     * La búsqueda se aplica sobre: nombre, apellido, número de documento,
+     * correo electrónico y especialidad.
+     *
+     * @param busqueda   texto para filtrar (opcional)
+     * @param paginacion objeto con página, tamaño y ordenamiento
+     * @return página de docentes que coinciden con el filtro
+     */
+    public Page<Docente> listarPaginado(String busqueda, Pageable paginacion) {
+        Specification<Docente> especificacion = (root, query, cb) -> {
+            if (busqueda == null || busqueda.isBlank()) {
+                return cb.conjunction();
+            }
+
+            String patron = "%" + busqueda.toLowerCase() + "%";
+            Join<Docente, com.example.gestionacademica.auth.domain.Usuario> usuario =
+                    root.join("usuario");
+
+            return cb.or(
+                    cb.like(cb.lower(usuario.get("nombre")), patron),
+                    cb.like(cb.lower(usuario.get("apellido")), patron),
+                    cb.like(cb.lower(usuario.get("numeroDocumento")), patron),
+                    cb.like(cb.lower(usuario.get("email")), patron),
+                    cb.like(cb.lower(root.get("especialidad")), patron)
+            );
+        };
+
+        return docenteRepository.findAll(especificacion, paginacion);
     }
 
     /**

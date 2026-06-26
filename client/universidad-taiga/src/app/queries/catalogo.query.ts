@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CatalogoService } from '../core/services/catalogo.service';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-import { CATALOGO_CARRERAS_KEY, CATALOGO_TIPOS_DOCUMENTO_KEY } from './query-keys';
+import { CATALOGO_CARRERAS_KEY, CATALOGO_GRADOS_KEY, CATALOGO_TIPOS_DOCUMENTO_KEY } from './query-keys';
 
 export const useTiposDocumentoQuery = () => {
   const service = inject(CatalogoService);
@@ -18,6 +18,18 @@ export const useTiposDocumentoQuery = () => {
 /**
  * Query para carreras del catálogo
  */
+export const useGradosAcademicosQuery = () => {
+  const service = inject(CatalogoService);
+
+  return injectQuery(() => ({
+    queryKey: CATALOGO_GRADOS_KEY,
+    queryFn: () => service.getGradosAcademicos(),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    retry: 1,
+  }));
+};
+
 export const useCarrerasQuery = () => {
   const service = inject(CatalogoService);
 
