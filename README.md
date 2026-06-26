@@ -116,14 +116,15 @@ gestion-academica/
 | Módulo | Estado |
 |--------|--------|
 | Login / Forgot / Reset Password | ✅ Completo |
-| Dashboard Admin | ✅ Completo |
+| Dashboard Admin | ⏳ Pendiente |
 | Gestión de Estudiantes | ✅ Completo |
-| Gestión de Cursos | ✅ Completo |
+| Gestión de Cursos | ⏳ Pendiente |
 | Gestión de Docentes | ✅ Completo |
-| Gestión de Horarios | ✅ Completo |
-| Gestión de Evaluaciones | ✅ Completo |
-| Módulo Docente (mis cursos, carga notas) | ✅ Completo |
-| Módulo Estudiante (mis notas, historial) | ✅ Completo |
+| Gestión de Secciones | ⏳ Pendiente |
+| Gestión de Horarios | ⏳ Pendiente |
+| Gestión de Evaluaciones | ⏳ Pendiente |
+| Módulo Docente (mis cursos, carga notas) | ⏳ Pendiente |
+| Módulo Estudiante (mis notas, historial) | ⏳ Pendiente |
 
 ---
 
