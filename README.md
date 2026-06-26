@@ -116,7 +116,7 @@ gestion-academica/
 | Módulo | Estado |
 |--------|--------|
 | Login / Forgot / Reset Password | ✅ Completo |
-| Dashboard Admin | ⏳ Pendiente |
+| Dashboard Admin | ✅ Completo |
 | Gestión de Estudiantes | ✅ Completo |
 | Gestión de Cursos | ✅ Completo |
 | Gestión de Docentes | ✅ Completo |
