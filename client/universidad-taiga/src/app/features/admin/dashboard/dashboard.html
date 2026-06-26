@@ -1,1 +1,117 @@
-<p>dashboard works!</p>
+<div class="flex flex-col gap-6">
+  <!-- ─── Saludo ───────────────────────────────────────── -->
+  <div appearance="floating" tuiCardLarge>
+    <header tuiHeader>
+      <div class="flex flex-col">
+        <h1 tuiTitle class="text-2xl font-bold">
+          Bienvenido, {{ userName() }}
+        </h1>
+        <span class="text-text-secondary mt-1 text-sm font-medium">
+          Panel de administración del sistema
+        </span>
+      </div>
+    </header>
+  </div>
+
+  <!-- ─── Indicador de carga ───────────────────────────── -->
+  @if (loading()) {
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div appearance="floating" tuiCardLarge class="flex flex-col gap-3">
+          <span [tuiSkeleton]="true" class="inline-block h-4 w-24 rounded"></span>
+          <span [tuiSkeleton]="true" class="inline-block h-9 w-20 rounded"></span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ─── Error ─────────────────────────────────────────── -->
+  @if (!loading() && error(); as msg) {
+    <div appearance="floating" tuiCardLarge class="border border-red-200 bg-red-50">
+      <div class="flex items-center gap-4">
+        <span class="text-red-700 text-sm font-medium">{{ msg }}</span>
+        <button
+          appearance="outline"
+          size="s"
+          tuiButton
+          type="button"
+          (click)="loadStats()"
+        >
+          Reintentar
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ─── Tarjetas de estadísticas ─────────────────────── -->
+  @if (!loading() && stats(); as data) {
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <!-- Estudiantes -->
+      <div appearance="floating" tuiCardLarge class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-text-secondary text-sm font-medium">Estudiantes</span>
+          <div class="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <ng-icon name="tablerSchool" size="22" />
+          </div>
+        </div>
+        <span class="text-3xl font-bold">{{ data.estudiantes }}</span>
+      </div>
+
+      <!-- Docentes -->
+      <div appearance="floating" tuiCardLarge class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-text-secondary text-sm font-medium">Docentes</span>
+          <div class="flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+            <ng-icon name="tablerUsers" size="22" />
+          </div>
+        </div>
+        <span class="text-3xl font-bold">{{ data.docentes }}</span>
+      </div>
+
+      <!-- Cursos -->
+      <div appearance="floating" tuiCardLarge class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-text-secondary text-sm font-medium">Cursos</span>
+          <div class="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+            <ng-icon name="tablerBook" size="22" />
+          </div>
+        </div>
+        <span class="text-3xl font-bold">{{ data.cursos }}</span>
+      </div>
+
+      <!-- Secciones -->
+      <div appearance="floating" tuiCardLarge class="flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-text-secondary text-sm font-medium">Secciones</span>
+          <div class="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+            <ng-icon name="tablerStackBack" size="22" />
+          </div>
+        </div>
+        <span class="text-3xl font-bold">{{ data.secciones }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- ─── Enlaces rápidos ──────────────────────────────── -->
+  <div>
+    <h2 class="text-text-primary mb-4 text-lg font-bold">Acceso rápido</h2>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      @for (link of quickLinks; track link.route) {
+        <a
+          [routerLink]="link.route"
+          appearance="floating"
+          tuiCardLarge
+          class="flex cursor-pointer items-center gap-4 no-underline transition-transform hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div class="flex size-12 items-center justify-center rounded-2xl bg-surface-hover text-text-secondary">
+            <ng-icon [name]="link.icon" size="24" />
+          </div>
+          <div class="flex flex-col">
+            <span class="text-text-primary text-base font-bold">{{ link.label }}</span>
+            <span class="text-text-secondary text-sm">{{ link.description }}</span>
+          </div>
+        </a>
+      }
+    </div>
+  </div>
+</div>
