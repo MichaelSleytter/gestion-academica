@@ -7,6 +7,9 @@ import com.example.gestionacademica.cursos.repository.SeccionRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,6 +29,25 @@ public class HorarioService {
      */
     public List<Horario> listarTodos() {
         return horarioRepository.findAll();
+    }
+
+    /**
+     * Lista horarios con paginación y búsqueda opcional.
+     *
+     * @param busqueda  texto para filtrar por díaSemana o aula (opcional)
+     * @param paginacion objeto Pageable con página y tamaño
+     * @return página de horarios
+     */
+    public Page<Horario> listarPaginado(String busqueda, Pageable paginacion) {
+        Specification<Horario> spec = (root, query, cb) -> {
+            if (busqueda == null || busqueda.isBlank()) return cb.conjunction();
+            String patron = "%" + busqueda.toLowerCase() + "%";
+            return cb.or(
+                cb.like(cb.lower(root.get("diaSemana")), patron),
+                cb.like(cb.lower(root.get("aula")), patron)
+            );
+        };
+        return horarioRepository.findAll(spec, paginacion);
     }
 
     /**

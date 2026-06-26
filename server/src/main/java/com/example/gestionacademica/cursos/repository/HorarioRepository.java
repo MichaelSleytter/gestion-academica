@@ -3,13 +3,14 @@ package com.example.gestionacademica.cursos.repository;
 import com.example.gestionacademica.cursos.domain.Horario;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
  * Repositorio para la entidad {@link Horario}.
  */
 @Repository
-public interface HorarioRepository extends JpaRepository<Horario, Integer> {
+public interface HorarioRepository extends JpaRepository<Horario, Integer>, JpaSpecificationExecutor<Horario> {
 
     /**
      * Obtiene horarios vinculados a una sección.

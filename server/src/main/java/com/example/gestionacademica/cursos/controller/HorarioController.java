@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,14 +25,24 @@ public class HorarioController {
     private final HorarioService horarioService;
 
     /**
-     * Lista todos los horarios.
+     * Lista horarios con paginación y búsqueda opcional.
      *
-     * @return lista de horarios
+     * @param pagina   número de página (0-based)
+     * @param tamaño   elementos por página
+     * @param busqueda texto de búsqueda (opcional, por díaSemana o aula)
+     * @return página de horarios
      */
     @GetMapping
-    @Operation(summary = "Listar todos los horarios")
-    public ResponseEntity<List<Horario>> listarTodos() {
-        return ResponseEntity.ok(horarioService.listarTodos());
+    @Operation(summary = "Listar horarios paginados",
+               description = "Busca por díaSemana o aula cuando se proporciona el parámetro busqueda")
+    public ResponseEntity<Page<Horario>> listarTodos(
+            @Parameter(description = "Número de página (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Elementos por página", example = "10")
+            @RequestParam(defaultValue = "10") int tamaño,
+            @Parameter(description = "Texto de búsqueda (opcional)")
+            @RequestParam(required = false) String busqueda) {
+        return ResponseEntity.ok(horarioService.listarPaginado(busqueda, PageRequest.of(pagina, tamaño)));
     }
 
     /**

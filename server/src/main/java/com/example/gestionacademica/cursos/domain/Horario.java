@@ -1,6 +1,6 @@
 package com.example.gestionacademica.cursos.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalTime;
@@ -32,6 +32,6 @@ public class Horario {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_seccion", nullable = false)
-    @JsonIgnore
+    @JsonIgnoreProperties({"secciones", "horarios", "matriculas", "docentes", "evaluaciones", "historial"})
     private Seccion seccion;
 }

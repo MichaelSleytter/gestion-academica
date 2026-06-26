@@ -38,3 +38,11 @@ export const SECCION_ACTUALIZAR_MUTATION_KEY = ['secciones', 'actualizar'] as co
 export const SECCION_ELIMINAR_MUTATION_KEY = ['secciones', 'eliminar'] as const;
 
 export const CICLOS_ACADEMICOS_KEY = ['ciclos-academicos'] as const;
+
+export const HORARIOS_PAGINADOS_KEY = (pagina: number, tamaño: number, busqueda?: string) =>
+  ['horarios', 'pagina', pagina, tamaño, busqueda ?? ''] as const;
+export const HORARIOS_KEY = ['horarios'] as const;
+export const HORARIO_KEY = (id: number) => ['horario', id] as const;
+export const HORARIO_CREAR_MUTATION_KEY = ['horarios', 'crear'] as const;
+export const HORARIO_ACTUALIZAR_MUTATION_KEY = ['horarios', 'actualizar'] as const;
+export const HORARIO_ELIMINAR_MUTATION_KEY = ['horarios', 'eliminar'] as const;
