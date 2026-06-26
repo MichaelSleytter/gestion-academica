@@ -3,13 +3,15 @@ package com.example.gestionacademica.evaluaciones.repository;
 import com.example.gestionacademica.evaluaciones.domain.Evaluacion;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 /**
  * Repositorio para la entidad {@link Evaluacion}.
  */
 @Repository
-public interface EvaluacionRepository extends JpaRepository<Evaluacion, Integer> {
+public interface EvaluacionRepository extends JpaRepository<Evaluacion, Integer>,
+        JpaSpecificationExecutor<Evaluacion> {
 
     /**
      * Lista evaluaciones por sección.

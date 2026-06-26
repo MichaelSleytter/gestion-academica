@@ -3,6 +3,7 @@ package com.example.gestionacademica.evaluaciones.domain;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.notas.domain.Nota;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -32,7 +33,7 @@ public class Evaluacion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_seccion", nullable = false)
-    @JsonIgnore
+    @JsonIgnoreProperties({"secciones", "horarios", "matriculas", "docentes", "evaluaciones", "historial"})
     private Seccion seccion;
 
     @OneToMany(mappedBy = "evaluacion", cascade = CascadeType.ALL)

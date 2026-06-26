@@ -46,3 +46,11 @@ export const HORARIO_KEY = (id: number) => ['horario', id] as const;
 export const HORARIO_CREAR_MUTATION_KEY = ['horarios', 'crear'] as const;
 export const HORARIO_ACTUALIZAR_MUTATION_KEY = ['horarios', 'actualizar'] as const;
 export const HORARIO_ELIMINAR_MUTATION_KEY = ['horarios', 'eliminar'] as const;
+
+export const EVALUACIONES_PAGINADOS_KEY = (pagina: number, tamaño: number, busqueda?: string) =>
+  ['evaluaciones', 'pagina', pagina, tamaño, busqueda ?? ''] as const;
+export const EVALUACIONES_KEY = ['evaluaciones'] as const;
+export const EVALUACION_KEY = (id: number) => ['evaluacion', id] as const;
+export const EVALUACION_CREAR_MUTATION_KEY = ['evaluaciones', 'crear'] as const;
+export const EVALUACION_ACTUALIZAR_MUTATION_KEY = ['evaluaciones', 'actualizar'] as const;
+export const EVALUACION_ELIMINAR_MUTATION_KEY = ['evaluaciones', 'eliminar'] as const;

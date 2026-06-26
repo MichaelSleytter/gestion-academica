@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,14 +25,23 @@ public class EvaluacionController {
     private final EvaluacionService evaluacionService;
 
     /**
-     * Lista todas las evaluaciones.
+     * Lista evaluaciones con paginación y búsqueda opcional por nombre.
      *
-     * @return lista de evaluaciones
+     * @param pagina   número de página (0-based)
+     * @param tamaño   elementos por página
+     * @param busqueda texto de búsqueda (opcional)
+     * @return página de evaluaciones
      */
     @GetMapping
-    @Operation(summary = "Listar todas las evaluaciones")
-    public ResponseEntity<List<Evaluacion>> listarTodas() {
-        return ResponseEntity.ok(evaluacionService.listarTodas());
+    @Operation(summary = "Listar evaluaciones paginadas")
+    public ResponseEntity<Page<Evaluacion>> listarTodas(
+            @Parameter(description = "Número de página (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Elementos por página", example = "10")
+            @RequestParam(defaultValue = "10") int tamano,
+            @Parameter(description = "Búsqueda por nombre", example = "parcial")
+            @RequestParam(required = false) String busqueda) {
+        return ResponseEntity.ok(evaluacionService.listarPaginado(busqueda, PageRequest.of(pagina, tamano)));
     }
 
     /**

@@ -122,7 +122,7 @@ gestion-academica/
 | Gestión de Docentes | ✅ Completo |
 | Gestión de Secciones | ✅ Completo |
 | Gestión de Horarios | ✅ Completo |
-| Gestión de Evaluaciones | ⏳ Pendiente |
+| Gestión de Evaluaciones | ✅ Completo |
 | Módulo Docente (mis cursos, carga notas) | ⏳ Pendiente |
 | Módulo Estudiante (mis notas, historial) | ⏳ Pendiente |
 

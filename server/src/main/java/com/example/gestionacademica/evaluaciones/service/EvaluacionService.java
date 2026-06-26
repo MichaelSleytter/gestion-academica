@@ -8,6 +8,9 @@ import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 /**
@@ -29,6 +32,22 @@ public class EvaluacionService {
      */
     public List<Evaluacion> listarTodas() {
         return evaluacionRepository.findAll();
+    }
+
+    /**
+     * Lista evaluaciones con paginación y búsqueda opcional por nombre.
+     *
+     * @param busqueda  texto de búsqueda (opcional)
+     * @param paginacion objeto Pageable con página y tamaño
+     * @return página de evaluaciones
+     */
+    public Page<Evaluacion> listarPaginado(String busqueda, Pageable paginacion) {
+        Specification<Evaluacion> spec = (root, query, cb) -> {
+            if (busqueda == null || busqueda.isBlank()) return cb.conjunction();
+            String patron = "%" + busqueda.toLowerCase() + "%";
+            return cb.like(cb.lower(root.get("nombre")), patron);
+        };
+        return evaluacionRepository.findAll(spec, paginacion);
     }
 
     /**
