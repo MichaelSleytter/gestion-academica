@@ -1,6 +1,7 @@
 package com.example.gestionacademica.matriculas.repository;
 
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +17,7 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Integer> {
 
     List<Matricula> findByEstudiante_IdUsuario(Integer idUsuario);
 
+    @EntityGraph(attributePaths = {"estudiante", "estudiante.usuario"})
     List<Matricula> findBySeccion_IdSeccion(Integer idSeccion);
 
     Optional<Matricula> findByEstudiante_IdUsuarioAndSeccion_IdSeccion(

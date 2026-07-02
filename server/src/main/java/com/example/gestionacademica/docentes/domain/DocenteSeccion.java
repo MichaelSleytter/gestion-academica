@@ -27,7 +27,6 @@ public class DocenteSeccion {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("idSeccion")
     @JoinColumn(name = "id_seccion")
-    @JsonIgnore
     private Seccion seccion;
 
     @Embeddable

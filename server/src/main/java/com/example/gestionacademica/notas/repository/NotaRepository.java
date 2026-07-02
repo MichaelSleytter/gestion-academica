@@ -1,6 +1,7 @@
 package com.example.gestionacademica.notas.repository;
 
 import com.example.gestionacademica.notas.domain.Nota;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -15,6 +16,7 @@ public interface NotaRepository extends JpaRepository<Nota, Integer> {
     List<Nota> findByEstudiante_IdUsuario(Integer idUsuario);
 
     // Notas de una evaluación
+    @EntityGraph(attributePaths = "estudiante")
     List<Nota> findByEvaluacion_IdEvaluacion(Integer idEvaluacion);
 
     // Valida duplicado por restricción única (evaluación + estudiante)

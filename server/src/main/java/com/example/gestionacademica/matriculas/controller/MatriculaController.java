@@ -1,6 +1,8 @@
 package com.example.gestionacademica.matriculas.controller;
 
+import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import com.example.gestionacademica.matriculas.dto.MatriculaSeccionResponseDTO;
 import com.example.gestionacademica.matriculas.service.MatriculaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -71,10 +73,25 @@ public class MatriculaController {
      */
     @GetMapping("/seccion/{idSeccion}")
     @Operation(summary = "Listar matrículas de una sección")
-    public ResponseEntity<List<Matricula>> listarPorSeccion(
+    public ResponseEntity<List<MatriculaSeccionResponseDTO>> listarPorSeccion(
             @Parameter(description = "ID de la sección", example = "1")
             @PathVariable Integer idSeccion) {
-        return ResponseEntity.ok(matriculaService.listarPorSeccion(idSeccion));
+        return ResponseEntity.ok(matriculaService.listarPorSeccion(idSeccion).stream()
+                .map(this::aRespuestaSeccion)
+                .toList());
+    }
+
+    private MatriculaSeccionResponseDTO aRespuestaSeccion(Matricula matricula) {
+        Usuario usuario = matricula.getEstudiante().getUsuario();
+        return new MatriculaSeccionResponseDTO(
+                matricula.getIdMatricula(),
+                matricula.getFechaMatricula(),
+                matricula.getEstado(),
+                matricula.getEstudiante().getIdUsuario(),
+                matricula.getEstudiante().getCodigoEstudiante(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getEmail());
     }
 
     /**

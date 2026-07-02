@@ -1,6 +1,7 @@
 package com.example.gestionacademica.notas.controller;
 
 import com.example.gestionacademica.notas.domain.Nota;
+import com.example.gestionacademica.notas.dto.NotaResponseDTO;
 import com.example.gestionacademica.notas.service.NotaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -55,10 +56,16 @@ public class NotaController {
      */
     @GetMapping("/evaluacion/{idEvaluacion}")
     @Operation(summary = "Listar notas por evaluacion")
-    public ResponseEntity<List<Nota>> listarPorEvaluacion(
+    public ResponseEntity<List<NotaResponseDTO>> listarPorEvaluacion(
             @Parameter(description = "ID de la evaluacion", example = "1")
             @PathVariable Integer idEvaluacion) {
-        return ResponseEntity.ok(notaService.listarPorEvaluacion(idEvaluacion));
+        return ResponseEntity.ok(notaService.listarPorEvaluacion(idEvaluacion).stream()
+                .map(this::aRespuesta)
+                .toList());
+    }
+
+    private NotaResponseDTO aRespuesta(Nota nota) {
+        return new NotaResponseDTO(nota.getIdNota(), nota.getNota(), nota.getEstudiante().getIdUsuario());
     }
 
     /**
