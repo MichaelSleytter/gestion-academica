@@ -146,7 +146,7 @@ public class GestionacademicaApplication {
                 estudiante.setUsuario(usuario);
                 estudiante.setCodigoEstudiante("EST-00000001");
                 estudiante.setCiclo(3);
-                estudiante.setEstadoAcademico(EstudianteEstadoAcademico.REGULAR);
+                estudiante.setEstadoAcademico(EstudianteEstadoAcademico.ACTIVO);
                 estudiante.setCarrera(carrera);
                 estudianteRepository.save(estudiante);
             }
