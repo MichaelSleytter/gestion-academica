@@ -129,10 +129,11 @@ function checkRoles(
  */
 export const requiresNoAuth: CanActivateFn = () => {
   const tokenService = inject(TokenService);
+  const roleService = inject(RoleService);
   const router = inject(Router);
 
   if (tokenService.isAuthenticated()) {
-    return router.createUrlTree(['/app/dashboard']);
+    return router.createUrlTree([roleService.getHomeRouteByRole()]);
   }
 
   return true;

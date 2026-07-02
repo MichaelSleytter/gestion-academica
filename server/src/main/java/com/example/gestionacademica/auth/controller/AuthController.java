@@ -214,11 +214,20 @@ public class AuthController {
         String newAccessToken = jwtService.generateAccessToken(usuario);
 
         // ============================================================
-        // PASO 4: Marcar refresh token como usado
+        // PASO 4: Rotar refresh token (emitir nuevo, marcar viejo como usado)
         // ============================================================
-        // Esto previene que el mismo token se use dos veces
-        // (protección contra replay attacks)
+        // Esto previene ataques de replay: el viejo token ya no sirve,
+        // y el frontend recibe un nuevo token en la cookie.
         jwtService.markRefreshTokenAsUsed(storedToken);
+        RefreshToken newRefreshToken = jwtService.generateRefreshToken(usuario);
+
+        Cookie refreshCookie = new Cookie("refreshToken", newRefreshToken.getToken());
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false); // TODO: true en producción
+        refreshCookie.setPath("/api/v1/auth/refresh");
+        refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 7 días
+        refreshCookie.setAttribute("SameSite", "Lax");
+        response.addCookie(refreshCookie);
 
         // ============================================================
         // PASO 5: Retornar nuevo access token
