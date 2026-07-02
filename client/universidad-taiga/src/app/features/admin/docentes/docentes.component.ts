@@ -90,7 +90,7 @@ export class Docentes {
     nombre: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     apellido: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
     email: this.formBuilder.nonNullable.control('', [Validators.required, Validators.email]),
-    password: this.formBuilder.nonNullable.control('', [Validators.minLength(8)]),
+    password: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(8)]),
     numeroDocumento: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(8)]),
     tipoDocumento: this.formBuilder.control<TipoDocumento | null>(null, Validators.required),
     especialidad: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
@@ -168,6 +168,8 @@ export class Docentes {
   openNuevoDocenteModal(): void {
     this.modoFormulario.set('crear');
     this.docenteSeleccionado.set(null);
+    this.docenteForm.controls.password.setValidators([Validators.required, Validators.minLength(8)]);
+    this.docenteForm.controls.password.updateValueAndValidity();
     this.resetFormulario();
     this.docenteModalAbierto.set(true);
   }
@@ -175,6 +177,8 @@ export class Docentes {
   openEditarDocenteModal(docente: DocenteResponse): void {
     this.modoFormulario.set('editar');
     this.docenteSeleccionado.set(docente);
+    this.docenteForm.controls.password.setValidators([Validators.minLength(8)]);
+    this.docenteForm.controls.password.updateValueAndValidity();
     this.cargarFormularioDesdeDocente(docente);
     this.docenteModalAbierto.set(true);
   }
@@ -329,7 +333,7 @@ export class Docentes {
       nombre: value.nombre.trim(),
       apellido: value.apellido.trim(),
       email: value.email.trim(),
-      password: value.password.trim() || 'sin_cambio1',
+      password: value.password.trim(),
       numeroDocumento: value.numeroDocumento.trim(),
       idTipoDocumento: tipoDocumento.idTipoDocumento,
       especialidad: value.especialidad.trim(),
