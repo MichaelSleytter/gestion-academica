@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
 import { AuthService } from '../../../core/services/auth.service';
@@ -341,7 +341,6 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private roleService = inject(RoleService);
   private router = inject(Router);
-  private route = inject(ActivatedRoute);
 
   /** Toggle password visibility */
   passwordVisible = signal(false);
@@ -377,10 +376,7 @@ export class LoginComponent {
 
     this.authService.login(credentials.email, credentials.password).subscribe({
       next: () => {
-        const returnUrl =
-          this.route.snapshot.queryParams['returnUrl'] ||
-          this.roleService.getHomeRouteByRole();
-        this.router.navigateByUrl(returnUrl);
+        this.router.navigateByUrl(this.roleService.getHomeRouteByRole());
       },
       error: (error) => {
         this.isLoading.set(false);

@@ -130,6 +130,20 @@ export class TokenService {
   }
 
   /**
+   * Extrae el identificador de usuario desde el claim `sub` del JWT actual.
+   *
+   * @returns ID de usuario autenticado, o null si el token no contiene un subject numérico.
+   */
+  extractCurrentUserId(): number | null {
+    const token = this.getToken();
+    if (!token) return null;
+
+    const subject = this.decodeToken(token)?.['sub'];
+    const userId = Number(subject);
+    return Number.isFinite(userId) && userId > 0 ? userId : null;
+  }
+
+  /**
    * Extrae el nombre + apellido del payload del JWT.
    *
    * @param token - JWT completo o null
@@ -152,7 +166,14 @@ export class TokenService {
   private decodeToken(token: string): Record<string, any> | null {
     try {
       const payload = token.split('.')[1];
-      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      // atob() es Latin-1, no UTF-8. decodeURIComponent fuerza UTF-8 correcto.
+      const decoded = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join(''),
+      );
       return JSON.parse(decoded);
     } catch {
       return null;

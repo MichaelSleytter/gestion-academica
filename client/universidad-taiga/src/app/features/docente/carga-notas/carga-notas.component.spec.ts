@@ -1,4 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { convertToParamMap, provideRouter } from '@angular/router';
+import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { ActivatedRoute } from '@angular/router';
+import { DocenteRoleService } from '../../../core/services/docente-role.service';
 
 import { CargaNotas } from './carga-notas.component';
 
@@ -9,6 +13,19 @@ describe('CargaNotas', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [CargaNotas],
+      providers: [
+        provideRouter([]),
+        provideTanStackQuery(new QueryClient()),
+        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '7' }) } } },
+        {
+          provide: DocenteRoleService,
+          useValue: {
+            getEvaluacionesBySeccion: vi.fn().mockResolvedValue([]),
+            getMatriculasBySeccion: vi.fn().mockResolvedValue([]),
+            getNotasByEvaluacion: vi.fn().mockResolvedValue([]),
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CargaNotas);
@@ -16,7 +33,19 @@ describe('CargaNotas', () => {
     await fixture.whenStable();
   });
 
-  it('should create', () => {
+  it('should create with section id from route', () => {
     expect(component).toBeTruthy();
+    expect(component.sectionId()).toBe(7);
+  });
+
+  it('should read student id from section enrollment DTO', () => {
+    expect(component.getStudentId({ idMatricula: 1, fechaMatricula: null, estado: 'ACTIVA', idEstudiante: 9 })).toBe(9);
+  });
+
+  it('should find existing notes by student id from note DTO', () => {
+    TestBed.inject(QueryClient).setQueryData(['evaluaciones', 3, 'notas'], [{ idNota: 5, nota: 18, idEstudiante: 9 }]);
+    component.selectedEvaluationId.set(3);
+
+    expect(component.findNotaByStudent(9)?.idNota).toBe(5);
   });
 });

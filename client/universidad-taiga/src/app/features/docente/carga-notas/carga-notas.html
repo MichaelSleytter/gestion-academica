@@ -1,1 +1,111 @@
-<p>carga-notas works!</p>
+<div class="flex flex-col gap-4 p-2.5">
+  <div appearance="floating" tuiCardLarge>
+    <header tuiHeader class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex flex-col gap-1">
+        <a routerLink="/app/docente/mis-cursos" class="text-sm font-semibold text-primary">← Volver a mis cursos</a>
+        <h2 class="text-2xl font-bold text-text-primary">Carga de notas</h2>
+        <span class="text-sm font-medium text-text-secondary">Sección #{{ sectionId() }}</span>
+      </div>
+      @if (selectedEvaluation()) {
+        <span class="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-on-primary">{{ selectedEvaluation()?.nombre }} · {{ selectedEvaluation()?.porcentaje }}%</span>
+      }
+    </header>
+  </div>
+
+  @if (!sectionId()) {
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">La ruta no contiene una sección válida.</div>
+  } @else if (isLoading()) {
+    <div class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface">
+      <tui-loader size="l">Cargando estudiantes y evaluaciones...</tui-loader>
+    </div>
+  } @else if (evaluationsQuery.isError() || enrollmentsQuery.isError()) {
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">No se pudieron cargar los datos de la sección.</div>
+  } @else if (evaluations().length === 0) {
+    <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-medium text-yellow-800">
+      Esta sección todavía no tiene evaluaciones configuradas. Crea una evaluación antes de cargar notas.
+    </div>
+  } @else if (enrollments().length === 0) {
+    <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-medium text-yellow-800">
+      Esta sección no tiene estudiantes matriculados.
+    </div>
+  } @else {
+    <div appearance="floating" tuiCardLarge>
+      <div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+        <tui-textfield tuiTextfieldSize="m">
+          <label tuiLabel>Evaluación</label>
+          <select tuiInput [value]="selectedEvaluationId()" (change)="onEvaluationChange($any($event).target.value)">
+            @for (evaluation of evaluations(); track evaluation.idEvaluacion) {
+              <option [value]="evaluation.idEvaluacion">{{ evaluation.nombre }} · {{ evaluation.porcentaje }}%</option>
+            }
+          </select>
+        </tui-textfield>
+
+        @if (notesQuery.isPending()) {
+          <tui-loader size="m">Cargando notas...</tui-loader>
+        }
+      </div>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+      <table tuiTable class="w-full border-separate border-spacing-0 table-auto" [columns]="columns">
+        <thead tuiThead class="bg-surface-hover">
+          <tr tuiThGroup class="h-12 border-b border-border text-xs font-bold uppercase tracking-wider text-text-secondary">
+            <th *tuiHead="'student'" tuiTh class="px-6 text-left">Estudiante</th>
+            <th *tuiHead="'status'" tuiTh class="px-6 text-left">Matrícula</th>
+            <th *tuiHead="'grade'" tuiTh class="px-6 text-left">Nota</th>
+            <th *tuiHead="'actions'" tuiTh class="px-6 text-right">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody tuiTbody [data]="enrollments()">
+          @for (enrollment of enrollments(); track enrollment.idMatricula) {
+            @if (getStudentId(enrollment); as idEstudiante) {
+              <tr tuiTr class="hover:bg-surface-hover focus-within:bg-surface-hover">
+                <td *tuiCell="'student'" tuiTd class="border-b border-border px-6 py-4">
+                  <div class="flex items-center gap-3">
+                    <div class="flex size-10 items-center justify-center rounded-2xl border border-border bg-surface-hover">
+                      <tui-icon icon="@tui.user" />
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="font-bold text-text-primary">{{ getStudentLabel(enrollment) }}</span>
+                      <span class="text-xs text-text-tertiary">ID {{ idEstudiante }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <td *tuiCell="'status'" tuiTd class="border-b border-border px-6 py-4">
+                  <span class="rounded-full bg-surface-hover px-3 py-1 text-xs font-semibold text-text-secondary">{{ enrollment.estado }}</span>
+                </td>
+
+                <td *tuiCell="'grade'" tuiTd class="border-b border-border px-6 py-4">
+                  <input
+                    class="w-28 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-primary"
+                    type="number"
+                    min="0"
+                    max="20"
+                    step="0.01"
+                    [value]="getGradeValue(idEstudiante) ?? ''"
+                    (input)="onGradeInput(idEstudiante, $any($event).target.value)"
+                  />
+                </td>
+
+                <td *tuiCell="'actions'" tuiTd class="border-b border-border px-6 py-4 text-right">
+                  <button
+                    appearance="primary"
+                    size="s"
+                    tuiButton
+                    type="button"
+                    [disabled]="saveNotaMutation.isPending()"
+                    (click)="saveGrade(enrollment)"
+                  >
+                    Guardar
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

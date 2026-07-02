@@ -195,7 +195,6 @@ export class Sidebar {
     if (roles.includes('DOCENTE')) {
       return [
         { label: 'Mis Cursos', route: 'docente/mis-cursos', icon: 'tablerBook' },
-        { label: 'Estudiantes', route: 'estudiantes', icon: 'tablerSchool' },
       ];
     }
 

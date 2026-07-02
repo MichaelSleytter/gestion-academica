@@ -54,3 +54,8 @@ export const EVALUACION_KEY = (id: number) => ['evaluacion', id] as const;
 export const EVALUACION_CREAR_MUTATION_KEY = ['evaluaciones', 'crear'] as const;
 export const EVALUACION_ACTUALIZAR_MUTATION_KEY = ['evaluaciones', 'actualizar'] as const;
 export const EVALUACION_ELIMINAR_MUTATION_KEY = ['evaluaciones', 'eliminar'] as const;
+
+export const DOCENTE_SECCIONES_KEY = (idDocente: number | null) => ['docente', idDocente, 'secciones'] as const;
+export const EVALUACIONES_BY_SECCION_KEY = (idSeccion: number | null) => ['secciones', idSeccion, 'evaluaciones'] as const;
+export const MATRICULAS_BY_SECCION_KEY = (idSeccion: number | null) => ['secciones', idSeccion, 'matriculas'] as const;
+export const NOTAS_BY_EVALUACION_KEY = (idEvaluacion: number | null) => ['evaluaciones', idEvaluacion, 'notas'] as const;

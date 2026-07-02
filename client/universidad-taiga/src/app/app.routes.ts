@@ -87,16 +87,50 @@ export const routes: Routes = [
         canActivate: [requiresRole('ADMIN')],
       },
 
-      // ─── Estudiantes (ADMIN + DOCENTE) ────────────────────────────────
+      // ─── Estudiantes (SOLO ADMIN) ────────────────────────────────────
       {
         path: 'estudiantes',
         loadComponent: () => import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
-        canActivate: [requiresRole('ADMIN', 'DOCENTE')],
+        canActivate: [requiresRole('ADMIN')],
       },
+
+      // ─── ESTUDIANTE: Mis cursos (SOLO ESTUDIANTE) ────────────────────
+      // MUST GO BEFORE estudiante/:id para que Angular matchee primero la ruta fija
+      {
+        path: 'estudiante/mis-cursos',
+        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
+        canActivate: [requiresRole('ESTUDIANTE')],
+      },
+      {
+        path: 'estudiante/mis-cursos/:id/notas',
+        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
+        canActivate: [requiresRole('ESTUDIANTE')],
+      },
+
       {
         path: 'estudiante/:id',
         loadComponent: () => import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
-        canActivate: [requiresRole('ADMIN', 'DOCENTE')],
+        canActivate: [requiresRole('ADMIN')],
+      },
+
+      // ─── DOCENTE: Estudiantes de una sección (solo lectura) ──────────
+      {
+        path: 'docente/mis-cursos/:id/estudiantes',
+        loadComponent: () => import('./features/docente/estudiantes-seccion/estudiantes-seccion.component').then((m) => m.EstudiantesSeccion),
+        canActivate: [requiresRole('DOCENTE')],
+      },
+
+      // ─── DOCENTE: Mis cursos (SOLO DOCENTE) ───────────────────────────
+      // MUST GO BEFORE docente/:id para que Angular matchee primero la ruta fija
+      {
+        path: 'docente/mis-cursos',
+        loadComponent: () => import('./features/docente/mis-cursos/mis-cursos.component').then((m) => m.MisCursos),
+        canActivate: [requiresRole('DOCENTE')],
+      },
+      {
+        path: 'docente/mis-cursos/:id/notas',
+        loadComponent: () => import('./features/docente/carga-notas/carga-notas.component').then((m) => m.CargaNotas),
+        canActivate: [requiresRole('DOCENTE')],
       },
 
       // ─── Docentes (SOLO ADMIN) ────────────────────────────────────────
@@ -147,30 +181,6 @@ export const routes: Routes = [
         path: 'evaluaciones',
         loadComponent: () => import('./features/admin/evaluaciones/evaluaciones.component').then((m) => m.Evaluaciones),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
-      },
-
-      // ─── DOCENTE: Mis cursos (SOLO DOCENTE) ───────────────────────────
-      {
-        path: 'docente/mis-cursos',
-        loadComponent: () => import('./features/docente/mis-cursos/mis-cursos.component').then((m) => m.MisCursos),
-        canActivate: [requiresRole('DOCENTE')],
-      },
-      {
-        path: 'docente/mis-cursos/:id/notas',
-        loadComponent: () => import('./features/docente/carga-notas/carga-notas.component').then((m) => m.CargaNotas),
-        canActivate: [requiresRole('DOCENTE')],
-      },
-
-      // ─── ESTUDIANTE: Mis cursos (SOLO ESTUDIANTE) ────────────────────
-      {
-        path: 'estudiante/mis-cursos',
-        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
-        canActivate: [requiresRole('ESTUDIANTE')],
-      },
-      {
-        path: 'estudiante/mis-cursos/:id/notas',
-        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
-        canActivate: [requiresRole('ESTUDIANTE')],
       },
 
       // ─── ESTUDIANTE: Historial (SOLO ESTUDIANTE) ─────────────────────
