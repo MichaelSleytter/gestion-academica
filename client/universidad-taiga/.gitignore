@@ -50,3 +50,5 @@ opencode.json
 ## ENV###
 .env
 .env.*
+.vercel
+.env*
