@@ -93,15 +93,14 @@ public class GestionacademicaApplication {
                 usuario.setApellido("López");
                 usuario.setEmail("docente@test.com");
                 usuario.setPassword(passwordEncoder.encode("Docente123!"));
-                usuario.setNumeroDocumento("87654321");
+                usuario.setNumeroDocumento("83234234");
                 usuario.setTipoDocumento(dni);
                 usuario.setRoles(Collections.singletonList(rolDocente));
                 usuario.setEstado(true);
                 usuario = usuarioRepository.save(usuario);
 
                 Docente docente = new Docente();
-                docente.setIdUsuario(usuario.getIdUsuario());
-                docente.setUsuario(usuario);
+                docente.setUsuario(usuario); // @MapsId usa el ID del usuario automáticamente
                 docente.setEspecialidad("Matemáticas");
                 docente.setGradoAcademico(grado);
                 docenteRepository.save(docente);
@@ -142,8 +141,7 @@ public class GestionacademicaApplication {
                 usuario = usuarioRepository.save(usuario);
 
                 Estudiante estudiante = new Estudiante();
-                estudiante.setIdUsuario(usuario.getIdUsuario());
-                estudiante.setUsuario(usuario);
+                estudiante.setUsuario(usuario); // @MapsId usa el ID del usuario automáticamente
                 estudiante.setCodigoEstudiante("EST-00000001");
                 estudiante.setCiclo(3);
                 estudiante.setEstadoAcademico(EstudianteEstadoAcademico.ACTIVO);
