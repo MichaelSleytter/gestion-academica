@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import org.springframework.transaction.support.TransactionTemplate;
 import java.util.Collections;
 
 /**
@@ -61,93 +62,96 @@ public class GestionacademicaApplication {
             GradoAcademicoRepository gradoAcademicoRepository,
             CarreraRepository carreraRepository,
             DocenteRepository docenteRepository,
-            EstudianteRepository estudianteRepository) {
+            EstudianteRepository estudianteRepository,
+            TransactionTemplate txTemplate) {
         return args -> {
             administradorService.crearAdministradorSiNoExiste();
 
-            // ── Docente de prueba ─────────────────────────────────────────────
-            if (usuarioRepository.findByEmail("docente@test.com").isEmpty()) {
-                TipoDocumento dni = tipoDocumentoRepository.findByNombreIgnoreCase("DNI")
-                        .orElseGet(() -> {
-                            TipoDocumento t = new TipoDocumento();
-                            t.setNombre("DNI");
-                            return tipoDocumentoRepository.save(t);
-                        });
+            txTemplate.executeWithoutResult(status -> {
+                // ── Docente de prueba ─────────────────────────────────────────────
+                if (usuarioRepository.findByEmail("docente@test.com").isEmpty()) {
+                    TipoDocumento dni = tipoDocumentoRepository.findByNombreIgnoreCase("DNI")
+                            .orElseGet(() -> {
+                                TipoDocumento t = new TipoDocumento();
+                                t.setNombre("DNI");
+                                return tipoDocumentoRepository.save(t);
+                            });
 
-                Rol rolDocente = rolRepository.findByNombreIgnoreCase("DOCENTE")
-                        .orElseGet(() -> {
-                            Rol r = new Rol();
-                            r.setNombre("DOCENTE");
-                            return rolRepository.save(r);
-                        });
+                    Rol rolDocente = rolRepository.findByNombreIgnoreCase("DOCENTE")
+                            .orElseGet(() -> {
+                                Rol r = new Rol();
+                                r.setNombre("DOCENTE");
+                                return rolRepository.save(r);
+                            });
 
-                GradoAcademico grado = gradoAcademicoRepository.findByNombreIgnoreCase("Magíster")
-                        .orElseGet(() -> {
-                            GradoAcademico g = new GradoAcademico();
-                            g.setNombre("Magíster");
-                            return gradoAcademicoRepository.save(g);
-                        });
+                    GradoAcademico grado = gradoAcademicoRepository.findByNombreIgnoreCase("Magíster")
+                            .orElseGet(() -> {
+                                GradoAcademico g = new GradoAcademico();
+                                g.setNombre("Magíster");
+                                return gradoAcademicoRepository.save(g);
+                            });
 
-                Usuario usuario = new Usuario();
-                usuario.setNombre("Carlos");
-                usuario.setApellido("López");
-                usuario.setEmail("docente@test.com");
-                usuario.setPassword(passwordEncoder.encode("Docente123!"));
-                usuario.setNumeroDocumento("83234234");
-                usuario.setTipoDocumento(dni);
-                usuario.setRoles(Collections.singletonList(rolDocente));
-                usuario.setEstado(true);
-                usuario = usuarioRepository.save(usuario);
+                    Usuario usuario = new Usuario();
+                    usuario.setNombre("Carlos");
+                    usuario.setApellido("López");
+                    usuario.setEmail("docente@test.com");
+                    usuario.setPassword(passwordEncoder.encode("Docente123!"));
+                    usuario.setNumeroDocumento("83234234");
+                    usuario.setTipoDocumento(dni);
+                    usuario.setRoles(Collections.singletonList(rolDocente));
+                    usuario.setEstado(true);
+                    usuario = usuarioRepository.save(usuario);
 
-                Docente docente = new Docente();
-                docente.setUsuario(usuario); // @MapsId usa el ID del usuario automáticamente
-                docente.setEspecialidad("Matemáticas");
-                docente.setGradoAcademico(grado);
-                docenteRepository.save(docente);
-            }
+                    Docente docente = new Docente();
+                    docente.setUsuario(usuario);
+                    docente.setEspecialidad("Matemáticas");
+                    docente.setGradoAcademico(grado);
+                    docenteRepository.save(docente);
+                }
 
-            // ── Estudiante de prueba ──────────────────────────────────────────
-            if (usuarioRepository.findByEmail("estudiante@test.com").isEmpty()) {
-                TipoDocumento dni = tipoDocumentoRepository.findByNombreIgnoreCase("DNI")
-                        .orElseGet(() -> {
-                            TipoDocumento t = new TipoDocumento();
-                            t.setNombre("DNI");
-                            return tipoDocumentoRepository.save(t);
-                        });
+                // ── Estudiante de prueba ──────────────────────────────────────────
+                if (usuarioRepository.findByEmail("estudiante@test.com").isEmpty()) {
+                    TipoDocumento dni = tipoDocumentoRepository.findByNombreIgnoreCase("DNI")
+                            .orElseGet(() -> {
+                                TipoDocumento t = new TipoDocumento();
+                                t.setNombre("DNI");
+                                return tipoDocumentoRepository.save(t);
+                            });
 
-                Rol rolEstudiante = rolRepository.findByNombreIgnoreCase("ESTUDIANTE")
-                        .orElseGet(() -> {
-                            Rol r = new Rol();
-                            r.setNombre("ESTUDIANTE");
-                            return rolRepository.save(r);
-                        });
+                    Rol rolEstudiante = rolRepository.findByNombreIgnoreCase("ESTUDIANTE")
+                            .orElseGet(() -> {
+                                Rol r = new Rol();
+                                r.setNombre("ESTUDIANTE");
+                                return rolRepository.save(r);
+                            });
 
-                Carrera carrera = carreraRepository.findByNombre("Ingeniería de Sistemas")
-                        .orElseGet(() -> {
-                            Carrera c = new Carrera();
-                            c.setNombre("Ingeniería de Sistemas");
-                            return carreraRepository.save(c);
-                        });
+                    Carrera carrera = carreraRepository.findByNombre("Ingeniería de Sistemas")
+                            .orElseGet(() -> {
+                                Carrera c = new Carrera();
+                                c.setNombre("Ingeniería de Sistemas");
+                                return carreraRepository.save(c);
+                            });
 
-                Usuario usuario = new Usuario();
-                usuario.setNombre("María");
-                usuario.setApellido("García");
-                usuario.setEmail("estudiante@test.com");
-                usuario.setPassword(passwordEncoder.encode("Estudiante123!"));
-                usuario.setNumeroDocumento("12345678");
-                usuario.setTipoDocumento(dni);
-                usuario.setRoles(Collections.singletonList(rolEstudiante));
-                usuario.setEstado(true);
-                usuario = usuarioRepository.save(usuario);
+                    Usuario usuario = new Usuario();
+                    usuario.setNombre("María");
+                    usuario.setApellido("García");
+                    usuario.setEmail("estudiante@test.com");
+                    usuario.setPassword(passwordEncoder.encode("Estudiante123!"));
+                    usuario.setNumeroDocumento("83453434");
+                    usuario.setTipoDocumento(dni);
+                    usuario.setRoles(Collections.singletonList(rolEstudiante));
+                    usuario.setEstado(true);
+                    usuario = usuarioRepository.save(usuario);
 
-                Estudiante estudiante = new Estudiante();
-                estudiante.setUsuario(usuario); // @MapsId usa el ID del usuario automáticamente
-                estudiante.setCodigoEstudiante("EST-00000001");
-                estudiante.setCiclo(3);
-                estudiante.setEstadoAcademico(EstudianteEstadoAcademico.ACTIVO);
-                estudiante.setCarrera(carrera);
-                estudianteRepository.save(estudiante);
-            }
+                    Estudiante estudiante = new Estudiante();
+                    estudiante.setUsuario(usuario);
+                    estudiante.setCodigoEstudiante("EST-00000001");
+                    estudiante.setCiclo(3);
+                    estudiante.setEstadoAcademico(EstudianteEstadoAcademico.ACTIVO);
+                    estudiante.setCarrera(carrera);
+                    estudianteRepository.save(estudiante);
+                }
+            });
         };
     }
 }
