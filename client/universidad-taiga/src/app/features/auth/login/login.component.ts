@@ -4,15 +4,22 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { RoleService } from '../../../core/services/role.service';
-import { LoginRequest } from '../../../models/auth.model';
+import type { LoginRequest } from '../../../models/auth.model';
 
 /**
- * Login page — two-panel split layout (image + form).
+ * Página de inicio de sesión con layout dividido en dos paneles (imagen + formulario).
  *
- * Adapted from Figma design to use design system tokens:
- * - **Font:** Inter (design system)
+ * @description
+ * Adaptada del diseño de Figma usando tokens del design system:
+ * - **Font:** Inter
  * - **Colors:** Primary #4F46E5, text-strong #0F172A, text-muted #64748B
  * - **Radius:** 0.375rem (inputs), 9999px (button pill)
+ *
+ * Maneja estados de carga, validación de formulario (email + password) y errores
+ * de autenticación con mensajes específicos según el código HTTP:
+ * - 401 → credenciales incorrectas
+ * - 403 → cuenta desactivada
+ * - 0 → error de conexión
  */
 @Component({
   selector: 'app-login',
@@ -68,7 +75,9 @@ import { LoginRequest } from '../../../models/auth.model';
               <label class="field-label" for="password">Password</label>
               <div
                 class="input-wrapper"
-                [class.input-error]="form.controls.password.invalid && form.controls.password.touched"
+                [class.input-error]="
+                  form.controls.password.invalid && form.controls.password.touched
+                "
               >
                 <input
                   id="password"
@@ -82,16 +91,39 @@ import { LoginRequest } from '../../../models/auth.model';
                   type="button"
                   class="eye-btn"
                   (click)="togglePassword()"
-                  [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  [attr.aria-label]="
+                    passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                  "
                 >
                   @if (passwordVisible()) {
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z" fill="#64748B"/>
-                      <path d="M12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="#64748B"/>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"
+                        fill="#64748B"
+                      />
+                      <path
+                        d="M12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                        fill="#64748B"
+                      />
                     </svg>
                   } @else {
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-3.89-6-7-11-7-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 3.89 6 7 11 7 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" fill="#64748B"/>
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-3.89-6-7-11-7-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 3.89 6 7 11 7 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"
+                        fill="#64748B"
+                      />
                     </svg>
                   }
                 </button>
@@ -119,7 +151,9 @@ import { LoginRequest } from '../../../models/auth.model';
             </button>
 
             <!-- Forgot password -->
-            <a routerLink="/forgot-password" tuiLink class="forgot-link">¿Olvidaste tu contraseña?</a>
+            <a routerLink="/forgot-password" tuiLink class="forgot-link"
+              >¿Olvidaste tu contraseña?</a
+            >
           </form>
         </div>
       </div>
@@ -342,7 +376,7 @@ export class LoginComponent {
   private roleService = inject(RoleService);
   private router = inject(Router);
 
-  /** Toggle password visibility */
+  /** Indica si la contraseña se muestra en texto plano. */
   passwordVisible = signal(false);
 
   form = new FormGroup({
@@ -352,14 +386,22 @@ export class LoginComponent {
 
   isLoading = signal(false);
 
-  /** Alterna la visibilidad de la contraseña. */
+  /**
+   * Alterna la visibilidad del campo de contraseña entre texto y password.
+   */
   togglePassword(): void {
     this.passwordVisible.update((v) => !v);
   }
 
   /**
-   * Handle form submission: validate, call auth service, navigate
-   * on success, show error on failure.
+   * Procesa el envío del formulario de inicio de sesión.
+   *
+   * @description
+   * 1. Valida el formulario (email + password obligatorios).
+   * 2. Marca todos los campos como touched si el formulario es inválido.
+   * 3. Llama a `AuthService.login()` con las credenciales.
+   * 4. En éxito, redirige al home del rol del usuario via `RoleService.getHomeRouteByRole()`.
+   * 5. En error, muestra un `alert()` con el mensaje correspondiente al código HTTP.
    */
   onSubmit(): void {
     if (this.form.invalid) {

@@ -1,5 +1,10 @@
 import { inject } from '@angular/core';
-import { Router, UrlTree, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
+import {
+  Router,
+  type UrlTree,
+  type CanActivateFn,
+  type ActivatedRouteSnapshot,
+} from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take, timeout, catchError, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -9,19 +14,21 @@ import { RoleService } from '../services/role.service';
 import type { AuthStatus } from '../../models/auth.model';
 
 /**
- * =============================================================================
- * AUTH GUARD - Protege rutas que requieren autenticación
- * =============================================================================
+ * Guard de ruta que requiere que el usuario esté autenticado.
  *
- * Usa el `authStatus` signal del AuthService para decidir:
- *   - 'authenticated': permite el acceso inmediatamente
- *   - 'loading': espera a que termine la verificación con el backend
- *                 (refresh token cookie) antes de decidir
- *   - 'unauthenticated': redirige al login
+ * @description
+ * Evalúa el `authStatus` del `TokenService` para decidir:
+ * - `'authenticated'` → permite el acceso inmediatamente.
+ * - `'loading'` → espera hasta 8 segundos a que la verificación termine
+ *   (útil en recarga de página cuando aún se está renovando el token).
+ * - `'unauthenticated'` → redirige a `/login?returnUrl=<ruta>`.
  *
- * Esto resuelve el problema de recarga de página cuando el access token
- * expiró pero el refresh token cookie sigue vivo: el guard espera a que
- * AuthService intente el refresh antes de redirigir a login.
+ * Resuelve el problema de recarga de página: cuando el access token expiró
+ * pero la cookie HttpOnly del refresh token sigue viva, el guard espera
+ * a que `TokenService` complete la verificación antes de decidir.
+ *
+ * @param route - Ruta a la que se intenta acceder (se usa para construir el returnUrl).
+ * @returns `true` si está autenticado, un `UrlTree` de redirección a `/login` si no.
  */
 export const requiresAuth: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const tokenService = inject(TokenService);
@@ -52,15 +59,17 @@ export const requiresAuth: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   return redirectToLogin(router, route);
 };
 
-
 /**
- * =============================================================================
- * GUARD 2: requiresRole
- * =============================================================================
+ * Guard de ruta que requiere uno o más roles específicos además de autenticación.
  *
- * Protección por roles: requiere estar autenticado Y tener rol específico.
+ * @description
+ * - Primero verifica autenticación (igual que `requiresAuth`).
+ * - Luego verifica que el usuario tenga al menos uno de los roles indicados.
+ * - Si no tiene el rol requerido, redirige a `/access-denied`.
+ * - También soporta el estado `'loading'` esperando hasta 8 segundos.
  *
- * @param allowedRoles - Roles que pueden acceder (OR logic: cualquiera de ellos)
+ * @param allowedRoles - Lista de nombres de rol permitidos (OR lógico).
+ * @returns Una función `CanActivateFn` lista para usar en la configuración de rutas.
  */
 export const requiresRole = (...allowedRoles: string[]): CanActivateFn => {
   return (route: ActivatedRouteSnapshot) => {
@@ -96,6 +105,13 @@ export const requiresRole = (...allowedRoles: string[]): CanActivateFn => {
 
 /**
  * Verifica si el usuario tiene al menos uno de los roles permitidos.
+ * Si no tiene el rol necesario, redirige a `/access-denied`.
+ *
+ * @param router - Router de Angular para crear el UrlTree de redirección.
+ * @param route - Ruta actual (se usa para logging de advertencia).
+ * @param roleService - Servicio que expone los roles del usuario autenticado.
+ * @param allowedRoles - Lista de roles que tienen acceso permitido.
+ * @returns `true` si tiene acceso, o un `UrlTree` a `/access-denied`.
  */
 function checkRoles(
   router: Router,
@@ -104,7 +120,7 @@ function checkRoles(
   allowedRoles: string[],
 ): boolean | UrlTree {
   const userRoles = roleService.getRoles();
-  const hasRequiredRole = allowedRoles.some(role => userRoles.includes(role));
+  const hasRequiredRole = allowedRoles.some((role) => userRoles.includes(role));
 
   if (hasRequiredRole) {
     return true;
@@ -112,20 +128,21 @@ function checkRoles(
 
   console.warn(
     `RoleGuard: User lacks required roles. ` +
-    `Has: ${userRoles.join(', ')}, Needs: ${allowedRoles.join(', ')}`
+      `Has: ${userRoles.join(', ')}, Needs: ${allowedRoles.join(', ')}`,
   );
 
   return router.createUrlTree(['/access-denied']);
 }
 
-
 /**
- * =============================================================================
- * GUARD 3: requiresNoAuth
- * =============================================================================
+ * Guard de ruta inverso: solo permite acceder si el usuario NO está autenticado.
  *
- * Protección inversa: solo permite acceder si NO está autenticado.
- * Útil para rutas como /login y /register.
+ * @description
+ * Útil para rutas públicas como `/login`, `/register`, `/forgot-password`,
+ * `/reset-password`. Si el usuario ya está autenticado, redirige a su home
+ * según el rol usando `RoleService.getHomeRouteByRole()`.
+ *
+ * @returns `true` si no está autenticado, un `UrlTree` al home del rol si ya lo está.
  */
 export const requiresNoAuth: CanActivateFn = () => {
   const tokenService = inject(TokenService);
@@ -139,13 +156,16 @@ export const requiresNoAuth: CanActivateFn = () => {
   return true;
 };
 
-
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 /**
- * Crea un UrlTree de redirección a /login preservando la URL original.
+ * Construye una redirección a `/login` preservando la ruta original como `returnUrl`.
+ *
+ * @param router - Router de Angular para crear el UrlTree.
+ * @param route - Ruta original que se intentaba acceder (opcional).
+ * @returns UrlTree apuntando a `/login?returnUrl=<ruta>`.
  */
 function redirectToLogin(router: Router, route?: ActivatedRouteSnapshot) {
-  const returnUrl = route?.url.map(s => s.path).join('/') || '/';
+  const returnUrl = route?.url.map((s) => s.path).join('/') || '/';
   return router.createUrlTree(['/login'], { queryParams: { returnUrl } });
 }

@@ -1,13 +1,28 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+import {
+  type AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
 import { AuthService } from '../../../core/services/auth.service';
 
 /**
- * Reset password page — two-panel split layout (image + form).
+ * Página de restablecimiento de contraseña mediante token.
  *
- * Allows users to set a new password using the token received by email.
+ * @description
+ * Layout dividido en dos paneles (imagen + formulario), consistente con login.
+ * Permite al usuario establecer una nueva contraseña usando el token UUID
+ * recibido por email. Incluye:
+ * - Validación de contraseña (mín. 8 caracteres).
+ * - Validación de coincidencia entre contraseña y confirmación.
+ * - Manejo de token inválido o expirado.
+ * - Pantalla de éxito post-restablecimiento.
+ *
+ * El token se obtiene del query param `?token=...` en la URL.
  */
 @Component({
   selector: 'app-reset-password',
@@ -37,9 +52,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <h1 class="heading">Restablecer contraseña</h1>
 
             <!-- Description -->
-            <p class="description">
-              Ingresá tu nueva contraseña para acceder a tu cuenta.
-            </p>
+            <p class="description">Ingresá tu nueva contraseña para acceder a tu cuenta.</p>
 
             <!-- Form -->
             <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form">
@@ -48,7 +61,9 @@ import { AuthService } from '../../../core/services/auth.service';
                 <label class="field-label" for="password">Nueva contraseña</label>
                 <div
                   class="input-wrapper"
-                  [class.input-error]="form.controls.password.invalid && form.controls.password.touched"
+                  [class.input-error]="
+                    form.controls.password.invalid && form.controls.password.touched
+                  "
                 >
                   <input
                     id="password"
@@ -69,7 +84,9 @@ import { AuthService } from '../../../core/services/auth.service';
                 <label class="field-label" for="confirmPassword">Confirmar contraseña</label>
                 <div
                   class="input-wrapper"
-                  [class.input-error]="form.hasError('mismatch') && form.controls.confirmPassword.touched"
+                  [class.input-error]="
+                    form.hasError('mismatch') && form.controls.confirmPassword.touched
+                  "
                 >
                   <input
                     id="confirmPassword"
@@ -88,8 +105,17 @@ import { AuthService } from '../../../core/services/auth.service';
               <!-- Error message -->
               @if (error()) {
                 <div class="error-message">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="#DC2626"/>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+                      fill="#DC2626"
+                    />
                   </svg>
                   <span>{{ error() }}</span>
                 </div>
@@ -116,13 +142,23 @@ import { AuthService } from '../../../core/services/auth.service';
             <!-- Success message -->
             <div class="success-state">
               <div class="success-icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#16A34A"/>
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+                    fill="#16A34A"
+                  />
                 </svg>
               </div>
               <h1 class="heading">Contraseña actualizada</h1>
               <p class="description">
-                Tu contraseña se restableció correctamente. Ya podés iniciar sesión con tu nueva contraseña.
+                Tu contraseña se restableció correctamente. Ya podés iniciar sesión con tu nueva
+                contraseña.
               </p>
               <button
                 tuiButton
@@ -138,8 +174,17 @@ import { AuthService } from '../../../core/services/auth.service';
 
           <!-- Back to login -->
           <a routerLink="/login" tuiLink class="back-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="#4F46E5"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+                fill="#4F46E5"
+              />
             </svg>
             Regresar al Login
           </a>
@@ -381,7 +426,6 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class ResetPasswordComponent {
   private authService = inject(AuthService);
-  private router = inject(Router);
   private route = inject(ActivatedRoute);
 
   token = signal<string | null>(null);
@@ -401,12 +445,24 @@ export class ResetPasswordComponent {
   constructor() {
     const token = this.route.snapshot.queryParamMap.get('token');
     if (!token) {
-      this.error.set('Token inválido o expirado. Solicitá un nuevo restablecimiento de contraseña.');
+      this.error.set(
+        'Token inválido o expirado. Solicitá un nuevo restablecimiento de contraseña.',
+      );
     } else {
       this.token.set(token);
     }
   }
 
+  /**
+   * Procesa el envío del formulario de nueva contraseña.
+   *
+   * @description
+   * 1. Valida el formulario (contraseña mín. 8 caracteres + coincidencia).
+   * 2. Verifica que exista un token válido en la URL.
+   * 3. Llama a `AuthService.resetPassword()` con token + nueva contraseña.
+   * 4. En éxito, muestra la pantalla de confirmación (`success = true`).
+   * 5. En error, muestra mensaje de token inválido o expirado.
+   */
   onSubmit(): void {
     if (this.form.invalid || !this.token()) {
       this.form.markAllAsTouched();
@@ -425,11 +481,19 @@ export class ResetPasswordComponent {
       },
       error: () => {
         this.isLoading.set(false);
-        this.error.set('El enlace es inválido o ya expiró. Solicitá un nuevo restablecimiento de contraseña.');
+        this.error.set(
+          'El enlace es inválido o ya expiró. Solicitá un nuevo restablecimiento de contraseña.',
+        );
       },
     });
   }
 
+  /**
+   * Validador personalizado que verifica que password y confirmPassword coincidan.
+   *
+   * @param control - FormGroup que contiene los campos `password` y `confirmPassword`.
+   * @returns `null` si coinciden, o `{ mismatch: true }` si no.
+   */
   private passwordMatchValidator(control: AbstractControl): { mismatch: boolean } | null {
     const password = control.get('password')?.value;
     const confirm = control.get('confirmPassword')?.value;

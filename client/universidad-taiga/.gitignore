@@ -52,3 +52,5 @@ opencode.json
 .env.*
 .vercel
 .env*
+# Local Pi runtime state
+.atl/

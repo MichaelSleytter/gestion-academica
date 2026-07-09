@@ -5,12 +5,14 @@ import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
 import { AuthService } from '../../../core/services/auth.service';
 
 /**
- * Forgot password page — two-panel split layout (image + form).
+ * Página de solicitud de restablecimiento de contraseña.
  *
- * Allows users to request a password reset email.
- * Uses design system tokens matching login page:
- * - **Font:** Inter
- * - **Colors:** Primary #4F46E5, text-strong #0F172A, text-muted #64748B
+ * @description
+ * Layout dividido en dos paneles (imagen + formulario), consistente con login.
+ * Envía un email con enlace para restablecer la contraseña.
+ * Por seguridad, **siempre muestra el mismo mensaje de éxito** independientemente
+ * de si el email existe o no en el sistema, para evitar revelar qué emails
+ * están registrados.
  */
 @Component({
   selector: 'app-forgot-password',
@@ -86,8 +88,17 @@ import { AuthService } from '../../../core/services/auth.service';
             <!-- Success message -->
             @if (sent()) {
               <div class="success-message">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="#16A34A"/>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+                    fill="#16A34A"
+                  />
                 </svg>
                 <span>Si el email existe, recibirás un enlace para restablecer tu contraseña.</span>
               </div>
@@ -95,8 +106,17 @@ import { AuthService } from '../../../core/services/auth.service';
 
             <!-- Back to login -->
             <a routerLink="/login" tuiLink class="back-link">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill="#4F46E5"/>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+                  fill="#4F46E5"
+                />
               </svg>
               Regresar al Login
             </a>
@@ -347,9 +367,13 @@ export class ForgotPasswordComponent {
   error = signal('');
 
   /**
-   * Envía la solicitud de restablecimiento de contraseña al backend.
-   * Siempre muestra el mismo mensaje de éxito por seguridad
-   * (no revela si el email existe o no).
+   * Procesa el envío del formulario de restablecimiento de contraseña.
+   *
+   * @description
+   * 1. Valida el email ingresado.
+   * 2. Llama a `AuthService.forgotPassword()` con el email.
+   * 3. **Siempre** establece `sent = true` sin importar la respuesta del backend,
+   *    para evitar revelar qué emails están registrados (seguridad por oscuridad).
    */
   onSubmit(): void {
     if (this.form.invalid) {
