@@ -2,6 +2,7 @@ package com.example.gestionacademica.matriculas.service;
 
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
 import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
@@ -87,7 +88,7 @@ public class MatriculaService {
         matricula.setEstudiante(estudiante);
         matricula.setSeccion(seccion);
         matricula.setFechaMatricula(LocalDateTime.now());
-        matricula.setEstado("ACTIVA");
+        matricula.setEstado(MatriculaEstado.ACTIVA);
 
         return matriculaRepository.save(matricula);
     }
@@ -97,7 +98,7 @@ public class MatriculaService {
      * Estados válidos: ACTIVA, RETIRADA, APROBADA, DESAPROBADA.
      */
     @Transactional
-    public Matricula cambiarEstado(Integer id, String nuevoEstado) {
+    public Matricula cambiarEstado(Integer id, MatriculaEstado nuevoEstado) {
         Matricula matricula = buscarPorId(id);
         matricula.setEstado(nuevoEstado);
         return matriculaRepository.save(matricula);

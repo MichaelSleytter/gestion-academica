@@ -101,6 +101,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Spring Security Test: MockMvc authentication and authorization helpers -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Spring Boot DevTools: reinicio automático en desarrollo -->
         <dependency>
 		<groupId>org.springframework.boot</groupId>
@@ -114,7 +121,21 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
-        <!-- ── SEGURIDAD JWT ─────────────────────────── -->
+            <!-- ── MIGRATIONS ──────────────────────────── -->
+
+            <!-- Flyway: database migrations -->
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-core</artifactId>
+            </dependency>
+
+            <!-- Flyway PostgreSQL support -->
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-database-postgresql</artifactId>
+            </dependency>
+
+            <!-- ── SEGURIDAD JWT ─────────────────────────── -->
 
         <!-- Spring Security starter (automatiza configuración de Security) -->
         <dependency>

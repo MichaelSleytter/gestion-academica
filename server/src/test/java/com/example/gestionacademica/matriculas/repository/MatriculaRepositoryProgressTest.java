@@ -8,6 +8,7 @@ import com.example.gestionacademica.cursos.domain.Curso;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.historial.support.RepositoryProgressTestData;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import com.example.gestionacademica.matriculas.domain.Matricula;
 import java.util.List;
 import org.hibernate.Hibernate;
@@ -40,14 +41,14 @@ class MatriculaRepositoryProgressTest extends RepositoryProgressTestData {
         CicloAcademico ciclo = ciclo(entityManager);
         Seccion activa = seccion(entityManager, curso(entityManager), ciclo);
         Seccion retirada = seccion(entityManager, curso(entityManager), ciclo);
-        matricula(entityManager, estudiante, activa, "ACTIVA");
-        matricula(entityManager, estudiante, retirada, "RETIRADA");
+        matricula(entityManager, estudiante, activa, MatriculaEstado.ACTIVA);
+        matricula(entityManager, estudiante, retirada, MatriculaEstado.RETIRADA);
         entityManager.clear();
 
         List<Matricula> resultado = repository.findActiveByEstudianteIdWithSeccionCurso(estudiante.getIdUsuario());
 
         assertThat(resultado).hasSize(1);
-        assertThat(resultado.getFirst().getEstado()).isEqualTo("ACTIVA");
+        assertThat(resultado.getFirst().getEstado()).isEqualTo(MatriculaEstado.ACTIVA);
         assertThat(resultado.getFirst().getSeccion().getCurso().getNombre()).contains("Curso-");
         assertThat(Hibernate.isInitialized(resultado.getFirst().getSeccion().getCicloAcademico())).isTrue();
     }

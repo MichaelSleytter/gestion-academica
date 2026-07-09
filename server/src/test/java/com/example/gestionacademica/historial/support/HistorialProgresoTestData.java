@@ -8,7 +8,9 @@ import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.estudiantes.domain.EstudianteEstadoAcademico;
 import com.example.gestionacademica.evaluaciones.domain.Evaluacion;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import com.example.gestionacademica.historial.domain.HistorialAcademico;
+import com.example.gestionacademica.historial.domain.HistorialAcademicoEstado;
 import com.example.gestionacademica.historial.domain.MallaCurricular;
 import com.example.gestionacademica.historial.domain.Prerrequisito;
 import com.example.gestionacademica.historial.domain.TipoReglaPrerrequisito;
@@ -109,7 +111,7 @@ public final class HistorialProgresoTestData {
         historial.setIdHistorial(id);
         historial.setEstudiante(estudiante);
         historial.setSeccion(seccion);
-        historial.setEstado("COMPLETADO");
+        historial.setEstado(HistorialAcademicoEstado.APROBADO);
         return historial;
     }
 
@@ -136,7 +138,7 @@ public final class HistorialProgresoTestData {
         matricula.setIdMatricula(id);
         matricula.setEstudiante(estudiante);
         matricula.setSeccion(seccion);
-        matricula.setEstado("ACTIVA");
+        matricula.setEstado(MatriculaEstado.ACTIVA);
         matricula.setFechaMatricula(LocalDateTime.now());
         return matricula;
     }

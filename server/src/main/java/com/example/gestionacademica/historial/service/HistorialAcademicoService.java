@@ -2,6 +2,7 @@ package com.example.gestionacademica.historial.service;
 
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.historial.domain.HistorialAcademico;
+import com.example.gestionacademica.historial.domain.HistorialAcademicoEstado;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
 import com.example.gestionacademica.historial.repository.HistorialAcademicoRepository;
@@ -137,8 +138,8 @@ public class HistorialAcademicoService {
                 .orElseThrow(() -> new RuntimeException("Seccion no encontrada con ID: " + idSeccion));
     }
 
-    private void validarEstado(String estado) {
-        if (estado == null || estado.trim().isEmpty()) {
+    private void validarEstado(HistorialAcademicoEstado estado) {
+        if (estado == null) {
             throw new RuntimeException("El estado del historial academico es obligatorio.");
         }
     }

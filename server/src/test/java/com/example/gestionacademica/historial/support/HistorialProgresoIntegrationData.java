@@ -11,9 +11,11 @@ import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.estudiantes.domain.EstudianteEstadoAcademico;
 import com.example.gestionacademica.evaluaciones.domain.Evaluacion;
 import com.example.gestionacademica.historial.domain.HistorialAcademico;
+import com.example.gestionacademica.historial.domain.HistorialAcademicoEstado;
 import com.example.gestionacademica.historial.domain.MallaCurricular;
 import com.example.gestionacademica.historial.domain.Prerrequisito;
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import com.example.gestionacademica.notas.domain.Nota;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -67,7 +69,7 @@ public abstract class HistorialProgresoIntegrationData {
         Evaluacion finalComunicacion = evaluacion(entityManager, seccionComunicacion, "100.00");
         nota(entityManager, estudiante, finalComunicacion, "12.00");
 
-        matricula(entityManager, estudiante, seccionMatematicaII, "ACTIVA");
+        matricula(entityManager, estudiante, seccionMatematicaII, MatriculaEstado.ACTIVA);
         entityManager.flush();
         entityManager.clear();
 
@@ -164,7 +166,7 @@ public abstract class HistorialProgresoIntegrationData {
         return em.persistFlushFind(entry);
     }
 
-    protected Matricula matricula(TestEntityManager em, Estudiante estudiante, Seccion seccion, String estado) {
+    protected Matricula matricula(TestEntityManager em, Estudiante estudiante, Seccion seccion, MatriculaEstado estado) {
         Matricula matricula = HistorialProgresoTestData.matricula(null, estudiante, seccion);
         matricula.setEstado(estado);
         matricula.setFechaMatricula(LocalDateTime.now());
@@ -181,7 +183,7 @@ public abstract class HistorialProgresoIntegrationData {
             Seccion seccion,
             String notaFinal) {
         HistorialAcademico historial = HistorialProgresoTestData.historial(null, estudiante, seccion);
-        historial.setEstado("APROBADO");
+        historial.setEstado(HistorialAcademicoEstado.APROBADO);
         historial.setNotaFinal(new BigDecimal(notaFinal));
         return em.persistFlushFind(historial);
     }

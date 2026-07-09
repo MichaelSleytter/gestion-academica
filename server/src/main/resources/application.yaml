@@ -26,11 +26,25 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   # ============================================
+  # FLYWAY — Database Migrations
+  # ============================================
+  flyway:
+    enabled: true
+    # Baseline existing schema so Flyway doesn't fail on non-empty DB
+    baseline-on-migrate: true
+    baseline-version: 0
+    # Location of migration SQL files
+    locations: classpath:db/migration
+    # Fail fast if migration checksums change
+    validate-on-migrate: true
+
+  # ============================================
   # JPA / HIBERNATE
   # ============================================
   jpa:
     hibernate:
-      ddl-auto: update
+      # Validate that JPA entities match the DB schema managed by Flyway
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:

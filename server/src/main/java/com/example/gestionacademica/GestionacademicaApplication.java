@@ -27,6 +27,7 @@ import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
 import com.example.gestionacademica.evaluaciones.domain.Evaluacion;
 import com.example.gestionacademica.evaluaciones.repository.EvaluacionRepository;
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -230,7 +231,7 @@ public class GestionacademicaApplication {
                             if (!matriculaRepository.existsByEstudiante_IdUsuarioAndSeccion_IdSeccion(
                                     estudiante.getIdUsuario(), seccion.getIdSeccion())) {
                                 Matricula mat = new Matricula();
-                                mat.setEstado("ACTIVA");
+                                mat.setEstado(MatriculaEstado.ACTIVA);
                                 mat.setFechaMatricula(LocalDateTime.now());
                                 mat.setEstudiante(estudiante);
                                 mat.setSeccion(seccion);

@@ -1,74 +1,63 @@
 -- Historial Académico seed for InsForge CLI
 -- PostgreSQL / idempotent / no secrets
 --
--- Review before running:
--- 1. Adjust params.carrera_nombre to the target career in the environment.
--- 2. Adjust seed_courses and hard_prerequisites to match the existing course catalog.
--- 3. Run after the application has created/updated schema with ddl-auto.
+-- Basado en los datos reales de la BD de Gestion-Universidad.
+-- Ejecutar después de que la app haya creado el schema con ddl-auto.
 
-BEGIN;
+-- 1. Backfill de códigos de curso (columna nullable agregada)
+UPDATE curso SET codigo = CONCAT('CUR-', id_curso) WHERE codigo IS NULL;
 
--- Backfill nullable course codes introduced for the progress API contract.
-UPDATE curso
-SET codigo = CONCAT('CUR-', id_curso)
-WHERE codigo IS NULL;
-
--- Minimum curriculum map for the target career.
-WITH params AS (
-    SELECT 'Ingeniería de Sistemas'::text AS carrera_nombre
-), seed_courses(codigo, nombre, ciclo_recomendado, obligatorio) AS (
-    VALUES
-        ('MAT101', 'Matemática I', 1, true),
-        ('COM101', 'Comunicación', 1, true),
-        ('INT100', 'Introducción a la Universidad', 1, true),
-        ('MAT102', 'Matemática II', 2, true),
-        ('ALG201', 'Algoritmos', 3, true)
-), target_career AS (
-    SELECT ca.id_carrera
-    FROM carrera ca
-    JOIN params p ON ca.nombre = p.carrera_nombre
-)
+-- 2. Malla curricular para Ingeniería de Sistemas (id_carrera = 19)
 INSERT INTO malla_curricular (id_carrera, id_curso, ciclo_recomendado, obligatorio, creditos)
-SELECT tc.id_carrera,
-       cu.id_curso,
-       sc.ciclo_recomendado,
-       sc.obligatorio,
-       cu.creditos
-FROM target_career tc
-JOIN seed_courses sc ON true
-JOIN curso cu ON cu.codigo = sc.codigo OR cu.nombre = sc.nombre
-WHERE cu.creditos > 0
+SELECT 19, cu.id_curso, sc.ciclo, sc.obligatorio, cu.creditos
+FROM (VALUES
+    ('CUR-2', 1, true),   -- Matemáticas I
+    ('CUR-6', 1, true),   -- Introducción a la Programación
+    ('CUR-19', 1, true),  -- Matemática Básica
+    ('CUR-14', 1, false), -- Educación Física (electivo)
+    ('CUR-3', 2, true),   -- Matemáticas II
+    ('CUR-7', 2, true),   -- Estructura de Datos
+    ('CUR-4', 2, true),   -- Física General
+    ('CUR-8', 3, true),   -- Base de Datos I
+    ('CUR-1', 3, true),   -- Desarrollo web
+    ('CUR-15', 3, false), -- Ética Profesional (electivo)
+    ('CUR-16', 4, true),  -- Metodología de Investigación
+    ('CUR-9', 4, true),   -- Base de Datos II
+    ('CUR-18', 4, true)   -- Programación III
+) AS sc(codigo, ciclo, obligatorio)
+JOIN curso cu ON cu.codigo = sc.codigo
 ON CONFLICT (id_carrera, id_curso) DO NOTHING;
 
--- HARD prerequisites for the same target career.
-WITH params AS (
-    SELECT 'Ingeniería de Sistemas'::text AS carrera_nombre
-), hard_prerequisites(curso_codigo, curso_nombre, prerrequisito_codigo, prerrequisito_nombre) AS (
-    VALUES
-        ('MAT102', 'Matemática II', 'MAT101', 'Matemática I'),
-        ('ALG201', 'Algoritmos', 'MAT102', 'Matemática II')
-), target_career AS (
-    SELECT ca.id_carrera
-    FROM carrera ca
-    JOIN params p ON ca.nombre = p.carrera_nombre
-)
+-- 3. Prerrequisitos HARD
 INSERT INTO prerrequisito (id_carrera, id_curso, id_curso_prerrequisito, tipo_regla)
-SELECT tc.id_carrera,
-       curso_destino.id_curso,
-       curso_pre.id_curso,
-       'HARD'
-FROM target_career tc
-JOIN hard_prerequisites hp ON true
-JOIN curso curso_destino
-    ON curso_destino.codigo = hp.curso_codigo OR curso_destino.nombre = hp.curso_nombre
-JOIN curso curso_pre
-    ON curso_pre.codigo = hp.prerrequisito_codigo OR curso_pre.nombre = hp.prerrequisito_nombre
-WHERE curso_destino.id_curso <> curso_pre.id_curso
-ON CONFLICT (id_carrera, id_curso, id_curso_prerrequisito) DO NOTHING;
+SELECT 19,
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-3'),  -- Matemáticas II
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-2'),  -- requiere Matemáticas I
+    'HARD'
+WHERE NOT EXISTS (SELECT 1 FROM prerrequisito WHERE id_carrera = 19 AND id_curso = (SELECT id_curso FROM curso WHERE codigo = 'CUR-3') AND id_curso_prerrequisito = (SELECT id_curso FROM curso WHERE codigo = 'CUR-2'));
 
-COMMIT;
+INSERT INTO prerrequisito (id_carrera, id_curso, id_curso_prerrequisito, tipo_regla)
+SELECT 19,
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-7'),  -- Estructura de Datos
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-6'),  -- requiere Intro. a la Programación
+    'HARD'
+WHERE NOT EXISTS (SELECT 1 FROM prerrequisito WHERE id_carrera = 19 AND id_curso = (SELECT id_curso FROM curso WHERE codigo = 'CUR-7') AND id_curso_prerrequisito = (SELECT id_curso FROM curso WHERE codigo = 'CUR-6'));
 
--- Validation query: curriculum size and total credits by career.
+INSERT INTO prerrequisito (id_carrera, id_curso, id_curso_prerrequisito, tipo_regla)
+SELECT 19,
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-9'),  -- Base de Datos II
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-8'),  -- requiere Base de Datos I
+    'HARD'
+WHERE NOT EXISTS (SELECT 1 FROM prerrequisito WHERE id_carrera = 19 AND id_curso = (SELECT id_curso FROM curso WHERE codigo = 'CUR-9') AND id_curso_prerrequisito = (SELECT id_curso FROM curso WHERE codigo = 'CUR-8'));
+
+INSERT INTO prerrequisito (id_carrera, id_curso, id_curso_prerrequisito, tipo_regla)
+SELECT 19,
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-18'), -- Programación III
+    (SELECT id_curso FROM curso WHERE codigo = 'CUR-7'),  -- requiere Estructura de Datos
+    'HARD'
+WHERE NOT EXISTS (SELECT 1 FROM prerrequisito WHERE id_carrera = 19 AND id_curso = (SELECT id_curso FROM curso WHERE codigo = 'CUR-18') AND id_curso_prerrequisito = (SELECT id_curso FROM curso WHERE codigo = 'CUR-7'));
+
+-- 4. Validación
 SELECT ca.nombre AS carrera,
        COUNT(mc.id_malla_curricular) AS cursos,
        COALESCE(SUM(mc.creditos), 0) AS creditos_totales

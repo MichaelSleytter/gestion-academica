@@ -25,7 +25,8 @@ public class HistorialAcademico {
     private BigDecimal notaFinal;
 
     @Column(name = "estado", nullable = false, length = 30)
-    private String estado;
+    @Enumerated(EnumType.STRING)
+    private HistorialAcademicoEstado estado;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estudiante", nullable = false)

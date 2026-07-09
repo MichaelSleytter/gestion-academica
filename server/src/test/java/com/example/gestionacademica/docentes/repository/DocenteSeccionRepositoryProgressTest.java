@@ -13,6 +13,7 @@ import com.example.gestionacademica.docentes.domain.Docente;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion;
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.historial.support.RepositoryProgressTestData;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,7 @@ class DocenteSeccionRepositoryProgressTest extends RepositoryProgressTestData {
         Curso curso = curso(entityManager);
         CicloAcademico ciclo = ciclo(entityManager);
         Seccion seccion = seccion(entityManager, curso, ciclo);
-        matricula(entityManager, estudiante, seccion, "ACTIVA");
+        matricula(entityManager, estudiante, seccion, MatriculaEstado.ACTIVA);
         docenteSeccion(entityManager, docente, seccion);
         entityManager.clear();
 
@@ -66,7 +67,7 @@ class DocenteSeccionRepositoryProgressTest extends RepositoryProgressTestData {
         Seccion seccionAsignada = seccion(entityManager, cursoAsignado, ciclo);
         Seccion seccionNoAsignada = seccion(entityManager, cursoNoAsignado, ciclo);
         docenteSeccion(entityManager, docente, seccionAsignada);
-        matricula(entityManager, estudiante, seccionNoAsignada, "ACTIVA");
+        matricula(entityManager, estudiante, seccionNoAsignada, MatriculaEstado.ACTIVA);
         entityManager.clear();
 
         boolean exists = repository.existsDocenteAssignedToEstudiante(

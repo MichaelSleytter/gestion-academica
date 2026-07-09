@@ -2,6 +2,7 @@ package com.example.gestionacademica.matriculas.controller;
 
 import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import com.example.gestionacademica.matriculas.dto.MatriculaSeccionResponseDTO;
 import com.example.gestionacademica.matriculas.service.MatriculaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -86,7 +87,7 @@ public class MatriculaController {
         return new MatriculaSeccionResponseDTO(
                 matricula.getIdMatricula(),
                 matricula.getFechaMatricula(),
-                matricula.getEstado(),
+                matricula.getEstado().name(),
                 matricula.getEstudiante().getIdUsuario(),
                 matricula.getEstudiante().getCodigoEstudiante(),
                 usuario.getNombre(),
@@ -132,7 +133,7 @@ public class MatriculaController {
             @Parameter(description = "ID de la matrícula", example = "1")
             @PathVariable Integer id,
             @Parameter(description = "Nuevo estado", example = "RETIRADA")
-            @RequestParam String estado) {
+            @RequestParam MatriculaEstado estado) {
         return ResponseEntity.ok(matriculaService.cambiarEstado(id, estado));
     }
 
