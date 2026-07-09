@@ -1,6 +1,7 @@
 package com.example.gestionacademica.estudiantes.repository;
 
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -37,4 +38,8 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Integer>
 
     @Query("SELECT e FROM Estudiante e WHERE e.carrera.idCarrera = :idCarrera AND e.estadoAcademico = 'ACTIVO'")
     List<Estudiante> findActivosPorCarrera(@Param("idCarrera") Integer idCarrera);
+
+    @EntityGraph(attributePaths = {"usuario", "carrera"})
+    @Query("SELECT e FROM Estudiante e WHERE e.idUsuario = :id")
+    Optional<Estudiante> findByIdWithUsuarioAndCarrera(@Param("id") Integer id);
 }

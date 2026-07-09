@@ -26,11 +26,22 @@ public class Curso {
     @Column(name = "nombre", nullable = false, length = 120)
     private String nombre;
 
+    @Column(name = "codigo", unique = true, length = 30)
+    private String codigo;
+
     @Column(name = "creditos", nullable = false)
     private Integer creditos;
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String descripcion;
+
+    public Curso(Integer idCurso, String nombre, Integer creditos, String descripcion, List<Seccion> secciones) {
+        this.idCurso = idCurso;
+        this.nombre = nombre;
+        this.creditos = creditos;
+        this.descripcion = descripcion;
+        this.secciones = secciones;
+    }
 
     @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL)
     @JsonIgnore

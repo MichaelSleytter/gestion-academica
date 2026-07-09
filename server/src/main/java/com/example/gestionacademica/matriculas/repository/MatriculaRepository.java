@@ -28,4 +28,17 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Integer> {
 
     @Query("SELECT COUNT(m) FROM Matricula m WHERE m.seccion.idSeccion = :idSeccion AND m.estado = 'ACTIVA'")
     Long countMatriculadosActivos(@Param("idSeccion") Integer idSeccion);
+
+    @Query("""
+        select m
+        from Matricula m
+        join fetch m.seccion s
+        join fetch s.curso c
+        join fetch s.cicloAcademico ca
+        where m.estudiante.idUsuario = :idEstudiante
+          and m.estado = 'ACTIVA'
+    """)
+    List<Matricula> findActiveByEstudianteIdWithSeccionCurso(
+        @Param("idEstudiante") Integer idEstudiante
+    );
 }
