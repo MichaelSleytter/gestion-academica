@@ -65,3 +65,7 @@ export const MATRICULAR_MUTATION_KEY = ['matriculas', 'matricular'] as const;
 export const RETIRAR_MUTATION_KEY = ['matriculas', 'retirar'] as const;
 export const NOTAS_BY_EVALUACION_KEY = (idEvaluacion: number | null) =>
   ['evaluaciones', idEvaluacion, 'notas'] as const;
+
+export const HISTORIAL_PROGRESO_ME_KEY = ['historial-progreso', 'me'] as const;
+export const HISTORIAL_PROGRESO_ESTUDIANTE_KEY = (idEstudiante: number | null) =>
+  ['historial-progreso', 'estudiante', idEstudiante] as const;

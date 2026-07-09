@@ -120,6 +120,15 @@ export const routes: Routes = [
         canActivate: [requiresRole('ESTUDIANTE')],
       },
 
+      // ─── ESTUDIANTE: Historial (SOLO ESTUDIANTE) ─────────────────────
+      // MUST GO BEFORE estudiante/:id para que Angular matchee primero la ruta fija
+      {
+        path: 'estudiante/historial',
+        loadComponent: () =>
+          import('./features/estudiante/historial/historial.component').then((m) => m.Historial),
+        canActivate: [requiresRole('ESTUDIANTE')],
+      },
+
       {
         path: 'estudiante/:id',
         loadComponent: () =>
@@ -216,14 +225,6 @@ export const routes: Routes = [
             (m) => m.Evaluaciones,
           ),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
-      },
-
-      // ─── ESTUDIANTE: Historial (SOLO ESTUDIANTE) ─────────────────────
-      {
-        path: 'estudiante/historial',
-        loadComponent: () =>
-          import('./features/estudiante/historial/historial.component').then((m) => m.Historial),
-        canActivate: [requiresRole('ESTUDIANTE')],
       },
 
       // ─── Perfil (TODOS los roles) ────────────────────────────────────

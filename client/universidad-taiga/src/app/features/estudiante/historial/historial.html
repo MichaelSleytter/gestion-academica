@@ -1,1 +1,217 @@
-<p>historial works!</p>
+<div class="flex flex-col gap-5 p-2.5">
+  @if (historialQuery.isPending()) {
+    <div
+      class="flex min-h-96 items-center justify-center rounded-2xl border border-border bg-surface"
+    >
+      <tui-loader size="l">Cargando tu historial académico...</tui-loader>
+    </div>
+  } @else if (historialQuery.isError()) {
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-800">
+      <div class="flex items-start gap-3">
+        <tui-icon icon="@tui.file-text" class="mt-0.5" />
+        <div>
+          <p class="text-base font-bold">No se pudo cargar tu historial académico</p>
+          <p class="mt-1 text-sm">{{ errorMessage() }}</p>
+        </div>
+      </div>
+    </div>
+  } @else if (progreso(); as progreso) {
+    <section appearance="floating" tuiCardLarge class="overflow-hidden">
+      <header tuiHeader class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex flex-col gap-2">
+          <span class="text-xs font-bold uppercase tracking-[0.25em] text-primary"
+            >Historial académico</span
+          >
+          <div>
+            <h2 class="text-3xl font-black tracking-tight text-text-primary">
+              {{ progreso.estudiante.nombres }} {{ progreso.estudiante.apellidos }}
+            </h2>
+            <p class="mt-1 text-sm font-medium text-text-secondary">
+              {{ progreso.estudiante.codigo }} · {{ progreso.carrera.nombre }}
+            </p>
+          </div>
+        </div>
+
+        <div class="min-w-64 rounded-2xl border border-border bg-surface-hover p-4">
+          <div class="flex items-end justify-between gap-4">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">
+                Avance de carrera
+              </p>
+              <p class="mt-1 text-3xl font-black text-text-primary">
+                {{ formatNumber(progreso.resumen.porcentajeAvance) }}%
+              </p>
+            </div>
+            <span class="rounded-full bg-primary px-3 py-1 text-xs font-bold text-on-primary">
+              {{ progreso.resumen.creditosAprobados }}/{{
+                progreso.carrera.creditosTotales
+              }}
+              créditos
+            </span>
+          </div>
+          <div class="mt-4 h-2 overflow-hidden rounded-full bg-border">
+            <div
+              class="h-full rounded-full bg-primary transition-all"
+              [style]="completionStyle(progreso)"
+            ></div>
+          </div>
+        </div>
+      </header>
+    </section>
+
+    <section class="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
+      <article appearance="floating" tuiCardLarge class="xl:col-span-2">
+        <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">
+          Promedio ponderado
+        </p>
+        <p class="mt-2 text-3xl font-black text-text-primary">
+          {{ formatNumber(progreso.resumen.promedioPonderado) }}
+        </p>
+        <p class="mt-1 text-sm text-text-secondary">Calculado por créditos de cada curso.</p>
+      </article>
+
+      <article appearance="floating" tuiCardLarge>
+        <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">Aprobados</p>
+        <p class="mt-2 text-3xl font-black text-green-700">
+          {{ progreso.resumen.cursosAprobados }}
+        </p>
+        <p class="mt-1 text-sm text-text-secondary">cursos</p>
+      </article>
+
+      <article appearance="floating" tuiCardLarge>
+        <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">Cursando</p>
+        <p class="mt-2 text-3xl font-black text-blue-700">
+          {{ progreso.resumen.cursosEnProgreso }}
+        </p>
+        <p class="mt-1 text-sm text-text-secondary">en progreso</p>
+      </article>
+
+      <article appearance="floating" tuiCardLarge>
+        <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">Pendientes</p>
+        <p class="mt-2 text-3xl font-black text-amber-700">
+          {{ progreso.resumen.cursosPendientes }}
+        </p>
+        <p class="mt-1 text-sm text-text-secondary">por completar</p>
+      </article>
+
+      <article appearance="floating" tuiCardLarge>
+        <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">Restantes</p>
+        <p class="mt-2 text-3xl font-black text-text-primary">
+          {{ progreso.resumen.creditosRestantes }}
+        </p>
+        <p class="mt-1 text-sm text-text-secondary">créditos</p>
+      </article>
+    </section>
+
+    @if (hasNoCourses()) {
+      <section class="rounded-2xl border border-border bg-surface p-10 text-center">
+        <tui-icon icon="@tui.book-open" class="text-text-muted" [style.fontSize]="'3rem'" />
+        <p class="mt-4 text-base font-semibold text-text-primary">
+          Todavía no hay malla curricular cargada
+        </p>
+        <p class="mt-1 text-sm text-text-secondary">
+          Cuando administración cargue los cursos de tu carrera, tu progreso aparecerá aquí.
+        </p>
+      </section>
+    } @else {
+      <section class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1">
+          <h3 class="text-xl font-black text-text-primary">Mapa de cursos</h3>
+          <p class="text-sm text-text-secondary">
+            Materias agrupadas por ciclo recomendado y estado académico.
+          </p>
+        </div>
+
+        @for (ciclo of ciclos(); track trackCycle($index, ciclo)) {
+          <section class="rounded-2xl border border-border bg-surface p-4">
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span
+                  class="grid size-10 place-items-center rounded-xl bg-primary text-sm font-black text-on-primary"
+                >
+                  {{ ciclo.ciclo }}
+                </span>
+                <div>
+                  <h4 class="text-base font-bold text-text-primary">Ciclo {{ ciclo.ciclo }}</h4>
+                  <p class="text-xs text-text-secondary">
+                    {{ ciclo.cursos.length }} cursos en este bloque
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid gap-3 lg:grid-cols-2">
+              @for (curso of ciclo.cursos; track trackCourse($index, curso)) {
+                <article class="rounded-2xl border border-border bg-background p-4 shadow-sm">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">
+                        {{ curso.codigo || 'Sin código' }} · {{ curso.creditos }} créditos
+                      </p>
+                      <h5 class="mt-1 text-base font-black text-text-primary">
+                        {{ curso.nombre }}
+                      </h5>
+                    </div>
+                    <span
+                      class="whitespace-nowrap rounded-full border px-3 py-1 text-xs font-bold {{
+                        statusView(curso.estado).className
+                      }}"
+                    >
+                      {{ statusView(curso.estado).label }}
+                    </span>
+                  </div>
+
+                  <div class="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <div class="rounded-xl bg-surface-hover p-3">
+                      <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">
+                        Nota final
+                      </p>
+                      <p class="mt-1 font-bold text-text-primary">
+                        {{ formatNumber(curso.notaFinal) }}
+                      </p>
+                    </div>
+                    <div class="rounded-xl bg-surface-hover p-3">
+                      <p class="text-xs font-bold uppercase tracking-wide text-text-tertiary">
+                        Tipo
+                      </p>
+                      <p class="mt-1 font-bold text-text-primary">
+                        {{ curso.obligatorio ? 'Obligatorio' : 'Electivo' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  @if (curso.estado === 'PENDING_BLOCKED' && curso.prerrequisitos.length > 0) {
+                    <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                      <p class="text-xs font-bold uppercase tracking-wide text-amber-800">
+                        Correlativas pendientes
+                      </p>
+                      <ul class="mt-2 flex flex-col gap-1 text-sm text-amber-900">
+                        @for (prerrequisito of curso.prerrequisitos; track prerrequisito.cursoId) {
+                          @if (!prerrequisito.cumplido) {
+                            <li class="flex items-center gap-2">
+                              <span class="size-1.5 rounded-full bg-amber-700"></span>
+                              {{ prerrequisito.codigo || 'Sin código' }} ·
+                              {{ prerrequisito.nombre }}
+                            </li>
+                          }
+                        }
+                      </ul>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          </section>
+        }
+      </section>
+    }
+  } @else {
+    <div class="rounded-2xl border border-border bg-surface p-10 text-center">
+      <tui-icon icon="@tui.file-text" class="text-text-muted" [style.fontSize]="'3rem'" />
+      <p class="mt-4 text-base font-semibold text-text-primary">
+        No hay datos de historial para mostrar
+      </p>
+      <p class="mt-1 text-sm text-text-secondary">Vuelve a intentarlo más tarde.</p>
+    </div>
+  }
+</div>
