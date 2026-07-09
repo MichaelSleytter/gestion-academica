@@ -53,159 +53,179 @@
         </tr>
       </thead>
       @if (isLoading()) {
-      <tbody>
-        @for(item of [1,2,3,4,5]; track item) {
-        <tr class="border-b border-border px-6 py-4">
-          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'120px'"></span></td>
-          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'200px'"></span></td>
-          <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'150px'"></span></td>
-          <td class="px-6 py-4 text-center">
-            <span [tuiSkeleton]="true" [style.width]="'60px'" class="mx-auto"></span>
-          </td>
-          <td class="px-6 py-4 text-right">
-            <span [tuiSkeleton]="true" [style.width]="'80px'"></span>
-          </td>
-        </tr>
-        }
-      </tbody>
+        <tbody>
+          @for (item of [1, 2, 3, 4, 5]; track item) {
+            <tr class="border-b border-border px-6 py-4">
+              <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'120px'"></span></td>
+              <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'200px'"></span></td>
+              <td class="px-6 py-4"><span [tuiSkeleton]="true" [style.width]="'150px'"></span></td>
+              <td class="px-6 py-4 text-center">
+                <span [tuiSkeleton]="true" [style.width]="'60px'" class="mx-auto"></span>
+              </td>
+              <td class="px-6 py-4 text-right">
+                <span [tuiSkeleton]="true" [style.width]="'80px'"></span>
+              </td>
+            </tr>
+          }
+        </tbody>
       } @else if ((seccionesQuery.data()?.content ?? []).length === 0) {
-      <tbody>
-        <tr>
-          <td [attr.colspan]="columns.length" class="px-6 py-16">
-            <div class="flex flex-col items-center justify-center gap-4">
-              <tui-icon icon="@tui.layout-list" class="text-text-muted" [style.fontSize]="'3rem'" />
-              <p class="text-text-secondary text-center">
-                {{ busqueda() ? 'No hay resultados para "' + busqueda() + '"' : 'No hay secciones registradas' }}
-              </p>
-              <button appearance="secondary" tuiButton (click)="openNuevaSeccionModal()">
-                Crear primera sección
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-      } @else {
-      <tbody tuiTbody [data]="seccionesQuery.data()?.content ?? []">
-        @for(seccion of seccionesQuery.data()?.content ?? []; track seccion.idSeccion) {
-        <tr tuiTr class="group hover:bg-surface-hover focus-within:bg-surface-hover">
-          <td *tuiCell="'codigo'" tuiTd class="border-b border-border px-6 py-4">
-            <div class="flex items-center gap-3">
-              <div
-                class="flex size-11 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface-hover text-xs font-bold text-text-secondary"
-              >
-                <tui-icon icon="@tui.hash" />
+        <tbody>
+          <tr>
+            <td [attr.colspan]="columns.length" class="px-6 py-16">
+              <div class="flex flex-col items-center justify-center gap-4">
+                <tui-icon
+                  icon="@tui.layout-list"
+                  class="text-text-muted"
+                  [style.fontSize]="'3rem'"
+                />
+                <p class="text-text-secondary text-center">
+                  {{
+                    busqueda()
+                      ? 'No hay resultados para "' + busqueda() + '"'
+                      : 'No hay secciones registradas'
+                  }}
+                </p>
+                <button appearance="secondary" tuiButton (click)="openNuevaSeccionModal()">
+                  Crear primera sección
+                </button>
               </div>
-              <span class="truncate text-base font-bold leading-6 text-text-primary"
-                >{{ seccion.codigoSeccion }}</span
-              >
-            </div>
-          </td>
+            </td>
+          </tr>
+        </tbody>
+      } @else {
+        <tbody tuiTbody [data]="seccionesQuery.data()?.content ?? []">
+          @for (seccion of seccionesQuery.data()?.content ?? []; track seccion.idSeccion) {
+            <tr tuiTr class="group hover:bg-surface-hover focus-within:bg-surface-hover">
+              <td *tuiCell="'codigo'" tuiTd class="border-b border-border px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="flex size-11 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface-hover text-xs font-bold text-text-secondary"
+                  >
+                    <tui-icon icon="@tui.hash" />
+                  </div>
+                  <span class="truncate text-base font-bold leading-6 text-text-primary">{{
+                    seccion.codigoSeccion
+                  }}</span>
+                </div>
+              </td>
 
-          <td *tuiCell="'curso'" tuiTd class="border-b border-border px-6 py-4">
-            <span class="text-sm font-medium text-text-primary">
-              {{ seccion.curso.nombre }}
-            </span>
-          </td>
+              <td *tuiCell="'curso'" tuiTd class="border-b border-border px-6 py-4">
+                <span class="text-sm font-medium text-text-primary">
+                  {{ seccion.curso.nombre }}
+                </span>
+              </td>
 
-          <td *tuiCell="'ciclo'" tuiTd class="border-b border-border px-6 py-4">
-            <span class="text-sm font-medium text-text-secondary">
-              {{ seccion.cicloAcademico.nombre }}
-            </span>
-          </td>
+              <td *tuiCell="'ciclo'" tuiTd class="border-b border-border px-6 py-4">
+                <span class="text-sm font-medium text-text-secondary">
+                  {{ seccion.cicloAcademico.nombre }}
+                </span>
+              </td>
 
-          <td *tuiCell="'vacantes'" tuiTd class="border-b border-border px-6 py-4 text-center">
-            <span
-              class="inline-flex size-8 items-center justify-center rounded-xl bg-surface-hover text-sm font-bold text-text-secondary"
-            >
-              {{ seccion.vacantes }}
-            </span>
-          </td>
+              <td *tuiCell="'vacantes'" tuiTd class="border-b border-border px-6 py-4 text-center">
+                <span
+                  class="inline-flex size-8 items-center justify-center rounded-xl bg-surface-hover text-sm font-bold text-text-secondary"
+                >
+                  {{ seccion.vacantes }}
+                </span>
+              </td>
 
-          <td *tuiCell="'acciones'" tuiTd class="border-b border-border px-6 py-4 text-right">
-            <div
-              class="inline-flex items-center gap-1 opacity-0 pointer-events-none transition duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
-            >
-              <button
-                appearance="action"
-                iconStart="@tui.pencil"
-                size="xs"
-                tuiIconButton
-                type="button"
-                aria-label="Editar sección"
-                (click)="openEditarSeccionModal(seccion)"
-              ></button>
-              <button
-                appearance="action"
-                iconStart="@tui.trash-2"
-                size="xs"
-                tuiIconButton
-                type="button"
-                aria-label="Eliminar sección"
-                (click)="openEliminarSeccionModal(seccion)"
-              ></button>
-            </div>
-          </td>
-        </tr>
-        }
-      </tbody>
+              <td *tuiCell="'acciones'" tuiTd class="border-b border-border px-6 py-4 text-right">
+                <div
+                  class="inline-flex items-center gap-1 opacity-0 pointer-events-none transition duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+                >
+                  <button
+                    appearance="action"
+                    iconStart="@tui.users"
+                    size="xs"
+                    tuiIconButton
+                    type="button"
+                    aria-label="Ver matriculados"
+                    (click)="verMatriculados(seccion.idSeccion)"
+                  ></button>
+                  <button
+                    appearance="action"
+                    iconStart="@tui.pencil"
+                    size="xs"
+                    tuiIconButton
+                    type="button"
+                    aria-label="Editar sección"
+                    (click)="openEditarSeccionModal(seccion)"
+                  ></button>
+                  <button
+                    appearance="action"
+                    iconStart="@tui.trash-2"
+                    size="xs"
+                    tuiIconButton
+                    type="button"
+                    aria-label="Eliminar sección"
+                    (click)="openEliminarSeccionModal(seccion)"
+                  ></button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
       }
     </table>
   </div>
 
   <!-- ─── Paginación ──────────────────────────────────────────── -->
   @if (totalPaginas() > 0) {
-  <div appearance="floating" tuiCardLarge>
-    <section>
-      <div class="flex items-center justify-between gap-4">
-        <span class="text-sm font-medium text-text-secondary">
-          {{ infoPaginacion() }}
-        </span>
+    <div appearance="floating" tuiCardLarge>
+      <section>
+        <div class="flex items-center justify-between gap-4">
+          <span class="text-sm font-medium text-text-secondary">
+            {{ infoPaginacion() }}
+          </span>
 
-        <div class="flex items-center gap-2">
-          <button
-            appearance="action"
-            iconStart="@tui.chevron-left"
-            size="s"
-            tuiIconButton
-            type="button"
-            aria-label="Página anterior"
-            [disabled]="!hayPaginaAnterior()"
-            (click)="paginaAnterior()"
-          ></button>
+          <div class="flex items-center gap-2">
+            <button
+              appearance="action"
+              iconStart="@tui.chevron-left"
+              size="s"
+              tuiIconButton
+              type="button"
+              aria-label="Página anterior"
+              [disabled]="!hayPaginaAnterior()"
+              (click)="paginaAnterior()"
+            ></button>
 
-          @for (p of paginasArray(); track p) {
-          <button
-            appearance="flat"
-            size="s"
-            tuiButton
-            type="button"
-            [class]="$index === pagina() ? 'bg-primary text-on-primary' : 'text-text-secondary'"
-            (click)="pagina.set($index)"
-          >
-            {{ $index + 1 }}
-          </button>
-          }
+            @for (p of paginasArray(); track p) {
+              <button
+                appearance="flat"
+                size="s"
+                tuiButton
+                type="button"
+                [class]="$index === pagina() ? 'bg-primary text-on-primary' : 'text-text-secondary'"
+                (click)="pagina.set($index)"
+              >
+                {{ $index + 1 }}
+              </button>
+            }
 
-          <button
-            appearance="action"
-            iconStart="@tui.chevron-right"
-            size="s"
-            tuiIconButton
-            type="button"
-            aria-label="Página siguiente"
-            [disabled]="!hayPaginaSiguiente()"
-            (click)="paginaSiguiente()"
-          ></button>
+            <button
+              appearance="action"
+              iconStart="@tui.chevron-right"
+              size="s"
+              tuiIconButton
+              type="button"
+              aria-label="Página siguiente"
+              [disabled]="!hayPaginaSiguiente()"
+              (click)="paginaSiguiente()"
+            ></button>
+          </div>
         </div>
-      </div>
-    </section>
-  </div>
+      </section>
+    </div>
   }
 
   <!-- ─── Modal: Crear / Editar Sección ───────────────────────── -->
   <ng-template
     let-observer
-    [tuiDialogOptions]="{ label: modoFormulario() === 'crear' ? 'Nueva sección' : 'Editar sección', size: 'm' }"
+    [tuiDialogOptions]="{
+      label: modoFormulario() === 'crear' ? 'Nueva sección' : 'Editar sección',
+      size: 'm',
+    }"
     [(tuiDialog)]="seccionModalAbierto"
   >
     <form [formGroup]="seccionForm" class="flex flex-col gap-4 p-4">
@@ -214,11 +234,16 @@
         <label tuiLabel>Código de sección</label>
         <input tuiInput placeholder="Ej: SEC-001" formControlName="codigoSeccion" />
       </tui-textfield>
-      @if (seccionForm.controls.codigoSeccion.touched && seccionForm.controls.codigoSeccion.invalid) {
-      <p class="text-xs text-red-500 -mt-3">
-        @if (seccionForm.controls.codigoSeccion.errors?.['required']) { El código es obligatorio }
-        @else if (seccionForm.controls.codigoSeccion.errors?.['minlength']) { Mínimo 2 caracteres }
-      </p>
+      @if (
+        seccionForm.controls.codigoSeccion.touched && seccionForm.controls.codigoSeccion.invalid
+      ) {
+        <p class="text-xs text-red-500 -mt-3">
+          @if (seccionForm.controls.codigoSeccion.errors?.['required']) {
+            El código es obligatorio
+          } @else if (seccionForm.controls.codigoSeccion.errors?.['minlength']) {
+            Mínimo 2 caracteres
+          }
+        </p>
       }
 
       <!-- Curso (select) -->
@@ -227,12 +252,12 @@
         <select tuiInput formControlName="idCurso">
           <option [ngValue]="null" disabled>Seleccionar curso</option>
           @for (curso of cursosList(); track curso.idCurso) {
-          <option [ngValue]="curso.idCurso">{{ curso.nombre }}</option>
+            <option [ngValue]="curso.idCurso">{{ curso.nombre }}</option>
           }
         </select>
       </tui-textfield>
       @if (seccionForm.controls.idCurso.touched && seccionForm.controls.idCurso.invalid) {
-      <p class="text-xs text-red-500 -mt-3">El curso es obligatorio</p>
+        <p class="text-xs text-red-500 -mt-3">El curso es obligatorio</p>
       }
 
       <!-- Ciclo Académico (select) -->
@@ -241,12 +266,12 @@
         <select tuiInput formControlName="idCiclo">
           <option [ngValue]="null" disabled>Seleccionar ciclo</option>
           @for (ciclo of ciclosList(); track ciclo.idCiclo) {
-          <option [ngValue]="ciclo.idCiclo">{{ ciclo.nombre }}</option>
+            <option [ngValue]="ciclo.idCiclo">{{ ciclo.nombre }}</option>
           }
         </select>
       </tui-textfield>
       @if (seccionForm.controls.idCiclo.touched && seccionForm.controls.idCiclo.invalid) {
-      <p class="text-xs text-red-500 -mt-3">El ciclo académico es obligatorio</p>
+        <p class="text-xs text-red-500 -mt-3">El ciclo académico es obligatorio</p>
       }
 
       <!-- Vacantes -->
@@ -255,10 +280,13 @@
         <input tuiInput type="number" placeholder="Ej: 30" formControlName="vacantes" />
       </tui-textfield>
       @if (seccionForm.controls.vacantes.touched && seccionForm.controls.vacantes.invalid) {
-      <p class="text-xs text-red-500 -mt-3">
-        @if (seccionForm.controls.vacantes.errors?.['required']) { Las vacantes son obligatorias }
-        @else if (seccionForm.controls.vacantes.errors?.['min']) { Mínimo 1 vacante }
-      </p>
+        <p class="text-xs text-red-500 -mt-3">
+          @if (seccionForm.controls.vacantes.errors?.['required']) {
+            Las vacantes son obligatorias
+          } @else if (seccionForm.controls.vacantes.errors?.['min']) {
+            Mínimo 1 vacante
+          }
+        </p>
       }
 
       <!-- Nombre del ciclo académico (texto directo) -->
@@ -266,8 +294,11 @@
         <label tuiLabel>Nombre del ciclo (texto)</label>
         <input tuiInput placeholder="Ej: 2024-I" formControlName="cicloAcademicoNombre" />
       </tui-textfield>
-      @if (seccionForm.controls.cicloAcademicoNombre.touched && seccionForm.controls.cicloAcademicoNombre.invalid) {
-      <p class="text-xs text-red-500 -mt-3">El nombre del ciclo es obligatorio</p>
+      @if (
+        seccionForm.controls.cicloAcademicoNombre.touched &&
+        seccionForm.controls.cicloAcademicoNombre.invalid
+      ) {
+        <p class="text-xs text-red-500 -mt-3">El nombre del ciclo es obligatorio</p>
       }
 
       <!-- Acciones -->

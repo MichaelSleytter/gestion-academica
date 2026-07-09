@@ -1,0 +1,225 @@
+<div tuiPlatform="web" class="flex flex-col gap-4 p-2.5">
+  <!-- ─── Encabezado ──────────────────────────────────────────── -->
+  <div class="flex items-center gap-3">
+    <button
+      appearance="flat"
+      iconStart="@tui.arrow-left"
+      size="m"
+      tuiButton
+      type="button"
+      (click)="goBack()"
+    >
+      Volver
+    </button>
+    <h2 class="text-2xl font-bold text-text-primary">Matriculados</h2>
+  </div>
+
+  <!-- ─── Contenido principal ─────────────────────────────────── -->
+  @if (isLoading()) {
+    <div
+      class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface"
+    >
+      <tui-loader size="l">Cargando matriculados...</tui-loader>
+    </div>
+  } @else if (matriculasQuery.isError()) {
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+      No se pudieron cargar los matriculados.
+    </div>
+  } @else {
+    <div class="flex items-center justify-between gap-4">
+      <!-- Info de vacantes -->
+      <div class="flex items-center gap-3">
+        <div class="flex h-2 w-40 overflow-hidden rounded-full bg-surface-hover">
+          <div
+            class="h-full rounded-full bg-primary transition-all duration-300"
+            [style.width.%]="
+              matriculasQuery.data()?.length ? (ocupados() / (ocupados() + 1)) * 100 : 0
+            "
+          ></div>
+        </div>
+        <span class="text-sm font-medium text-text-secondary"> {{ ocupados() }} ocupadas </span>
+      </div>
+
+      <!-- Botón matricular -->
+      <button appearance="primary" size="m" tuiButton type="button" (click)="openMatricularModal()">
+        + Matricular
+      </button>
+    </div>
+
+    <!-- ─── Tabla de matriculados ────────────────────────────── -->
+    <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr
+            class="border-b border-border bg-surface-hover text-xs font-semibold uppercase tracking-wide text-text-tertiary"
+          >
+            <th class="px-5 py-3">Código</th>
+            <th class="px-5 py-3">Nombre</th>
+            <th class="px-5 py-3">Apellido</th>
+            <th class="px-5 py-3">Email</th>
+            <th class="px-5 py-3">Estado</th>
+            <th class="px-5 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (matricula of matriculasQuery.data(); track matricula.idMatricula) {
+            <tr class="border-b border-border last:border-b-0 hover:bg-surface-hover">
+              <td class="px-5 py-3 font-medium text-text-primary">
+                {{ matricula.codigoEstudiante }}
+              </td>
+              <td class="px-5 py-3 text-text-primary">{{ matricula.nombre }}</td>
+              <td class="px-5 py-3 text-text-primary">{{ matricula.apellido }}</td>
+              <td class="px-5 py-3 text-text-secondary">{{ matricula.email }}</td>
+              <td class="px-5 py-3">
+                <span
+                  class="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  [class]="estadoBadgeClass(matricula.estado)"
+                >
+                  {{ matricula.estado }}
+                </span>
+              </td>
+              <td class="px-5 py-3 text-right">
+                @if (matricula.estado === 'ACTIVA') {
+                  <button
+                    appearance="accent"
+                    iconStart="@tui.user-x"
+                    size="xs"
+                    tuiIconButton
+                    type="button"
+                    aria-label="Retirar matrícula"
+                    [disabled]="isProcessing()"
+                    (click)="openRetirarModal(matricula)"
+                  ></button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="px-5 py-10 text-center text-text-secondary">
+                No hay estudiantes matriculados en esta sección.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- ─── Modal: Matricular estudiante ───────────────────────── -->
+  <ng-template
+    let-observer
+    [tuiDialogOptions]="{ label: 'Matricular estudiante', size: 'm' }"
+    [(tuiDialog)]="matricularModalAbierto"
+  >
+    <div class="flex flex-col gap-4 p-4">
+      <p class="text-sm text-text-secondary">Vacantes disponibles</p>
+
+      <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
+        <input
+          tuiInput
+          placeholder="Buscar por código o nombre"
+          (input)="onBusquedaEstudianteChange($any($event).target.value)"
+        />
+      </tui-textfield>
+
+      @if (buscandoEstudiantes()) {
+        <div class="flex items-center justify-center py-4">
+          <tui-loader size="s"></tui-loader>
+        </div>
+      } @else if (estudiantesResultados().length > 0) {
+        <div class="flex flex-col gap-1 max-h-60 overflow-y-auto rounded-lg border border-border">
+          @for (est of estudiantesResultados(); track est.id) {
+            <label
+              class="flex items-center gap-3 px-3 py-2 cursor-pointer rounded hover:bg-surface-hover"
+              [class.bg-surface-hover]="estudianteSeleccionado() === est.id"
+            >
+              <input
+                type="radio"
+                name="estudiante"
+                [value]="est.id"
+                [checked]="estudianteSeleccionado() === est.id"
+                (change)="estudianteSeleccionado.set(est.id)"
+                class="accent-primary"
+              />
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-text-primary"
+                  >{{ est.codigo }} - {{ est.nombre }} {{ est.apellido }}</span
+                >
+                <span class="text-xs text-text-secondary">{{ est.email }}</span>
+              </div>
+            </label>
+          }
+        </div>
+      } @else if (busquedaEstudiante().length >= 2) {
+        <p class="text-sm text-text-secondary text-center py-4">No se encontraron estudiantes</p>
+      } @else {
+        <p class="text-sm text-text-secondary text-center py-4">
+          Escribí al menos 2 caracteres para buscar
+        </p>
+      }
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button
+          appearance="secondary"
+          size="m"
+          tuiButton
+          type="button"
+          (click)="closeMatricularModal(); observer.complete()"
+        >
+          Cancelar
+        </button>
+        <button
+          appearance="primary"
+          size="m"
+          tuiButton
+          type="button"
+          [disabled]="estudianteSeleccionado() === null || matricularMutation.isPending()"
+          (click)="confirmarMatricular(observer)"
+        >
+          {{ matricularMutation.isPending() ? 'Matriculando...' : 'Matricular' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- ─── Modal: Confirmar retiro ────────────────────────────── -->
+  <ng-template
+    let-observer
+    [tuiDialogOptions]="{ label: 'Retirar matrícula', size: 's' }"
+    [(tuiDialog)]="retirarModalAbierto"
+  >
+    <div class="flex flex-col gap-6 p-4">
+      <p class="text-text-primary text-sm leading-relaxed">
+        ¿Retirar a
+        <strong
+          >{{ matriculaSeleccionada()?.nombre }} {{ matriculaSeleccionada()?.apellido }}</strong
+        >
+        de la sección?
+      </p>
+      <p class="text-xs text-text-secondary -mt-4">
+        El estado cambiará a RETIRADA y la vacante quedará disponible.
+      </p>
+      <div class="flex justify-end gap-2">
+        <button
+          appearance="secondary"
+          size="m"
+          tuiButton
+          type="button"
+          (click)="closeRetirarModal(); observer.complete()"
+        >
+          Cancelar
+        </button>
+        <button
+          appearance="accent"
+          size="m"
+          tuiButton
+          type="button"
+          [disabled]="retirarMutation.isPending()"
+          (click)="confirmarRetirar(observer)"
+        >
+          {{ retirarMutation.isPending() ? 'Retirando...' : 'Retirar' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</div>

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   TuiButton,
@@ -13,16 +14,19 @@ import { TuiPlatform } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
 import { TuiSkeleton, TuiSelect } from '@taiga-ui/kit';
-import { SeccionResponse } from '../../../models/seccion/seccion.response';
-import { SeccionCreateRequest } from '../../../models/seccion/seccion.request';
+import type { SeccionResponse } from '../../../models/seccion/seccion.response';
+import type { SeccionCreateRequest } from '../../../models/seccion/seccion.request';
 import {
   useSeccionesPaginadosQuery,
   useCrearSeccionMutation,
   useActualizarSeccionMutation,
   useEliminarSeccionMutation,
 } from '../../../queries/seccion.query';
-import { SeccionService, CicloAcademicoResponse } from '../../../core/services/seccion.service';
-import { CursoResponse } from '../../../models/curso/curso.response';
+import {
+  SeccionService,
+  type CicloAcademicoResponse,
+} from '../../../core/services/seccion.service';
+import type { CursoResponse } from '../../../models/curso/curso.response';
 
 type ModoFormulario = 'crear' | 'editar';
 
@@ -59,6 +63,7 @@ interface DialogObserver {
  * Accesible para: ADMIN, DOCENTE
  */
 export class Secciones {
+  private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
   private readonly notifications = inject(TuiNotificationService);
   private readonly seccionService = inject(SeccionService);
@@ -139,10 +144,7 @@ export class Secciones {
       Validators.required,
       Validators.minLength(2),
     ]),
-    vacantes: this.formBuilder.nonNullable.control(1, [
-      Validators.required,
-      Validators.min(1),
-    ]),
+    vacantes: this.formBuilder.nonNullable.control(1, [Validators.required, Validators.min(1)]),
     cicloAcademicoNombre: this.formBuilder.nonNullable.control('', [Validators.required]),
     idCurso: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
     idCiclo: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
@@ -153,6 +155,13 @@ export class Secciones {
   readonly crearSeccionMutation = useCrearSeccionMutation();
   readonly actualizarSeccionMutation = useActualizarSeccionMutation();
   readonly eliminarSeccionMutation = useEliminarSeccionMutation();
+
+  // ─── Navegación ───────────────────────────────────────────────────────
+
+  /** Navega a la vista de matriculados de una sección. */
+  verMatriculados(idSeccion: number): void {
+    void this.router.navigate(['/app/secciones', idSeccion, 'matriculas']);
+  }
 
   // ─── Paginación ──────────────────────────────────────────────────────
 
@@ -247,14 +256,22 @@ export class Secciones {
         {
           onSuccess: () => {
             this.notifications
-              .open('Sección creada exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+              .open('Sección creada exitosamente', {
+                label: 'Éxito',
+                appearance: 'success',
+                autoClose: 3000,
+              })
               .subscribe();
             observer.complete();
             this.closeSeccionModal();
           },
           onError: (error) => {
             this.notifications
-              .open(error?.message ?? 'Error al crear sección', { label: 'Error', appearance: 'error', autoClose: 5000 })
+              .open(error?.message ?? 'Error al crear sección', {
+                label: 'Error',
+                appearance: 'error',
+                autoClose: 5000,
+              })
               .subscribe();
           },
         },
@@ -270,14 +287,22 @@ export class Secciones {
       {
         onSuccess: () => {
           this.notifications
-            .open('Sección actualizada exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+            .open('Sección actualizada exitosamente', {
+              label: 'Éxito',
+              appearance: 'success',
+              autoClose: 3000,
+            })
             .subscribe();
           observer.complete();
           this.closeSeccionModal();
         },
         onError: (error) => {
           this.notifications
-            .open(error?.message ?? 'Error al actualizar sección', { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .open(error?.message ?? 'Error al actualizar sección', {
+              label: 'Error',
+              appearance: 'error',
+              autoClose: 5000,
+            })
             .subscribe();
         },
       },
@@ -293,14 +318,22 @@ export class Secciones {
     this.eliminarSeccionMutation.mutate(seleccionada.idSeccion, {
       onSuccess: () => {
         this.notifications
-          .open('Sección eliminada exitosamente', { label: 'Eliminada', appearance: 'success', autoClose: 3000 })
+          .open('Sección eliminada exitosamente', {
+            label: 'Eliminada',
+            appearance: 'success',
+            autoClose: 3000,
+          })
           .subscribe();
         observer.complete();
         this.closeEliminarModal();
       },
       onError: (error) => {
         this.notifications
-          .open(error?.message ?? 'Error al eliminar sección', { label: 'Error', appearance: 'error', autoClose: 5000 })
+          .open(error?.message ?? 'Error al eliminar sección', {
+            label: 'Error',
+            appearance: 'error',
+            autoClose: 5000,
+          })
           .subscribe();
       },
     });
@@ -319,11 +352,11 @@ export class Secciones {
   // ─── Navegación de páginas ───────────────────────────────────────────
 
   paginaAnterior(): void {
-    if (this.pagina() > 0) this.pagina.update(p => p - 1);
+    if (this.pagina() > 0) this.pagina.update((p) => p - 1);
   }
 
   paginaSiguiente(): void {
-    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update(p => p + 1);
+    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update((p) => p + 1);
   }
 
   // ─── Métodos privados ────────────────────────────────────────────────

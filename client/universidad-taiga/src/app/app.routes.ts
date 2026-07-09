@@ -12,7 +12,7 @@
  *   - ESTUDIANTE: Visualización de cursos, notas e historial
  */
 
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
 import { requiresAuth, requiresRole, requiresNoAuth } from './core/guards/auth.guard';
 
 /**
@@ -41,13 +41,17 @@ export const routes: Routes = [
    */
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login/login.component').then((m) => m.LoginComponent),
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then((m) => m.LoginComponent),
     canActivate: [requiresNoAuth],
   },
 
   {
     path: 'forgot-password',
-    loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent,
+      ),
     canActivate: [requiresNoAuth],
   },
 
@@ -57,12 +61,16 @@ export const routes: Routes = [
    */
   {
     path: 'reset-password',
-    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+    loadComponent: () =>
+      import('./features/auth/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
   },
 
   {
     path: 'page404',
-    loadComponent: () => import('./shared/components/page404/page404.component').then((m) => m.Page404),
+    loadComponent: () =>
+      import('./shared/components/page404/page404.component').then((m) => m.Page404),
   },
 
   // =========================================================================
@@ -76,21 +84,24 @@ export const routes: Routes = [
    */
   {
     path: 'app',
-    loadComponent: () => import('./shared/components/layout/layout.component').then((m) => m.AppLayout),
+    loadComponent: () =>
+      import('./shared/components/layout/layout.component').then((m) => m.AppLayout),
     canActivate: [requiresAuth],
     canActivateChild: [requiresAuth],
     children: [
       // ─── Dashboard (SOLO ADMIN) ───────────────────────────────────────
       {
         path: 'dashboard',
-        loadComponent: () => import('./features/admin/dashboard/dashboard.component').then((m) => m.Dashboard),
+        loadComponent: () =>
+          import('./features/admin/dashboard/dashboard.component').then((m) => m.Dashboard),
         canActivate: [requiresRole('ADMIN')],
       },
 
       // ─── Estudiantes (SOLO ADMIN) ────────────────────────────────────
       {
         path: 'estudiantes',
-        loadComponent: () => import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
+        loadComponent: () =>
+          import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
         canActivate: [requiresRole('ADMIN')],
       },
 
@@ -98,25 +109,31 @@ export const routes: Routes = [
       // MUST GO BEFORE estudiante/:id para que Angular matchee primero la ruta fija
       {
         path: 'estudiante/mis-cursos',
-        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
+        loadComponent: () =>
+          import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
         canActivate: [requiresRole('ESTUDIANTE')],
       },
       {
         path: 'estudiante/mis-cursos/:id/notas',
-        loadComponent: () => import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
+        loadComponent: () =>
+          import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
         canActivate: [requiresRole('ESTUDIANTE')],
       },
 
       {
         path: 'estudiante/:id',
-        loadComponent: () => import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
+        loadComponent: () =>
+          import('./features/admin/estudiantes/estudiantes.component').then((m) => m.Estudiantes),
         canActivate: [requiresRole('ADMIN')],
       },
 
       // ─── DOCENTE: Estudiantes de una sección (solo lectura) ──────────
       {
         path: 'docente/mis-cursos/:id/estudiantes',
-        loadComponent: () => import('./features/docente/estudiantes-seccion/estudiantes-seccion.component').then((m) => m.EstudiantesSeccion),
+        loadComponent: () =>
+          import('./features/docente/estudiantes-seccion/estudiantes-seccion.component').then(
+            (m) => m.EstudiantesSeccion,
+          ),
         canActivate: [requiresRole('DOCENTE')],
       },
 
@@ -124,80 +141,100 @@ export const routes: Routes = [
       // MUST GO BEFORE docente/:id para que Angular matchee primero la ruta fija
       {
         path: 'docente/mis-cursos',
-        loadComponent: () => import('./features/docente/mis-cursos/mis-cursos.component').then((m) => m.MisCursos),
+        loadComponent: () =>
+          import('./features/docente/mis-cursos/mis-cursos.component').then((m) => m.MisCursos),
         canActivate: [requiresRole('DOCENTE')],
       },
       {
         path: 'docente/mis-cursos/:id/notas',
-        loadComponent: () => import('./features/docente/carga-notas/carga-notas.component').then((m) => m.CargaNotas),
+        loadComponent: () =>
+          import('./features/docente/carga-notas/carga-notas.component').then((m) => m.CargaNotas),
         canActivate: [requiresRole('DOCENTE')],
       },
 
       // ─── Docentes (SOLO ADMIN) ────────────────────────────────────────
       {
         path: 'docentes',
-        loadComponent: () => import('./features/admin/docentes/docentes.component').then((m) => m.Docentes),
+        loadComponent: () =>
+          import('./features/admin/docentes/docentes.component').then((m) => m.Docentes),
         canActivate: [requiresRole('ADMIN')],
       },
       {
         path: 'docente/:id',
-        loadComponent: () => import('./features/admin/docentes/docentes.component').then((m) => m.Docentes),
+        loadComponent: () =>
+          import('./features/admin/docentes/docentes.component').then((m) => m.Docentes),
         canActivate: [requiresRole('ADMIN')],
       },
 
       // ─── Cursos ───────────────────────────────────────────────────────
       {
         path: 'cursos',
-        loadComponent: () => import('./features/admin/cursos/cursos.component').then((m) => m.Cursos),
+        loadComponent: () =>
+          import('./features/admin/cursos/cursos.component').then((m) => m.Cursos),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
       {
         path: 'cursos/:id',
-        loadComponent: () => import('./features/admin/cursos/cursos.component').then((m) => m.Cursos),
+        loadComponent: () =>
+          import('./features/admin/cursos/cursos.component').then((m) => m.Cursos),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── Secciones (ADMIN + DOCENTE) ──────────────────────────────────
       {
         path: 'secciones',
-        loadComponent: () => import('./features/admin/secciones/secciones.component').then((m) => m.Secciones),
+        loadComponent: () =>
+          import('./features/admin/secciones/secciones.component').then((m) => m.Secciones),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
       {
         path: 'secciones/:id',
-        loadComponent: () => import('./features/admin/secciones/secciones.component').then((m) => m.Secciones),
+        loadComponent: () =>
+          import('./features/admin/secciones/secciones.component').then((m) => m.Secciones),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
+      },
+      {
+        path: 'secciones/:id/matriculas',
+        loadComponent: () =>
+          import('./features/admin/matriculas/matriculas.component').then((m) => m.Matriculas),
+        canActivate: [requiresRole('ADMIN')],
       },
 
       // ─── Horarios (ADMIN + DOCENTE) ───────────────────────────────────
       {
         path: 'horarios',
-        loadComponent: () => import('./features/admin/horarios/horarios.component').then((m) => m.Horarios),
+        loadComponent: () =>
+          import('./features/admin/horarios/horarios.component').then((m) => m.Horarios),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── Evaluaciones (ADMIN + DOCENTE) ───────────────────────────────
       {
         path: 'evaluaciones',
-        loadComponent: () => import('./features/admin/evaluaciones/evaluaciones.component').then((m) => m.Evaluaciones),
+        loadComponent: () =>
+          import('./features/admin/evaluaciones/evaluaciones.component').then(
+            (m) => m.Evaluaciones,
+          ),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       // ─── ESTUDIANTE: Historial (SOLO ESTUDIANTE) ─────────────────────
       {
         path: 'estudiante/historial',
-        loadComponent: () => import('./features/estudiante/historial/historial.component').then((m) => m.Historial),
+        loadComponent: () =>
+          import('./features/estudiante/historial/historial.component').then((m) => m.Historial),
         canActivate: [requiresRole('ESTUDIANTE')],
       },
 
       // ─── Perfil (TODOS los roles) ────────────────────────────────────
       {
         path: 'perfil',
-        loadComponent: () => import('./shared/components/perfil/perfil.component').then((m) => m.Perfil),
+        loadComponent: () =>
+          import('./shared/components/perfil/perfil.component').then((m) => m.Perfil),
       },
 
       // ─── Default: el layout redirige al home según el rol ────────────
-    ]
+    ],
   },
 
   // Redirects de rutas antiguas al layout
@@ -228,7 +265,8 @@ export const routes: Routes = [
 
   {
     path: '**',
-    loadComponent: () => import('./shared/components/page404/page404.component').then((m) => m.Page404),
+    loadComponent: () =>
+      import('./shared/components/page404/page404.component').then((m) => m.Page404),
   },
 ];
 
