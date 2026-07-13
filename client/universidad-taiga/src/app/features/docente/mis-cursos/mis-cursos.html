@@ -7,7 +7,23 @@
           Secciones asignadas para carga de notas
         </span>
       </div>
-      <span class="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-on-primary">{{ totalSecciones() }} secciones</span>
+      <div class="flex items-center gap-3">
+        <label class="flex flex-col gap-1 text-xs font-medium text-text-secondary">
+          Filtrado por
+          <select
+            class="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary"
+            [value]="periodoSeleccionado()"
+            (change)="onPeriodoChange($event)"
+          >
+            <option value="actual">Periodo actual</option>
+            @for (periodo of periodos(); track periodo) {
+              <option [value]="periodo">{{ periodo }}</option>
+            }
+            <option value="todos">Ver todos</option>
+          </select>
+        </label>
+        <span class="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-on-primary">{{ totalSecciones() }} secciones</span>
+      </div>
     </header>
   </div>
 
@@ -29,9 +45,14 @@
       <p class="mt-4 text-base font-semibold text-text-primary">No tienes secciones asignadas</p>
       <p class="mt-1 text-sm text-text-secondary">Cuando administración te asigne cursos, aparecerán aquí.</p>
     </div>
+  } @else if (seccionesFiltradas().length === 0) {
+    <div class="rounded-2xl border border-border bg-surface p-10 text-center">
+      <p class="text-base font-semibold text-text-primary">Sin cursos en este periodo</p>
+      <p class="mt-1 text-sm text-text-secondary">Elige otro periodo para ver cursos anteriores.</p>
+    </div>
   } @else {
     <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      @for (seccion of secciones(); track seccion.idSeccion) {
+      @for (seccion of seccionesFiltradas(); track seccion.idSeccion) {
         <article appearance="floating" tuiCardLarge class="flex min-h-56 flex-col justify-between gap-4">
           <div class="flex flex-col gap-3">
             <div class="flex items-start justify-between gap-3">

@@ -7,6 +7,7 @@ import {
 import type { EvaluacionResponse } from '../models/evaluacion/evaluacion.response';
 import type { HorarioResponse } from '../models/horario/horario.response';
 import type { NotaConEvaluacionResponse } from '../core/services/estudiante-role.service';
+import { isCurrentAcademicPeriod } from '../shared/utils/academic-period';
 import { EVALUACIONES_BY_SECCION_KEY } from './query-keys';
 
 /**
@@ -69,11 +70,9 @@ export function useMiHorarioQuery() {
     queryKey: ['estudiante', 'mi-horario'],
     queryFn: async () => {
       const cursos = await service.getMisCursos();
-      const cursosActivos = cursos.filter((curso) => curso.estado === 'ACTIVA');
-      const periodosActivos = new Set(cursosActivos.map((curso) => curso.cicloAcademicoNombre).filter(Boolean));
-      const seccionesActivas = periodosActivos.size === 1
-        ? cursosActivos.filter((curso) => periodosActivos.has(curso.cicloAcademicoNombre))
-        : cursosActivos;
+      const seccionesActivas = cursos.filter(
+        (curso) => curso.estado === 'ACTIVA' && isCurrentAcademicPeriod(curso),
+      );
       const horarios = await Promise.all(
         seccionesActivas.map((curso) => service.getHorariosBySeccion(curso.idSeccion)),
       );

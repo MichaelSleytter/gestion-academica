@@ -12,17 +12,17 @@
           >
         </div>
         <label class="flex flex-col gap-1 text-xs font-medium text-text-secondary">
-          Periodo
+          Filtrado por
           <select
             class="rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary"
             [value]="periodoSeleccionado()"
             (change)="onPeriodoChange($event)"
           >
-            <option value="actual">Actual</option>
-            <option value="todos">Todos</option>
+            <option value="actual">Periodo actual</option>
             @for (periodo of periodos(); track periodo) {
               <option [value]="periodo">{{ periodo }}</option>
             }
+            <option value="todos">Ver todos</option>
           </select>
         </label>
       </header>

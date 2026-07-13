@@ -31,6 +31,10 @@ export interface CursoMatriculadoResponse {
   codigoSeccion: string;
   /** Nombre del ciclo académico */
   cicloAcademicoNombre: string;
+  /** Fecha de inicio del ciclo académico (YYYY-MM-DD) */
+  fechaInicio: string;
+  /** Fecha de fin del ciclo académico (YYYY-MM-DD) */
+  fechaFin: string;
   /** ID del curso */
   idCurso: number;
   /** Nombre del curso */

@@ -3,14 +3,21 @@ package com.example.gestionacademica.matriculas.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
+import com.example.gestionacademica.cursos.domain.CicloAcademico;
+import com.example.gestionacademica.cursos.domain.Curso;
+import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.cursos.repository.SeccionRepository;
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
+import com.example.gestionacademica.matriculas.dto.MatriculaMisCursosDTO;
 import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -53,6 +60,30 @@ class MatriculaServiceTest {
         assertThat(resultado).hasSize(1);
         assertThat(resultado.get(0)).isSameAs(matricula);
         verify(matriculaRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("listarMisCursos: debe incluir fechas del ciclo académico")
+    void listarMisCursos_debeIncluirFechasDelCiclo() {
+        Matricula matricula = mock(Matricula.class);
+        Seccion seccion = mock(Seccion.class);
+        Curso curso = mock(Curso.class);
+        CicloAcademico ciclo = mock(CicloAcademico.class);
+        LocalDate fechaInicio = LocalDate.of(2026, 3, 1);
+        LocalDate fechaFin = LocalDate.of(2026, 7, 15);
+        when(matricula.getSeccion()).thenReturn(seccion);
+        when(matricula.getIdMatricula()).thenReturn(10);
+        when(matricula.getEstado()).thenReturn(MatriculaEstado.ACTIVA);
+        when(seccion.getCurso()).thenReturn(curso);
+        when(seccion.getCicloAcademico()).thenReturn(ciclo);
+        when(ciclo.getFechaInicio()).thenReturn(fechaInicio);
+        when(ciclo.getFechaFin()).thenReturn(fechaFin);
+        when(matriculaRepository.findActiveByEstudianteIdWithSeccionCurso(1)).thenReturn(List.of(matricula));
+
+        MatriculaMisCursosDTO resultado = matriculaService.listarMisCursos(1).getFirst();
+
+        assertThat(resultado.fechaInicio()).isEqualTo(fechaInicio);
+        assertThat(resultado.fechaFin()).isEqualTo(fechaFin);
     }
 
     /** Verifica que buscarPorId retorna la entidad cuando existe. */

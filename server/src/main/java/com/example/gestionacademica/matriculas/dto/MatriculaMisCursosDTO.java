@@ -1,5 +1,7 @@
 package com.example.gestionacademica.matriculas.dto;
 
+import java.time.LocalDate;
+
 /**
  * DTO de respuesta para el endpoint mis-cursos del estudiante autenticado.
  * <p>
@@ -11,6 +13,8 @@ package com.example.gestionacademica.matriculas.dto;
  * @param idSeccion           ID de la sección.
  * @param codigoSeccion       Código de la sección.
  * @param cicloAcademicoNombre Nombre del ciclo académico.
+ * @param fechaInicio          Fecha de inicio del ciclo académico.
+ * @param fechaFin             Fecha de fin del ciclo académico.
  * @param idCurso             ID del curso.
  * @param nombreCurso         Nombre del curso.
  * @param creditos            Créditos del curso.
@@ -21,6 +25,8 @@ public record MatriculaMisCursosDTO(
         Integer idSeccion,
         String codigoSeccion,
         String cicloAcademicoNombre,
+        LocalDate fechaInicio,
+        LocalDate fechaFin,
         Integer idCurso,
         String nombreCurso,
         Integer creditos) {

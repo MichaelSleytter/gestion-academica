@@ -12,6 +12,7 @@ import {
 } from '../../../queries/estudiante-role.query';
 import { ContenidoService } from '../../../core/services/contenido.service';
 import type { CursoContenidoResponse } from '../../../models/contenido/curso-contenido.response';
+import { isCurrentAcademicPeriod } from '../../../shared/utils/academic-period';
 /**
  * Evaluación combinada con su nota (si existe).
  */
@@ -71,6 +72,11 @@ export class MisNotas {
 
   /** Cursos matriculados del estudiante. */
   readonly cursosMatriculados = computed(() => this.misCursosQuery.data() ?? []);
+  private readonly cursosActuales = computed(() =>
+    this.cursosMatriculados().filter(
+      (curso) => curso.estado === 'ACTIVA' && isCurrentAcademicPeriod(curso),
+    ),
+  );
 
   readonly periodoSeleccionado = signal('actual');
 
@@ -81,14 +87,12 @@ export class MisNotas {
   readonly cursosFiltrados = computed(() => {
     const periodo = this.periodoSeleccionado();
     if (periodo === 'todos') return this.cursosMatriculados();
-    if (periodo === 'actual') return this.cursosMatriculados().filter((curso) => curso.estado === 'ACTIVA');
+    if (periodo === 'actual') return this.cursosActuales();
     return this.cursosMatriculados().filter((curso) => curso.cicloAcademicoNombre === periodo);
   });
 
-  /** Cantidad de cursos con estado ACTIVA. */
-  readonly cursosActivos = computed(
-    () => this.cursosMatriculados().filter((c) => c.estado === 'ACTIVA').length,
-  );
+  /** Cantidad de cursos activos del periodo actual. */
+  readonly cursosActivos = computed(() => this.cursosActuales().length);
 
   /** Columnas de la tabla de cursos. */
   readonly cursosColumns = ['curso', 'seccion', 'ciclo', 'estado', 'acciones'] as const;

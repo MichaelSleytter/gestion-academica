@@ -66,12 +66,15 @@ public class MatriculaService {
     private MatriculaMisCursosDTO aMisCursosDTO(Matricula matricula) {
         var seccion = matricula.getSeccion();
         var curso = seccion.getCurso();
+        var cicloAcademico = seccion.getCicloAcademico();
         return new MatriculaMisCursosDTO(
                 matricula.getIdMatricula(),
                 matricula.getEstado().name(),
                 seccion.getIdSeccion(),
                 seccion.getCodigoSeccion(),
                 seccion.getCicloAcademicoNombre(),
+                cicloAcademico.getFechaInicio(),
+                cicloAcademico.getFechaFin(),
                 curso.getIdCurso(),
                 curso.getNombre(),
                 curso.getCreditos()
