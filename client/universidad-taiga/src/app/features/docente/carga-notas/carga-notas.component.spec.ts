@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { convertToParamMap, provideRouter } from '@angular/router';
 import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { ActivatedRoute } from '@angular/router';
@@ -16,7 +16,10 @@ describe('CargaNotas', () => {
       providers: [
         provideRouter([]),
         provideTanStackQuery(new QueryClient()),
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: convertToParamMap({ id: '7' }) } } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: convertToParamMap({ id: '7' }) } },
+        },
         {
           provide: DocenteRoleService,
           useValue: {
@@ -39,13 +42,19 @@ describe('CargaNotas', () => {
   });
 
   it('should read student id from section enrollment DTO', () => {
-    expect(component.getStudentId({ idMatricula: 1, fechaMatricula: null, estado: 'ACTIVA', idEstudiante: 9 })).toBe(9);
+    expect(
+      component.getStudentId({
+        idMatricula: 1,
+        fechaMatricula: null,
+        estado: 'ACTIVA',
+        idEstudiante: 9,
+      }),
+    ).toBe(9);
   });
 
-  it('should find existing notes by student id from note DTO', () => {
-    TestBed.inject(QueryClient).setQueryData(['evaluaciones', 3, 'notas'], [{ idNota: 5, nota: 18, idEstudiante: 9 }]);
-    component.selectedEvaluationId.set(3);
+  it('should find existing notes by evaluation and student id from note DTO', () => {
+    component.allNotesMap.set({ 3: [{ idNota: 5, nota: 18, idEstudiante: 9 }] });
 
-    expect(component.findNotaByStudent(9)?.idNota).toBe(5);
+    expect(component.findNotaByStudent(3, 9)?.idNota).toBe(5);
   });
 });

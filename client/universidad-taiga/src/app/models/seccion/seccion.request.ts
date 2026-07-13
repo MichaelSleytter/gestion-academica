@@ -8,6 +8,8 @@ export interface SeccionCreateRequest {
   cicloAcademicoNombre: string;
   /** Cantidad de vacantes */
   vacantes: number;
+  /** Color visual opcional para identificar la sección en horarios */
+  color?: string | null;
 }
 
 /**

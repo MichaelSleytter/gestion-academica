@@ -1,4 +1,7 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { TuiIcon, TuiLoader } from '@taiga-ui/core';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
 import type {
@@ -6,7 +9,10 @@ import type {
   EstadoCursoProgreso,
   HistorialProgresoResponse,
 } from '../../../models/historial';
-import { useMiHistorialProgresoQuery } from '../../../queries/historial-progreso.query';
+import {
+  useHistorialProgresoEstudianteQuery,
+  useMiHistorialProgresoQuery,
+} from '../../../queries/historial-progreso.query';
 
 interface CicloCursos {
   ciclo: number;
@@ -24,7 +30,7 @@ interface StatusView {
  * Muestra el progreso completo de carrera calculado por backend:
  * créditos, promedio ponderado, avance, materias y correlativas.
  *
- * Accesible para: ESTUDIANTE.
+ * Accesible para: ESTUDIANTE, ADMIN y DOCENTE autorizado.
  */
 @Component({
   selector: 'app-historial',
@@ -34,11 +40,32 @@ interface StatusView {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Historial {
+  private readonly route = inject(ActivatedRoute);
+
+  /** Student ID from admin/docente lookup route, or null for self-service. */
+  readonly idEstudiante = toSignal(
+    this.route.paramMap.pipe(
+      map((params) => {
+        const id = Number(params.get('id'));
+        return Number.isFinite(id) && id > 0 ? id : null;
+      }),
+    ),
+    { initialValue: null },
+  );
+
   /** Query with authenticated student's academic progress. */
-  readonly historialQuery = useMiHistorialProgresoQuery();
+  private readonly miHistorialQuery = useMiHistorialProgresoQuery();
+
+  /** Query with an authorized student's academic progress. */
+  private readonly historialEstudianteQuery = useHistorialProgresoEstudianteQuery(this.idEstudiante);
+
+  /** Active query for self-service or admin/docente lookup. */
+  readonly historialQuery = computed(() =>
+    this.idEstudiante() ? this.historialEstudianteQuery : this.miHistorialQuery,
+  );
 
   /** Academic progress response ready for the template. */
-  readonly progreso = computed(() => this.historialQuery.data() ?? null);
+  readonly progreso = computed(() => this.historialQuery().data() ?? null);
 
   /** Summary metrics. */
   readonly resumen = computed(() => this.progreso()?.resumen ?? null);
@@ -53,7 +80,7 @@ export class Historial {
 
   /** Human-readable API error. */
   readonly errorMessage = computed(
-    () => this.historialQuery.error()?.message ?? 'No se pudo cargar tu historial académico.',
+    () => this.historialQuery().error()?.message ?? 'No se pudo cargar el historial académico.',
   );
 
   completionStyle(progreso: HistorialProgresoResponse): string {

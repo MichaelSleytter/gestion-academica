@@ -1,0 +1,84 @@
+<div tuiPlatform="web" class="card flex flex-col gap-3 p-2.5">
+  <div appearance="floating" tuiCardLarge>
+    <header tuiHeader class="flex h-full items-center justify-between">
+      <div class="flex flex-col justify-center">
+        <h2 tuiTitle>Mi horario</h2>
+        <span class="subtitle text-sm font-medium text-text-secondary">
+          Consulta tus clases matriculadas activas
+        </span>
+      </div>
+    </header>
+  </div>
+
+  @if (isLoading()) {
+    <div appearance="floating" tuiCardLarge class="flex min-h-64 items-center justify-center">
+      <tui-loader size="m">Cargando horario...</tui-loader>
+    </div>
+  } @else if (isError()) {
+    <div appearance="floating" tuiCardLarge class="flex min-h-64 flex-col items-center justify-center gap-2 text-center">
+      <p class="text-base font-bold text-text-primary">No se pudo cargar tu horario</p>
+      <p class="text-sm text-text-secondary">Intenta nuevamente más tarde.</p>
+    </div>
+  } @else if (calendarEvents().length === 0) {
+    <div appearance="floating" tuiCardLarge class="flex min-h-64 flex-col items-center justify-center gap-2 text-center">
+      <p class="text-base font-bold text-text-primary">No tienes horarios registrados</p>
+      <p class="text-sm text-text-secondary">Tus secciones activas aún no tienen clases programadas.</p>
+    </div>
+  } @else {
+    <div appearance="floating" tuiCardLarge>
+      <section class="flex flex-col gap-3">
+        <h3 class="text-base font-bold text-text-primary">Vista semanal</h3>
+
+        @if (calendarLegend().length > 0) {
+          <div class="flex flex-wrap gap-2" aria-label="Leyenda de colores por sección">
+            @for (section of calendarLegend(); track section.id) {
+              <span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-sm font-medium text-text-secondary">
+                <span class="size-3 rounded-full" [style.background]="section.color"></span>
+                {{ section.label }}
+              </span>
+            }
+          </div>
+        }
+      </section>
+    </div>
+
+    <section appearance="floating" tuiCardLarge class="overflow-hidden">
+      <div class="overflow-x-auto rounded-2xl border border-border bg-surface">
+        <div class="grid min-w-[760px]" [style.gridTemplateColumns]="'88px repeat(' + calendarDays.length + ', minmax(160px, 1fr))'">
+          <div class="sticky left-0 z-20 border-b border-r border-border bg-surface-hover p-3 text-xs font-bold uppercase text-text-secondary">Hora</div>
+          @for (day of calendarDays; track day) {
+            <div class="border-b border-r border-border bg-surface-hover p-3 text-center text-sm font-bold text-text-primary">
+              {{ day }}
+            </div>
+          }
+
+          @for (hour of calendarHours; track hour) {
+            <div class="sticky left-0 z-10 border-b border-r border-border bg-surface px-3 py-2 text-xs font-bold tabular-nums text-text-secondary" [style.height.px]="hourHeight">
+              {{ formatHour(hour) }}
+            </div>
+            @for (day of calendarDays; track day; let dayIndex = $index) {
+              <div class="relative border-b border-r border-border bg-surface" [style.height.px]="hourHeight">
+                @for (event of eventsForDay(dayIndex); track event.idHorario) {
+                  @if (event.top >= (hour - 7) * hourHeight && event.top < (hour - 6) * hourHeight) {
+                    <article
+                      class="absolute inset-x-2 z-20 overflow-hidden rounded-xl border border-border p-2 text-left shadow-sm"
+                      [style.top.px]="event.top - (hour - 7) * hourHeight"
+                      [style.height.px]="event.height"
+                      [style.background]="event.backgroundColor"
+                      [style.borderLeft]="'4px solid ' + event.color"
+                      [attr.aria-label]="event.title + ', ' + event.subtitle + ', ' + event.horaInicio.substring(0, 5) + ' a ' + event.horaFin.substring(0, 5)"
+                    >
+                      <strong class="block truncate text-sm text-text-primary">{{ event.subtitle }}</strong>
+                      <span class="block truncate text-xs text-text-secondary">{{ event.title }} · {{ event.aula || 'Sin aula' }}</span>
+                      <span class="block truncate text-xs text-text-tertiary">{{ event.horaInicio.substring(0, 5) }}–{{ event.horaFin.substring(0, 5) }}</span>
+                    </article>
+                  }
+                }
+              </div>
+            }
+          }
+        </div>
+      </div>
+    </section>
+  }
+</div>

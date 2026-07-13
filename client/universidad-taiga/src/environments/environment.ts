@@ -18,8 +18,11 @@ export const environment = {
 
   /**
    * URL base de la API REST.
-   * Desarrollo: apunta directo al backend local.
-   * Producción: se reemplaza por ruta relativa `/api/v1` (Vercel proxy).
+   * Desarrollo: ruta relativa proxy por Angular dev server a `localhost:8080`.
+   * Producción: ruta relativa proxy por Vercel a Railway.
+   *
+   * @see proxy.conf.json - Configuración del proxy de desarrollo.
+   * @see vercel.json - Configuración del proxy de producción.
    */
-  apiBaseUrl: 'http://localhost:8080/api/v1',
+  apiBaseUrl: '/api/v1',
 };

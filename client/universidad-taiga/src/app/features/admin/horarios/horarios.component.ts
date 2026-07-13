@@ -1,18 +1,22 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
   TuiButton,
   TuiDialog,
+  TuiDialogService,
+  TuiHint,
   TuiIcon,
   TuiInput,
   TuiNotificationService,
   TuiTextfield,
   TuiTitle,
 } from '@taiga-ui/core';
-import { TuiPlatform } from '@taiga-ui/cdk';
+import { TuiPlatform, TuiTime } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import { TuiSkeleton } from '@taiga-ui/kit';
+import { TUI_CONFIRM, type TuiConfirmData, TuiInputTime, TuiSkeleton, tuiCreateTimePeriods, tuiInputTimeOptionsProvider } from '@taiga-ui/kit';
+import { firstValueFrom } from 'rxjs';
 import { HorarioResponse } from '../../../models/horario/horario.response';
 import { HorarioCreateRequest } from '../../../models/horario/horario.request';
 import {
@@ -22,6 +26,21 @@ import {
   useEliminarHorarioMutation,
 } from '../../../queries/horario.query';
 import { HorarioService } from '../../../core/services/horario.service';
+import {
+  CALENDAR_DAYS,
+  END_HOUR,
+  HOUR_HEIGHT,
+  START_HOUR,
+  CalendarHorarioEvent,
+  addWeeks,
+  filterCalendarEvents,
+  getCurrentWeekStart,
+  getWeekLabel,
+  isCurrentWeek,
+  mapHorarioToCalendarEvent,
+  moveEventToSlot,
+  uniqueEventSections,
+} from './calendar.helpers';
 
 type ModoFormulario = 'crear' | 'editar';
 
@@ -37,17 +56,33 @@ interface DialogObserver {
     TuiCardLarge,
     TuiDialog,
     TuiHeader,
+    TuiHint,
     TuiInput,
     TuiPlatform,
     TuiTextfield,
     TuiTable,
     TuiTitle,
     TuiIcon,
+    TuiInputTime,
     TuiSkeleton,
   ],
   templateUrl: './horarios.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [
+    tuiInputTimeOptionsProvider({
+      valueTransformer: {
+        fromControlValue(controlValue: string): TuiTime | null {
+          if (!controlValue) return null;
+          const [hours, minutes] = controlValue.split(':').map(Number);
+          return isNaN(hours) || isNaN(minutes) ? null : new TuiTime(hours, minutes);
+        },
+        toControlValue(time: TuiTime | null): string {
+          return time ? time.toString('HH:MM') : '';
+        },
+      },
+    }),
+  ],
 })
 /**
  * Página de gestión de horarios académicos.
@@ -60,6 +95,7 @@ export class Horarios {
   private readonly formBuilder = inject(FormBuilder);
   private readonly notifications = inject(TuiNotificationService);
   private readonly horarioService = inject(HorarioService);
+  private readonly dialogs = inject(TuiDialogService);
 
   /** Columnas de la tabla de horarios. */
   readonly columns = ['diaSemana', 'horaInicio', 'horaFin', 'aula', 'seccion', 'acciones'] as const;
@@ -95,6 +131,11 @@ export class Horarios {
   readonly catalogosError = signal<string | null>(null);
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      const mql = window.matchMedia('(max-width: 767px)');
+      this.isMobile.set(mql.matches);
+      mql.addEventListener('change', (e) => this.isMobile.set(e.matches));
+    }
     this.cargarCatalogos();
   }
 
@@ -118,8 +159,6 @@ export class Horarios {
 
   /** Controla la apertura/cierre del modal de formulario (crear/editar). */
   readonly horarioModalAbierto = signal(false);
-  /** Controla la apertura/cierre del diálogo de confirmación de eliminación. */
-  readonly eliminarModalAbierto = signal(false);
   /** Modo actual del formulario: 'crear' o 'editar'. */
   readonly modoFormulario = signal<ModoFormulario>('crear');
   /** Horario seleccionado para edición o eliminación. */
@@ -141,6 +180,32 @@ export class Horarios {
   readonly actualizarHorarioMutation = useActualizarHorarioMutation();
   readonly eliminarHorarioMutation = useEliminarHorarioMutation();
 
+  // ─── Semana actual ──────────────────────────────────────────────────
+
+  /** Fecha de inicio de la semana visible (siempre lunes). */
+  readonly currentWeekStart = signal(getCurrentWeekStart());
+  /** Etiqueta formateada de la semana visible. */
+  readonly weekLabel = computed(() => getWeekLabel(this.currentWeekStart()));
+  /** Indica si la semana visible es la actual. */
+  readonly isCurrentWeek = computed(() => isCurrentWeek(this.currentWeekStart()));
+  /** Indica si el viewport es menor a 768px. */
+  readonly isMobile = signal(false);
+
+  /** Navega a la semana anterior. */
+  previousWeek(): void {
+    this.currentWeekStart.update((d) => addWeeks(d, -1));
+  }
+
+  /** Navega a la semana siguiente. */
+  nextWeek(): void {
+    this.currentWeekStart.update((d) => addWeeks(d, 1));
+  }
+
+  /** Vuelve a la semana actual. */
+  goToCurrentWeek(): void {
+    this.currentWeekStart.set(getCurrentWeekStart());
+  }
+
   // ─── Paginación ──────────────────────────────────────────────────────
 
   /** Indica si hay una página anterior. */
@@ -161,6 +226,41 @@ export class Horarios {
   readonly paginasArray = computed(() => Array.from({ length: this.totalPaginas() }, (_, i) => i));
 
   protected readonly String = String;
+  protected readonly Number = Number;
+  protected readonly calendarDays = CALENDAR_DAYS;
+  protected readonly calendarHours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
+  protected readonly hourHeight = HOUR_HEIGHT;
+
+  /** 30-min interval times for the time picker suggestions. */
+  protected readonly acceptableTimes: readonly TuiTime[] = (() => {
+    const periods = tuiCreateTimePeriods(START_HOUR, END_HOUR, [0, 30]);
+    return [...periods, new TuiTime(END_HOUR, 0)];
+  })();
+
+  readonly selectedSectionId = signal<number | null>(null);
+  readonly selectedDayIndex = signal<number | null>(null);
+  readonly aulaFilter = signal('');
+  readonly focusedDayIndex = signal(0);
+  readonly draggedEvent = signal<CalendarHorarioEvent | null>(null);
+
+  readonly calendarEvents = computed(() =>
+    (this.horariosQuery.data()?.content ?? []).map((horario) => this.toCalendarEvent(horario)),
+  );
+  readonly filteredCalendarEvents = computed(() =>
+    filterCalendarEvents(this.calendarEvents(), {
+      sectionId: this.selectedSectionId(),
+      dayIndex: this.selectedDayIndex(),
+      aula: this.aulaFilter(),
+    }),
+  );
+  readonly calendarLegend = computed(() => uniqueEventSections(this.calendarEvents()));
+  readonly visibleCalendarDays = computed(() => {
+    if (this.isMobile()) {
+      return [this.selectedDayIndex() ?? new Date().getDay() - 1]; // Mon=0
+    }
+    const selected = this.selectedDayIndex();
+    return selected == null ? this.calendarDays.map((_day, index) => index) : [selected];
+  });
 
   // ─── Búsqueda con debounce ───────────────────────────────────────────
 
@@ -186,6 +286,15 @@ export class Horarios {
     this.horarioModalAbierto.set(true);
   }
 
+  openCrearDesdeSlot(dayIndex: number, hour: number): void {
+    this.openNuevoHorarioModal();
+    this.horarioForm.patchValue({
+      diaSemana: this.calendarDays[dayIndex] ?? this.calendarDays[0],
+      horaInicio: this.formatHour(hour),
+      horaFin: this.formatHour(hour + 1),
+    });
+  }
+
   /** Abre modal de edición usando objeto completo del horario. */
   openEditarHorarioModal(horario: HorarioResponse): void {
     this.modoFormulario.set('editar');
@@ -201,16 +310,45 @@ export class Horarios {
     this.resetFormulario();
   }
 
-  /** Abre diálogo de confirmación para eliminación. */
-  openEliminarHorarioModal(horario: HorarioResponse): void {
+  /** Abre diálogo de confirmación para eliminación usando TUI_CONFIRM. */
+  async openEliminarHorarioModal(horario: HorarioResponse): Promise<void> {
+    const confirmed = await firstValueFrom(
+      this.dialogs.open<boolean>(TUI_CONFIRM, {
+        label: 'Eliminar horario',
+        size: 's',
+        data: {
+          content: `¿Eliminar el horario de ${horario.diaSemana} a las ${horario.horaInicio.substring(0, 5)}? Esta acción no se puede deshacer.`,
+          yes: 'Eliminar',
+          no: 'Cancelar',
+          appearance: 'accent',
+        } satisfies TuiConfirmData,
+      }),
+    );
+
+    if (!confirmed) return;
+
     this.horarioSeleccionado.set(horario);
-    this.eliminarModalAbierto.set(true);
+    this.ejecutarEliminacion();
   }
 
-  /** Cierra diálogo de eliminación. */
-  closeEliminarModal(): void {
-    this.eliminarModalAbierto.set(false);
-    this.horarioSeleccionado.set(null);
+  /** Ejecuta la mutación de eliminación. */
+  private ejecutarEliminacion(): void {
+    const seleccionado = this.horarioSeleccionado();
+    if (!seleccionado) return;
+
+    this.eliminarHorarioMutation.mutate(seleccionado.idHorario, {
+      onSuccess: () => {
+        this.notifications
+          .open('Horario eliminado exitosamente', { label: 'Eliminado', appearance: 'success', autoClose: 3000 })
+          .subscribe();
+        this.horarioSeleccionado.set(null);
+      },
+      onError: (error) => {
+        this.notifications
+          .open(this.errorMessage(error, 'Error al eliminar horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
+          .subscribe();
+      },
+    });
   }
 
   // ─── Guardar (crear/editar) ──────────────────────────────────────────
@@ -240,7 +378,7 @@ export class Horarios {
           },
           onError: (error) => {
             this.notifications
-              .open(error?.message ?? 'Error al crear horario', { label: 'Error', appearance: 'error', autoClose: 5000 })
+              .open(this.errorMessage(error, 'Error al crear horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
               .subscribe();
           },
         },
@@ -263,33 +401,11 @@ export class Horarios {
         },
         onError: (error) => {
           this.notifications
-            .open(error?.message ?? 'Error al actualizar horario', { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .open(this.errorMessage(error, 'Error al actualizar horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
             .subscribe();
         },
       },
     );
-  }
-
-  // ─── Eliminar ────────────────────────────────────────────────────────
-
-  confirmarEliminar(observer: DialogObserver): void {
-    const seleccionado = this.horarioSeleccionado();
-    if (!seleccionado) return;
-
-    this.eliminarHorarioMutation.mutate(seleccionado.idHorario, {
-      onSuccess: () => {
-        this.notifications
-          .open('Horario eliminado exitosamente', { label: 'Eliminado', appearance: 'success', autoClose: 3000 })
-          .subscribe();
-        observer.complete();
-        this.closeEliminarModal();
-      },
-      onError: (error) => {
-        this.notifications
-          .open(error?.message ?? 'Error al eliminar horario', { label: 'Error', appearance: 'error', autoClose: 5000 })
-          .subscribe();
-      },
-    });
   }
 
   // ─── Estado de carga ─────────────────────────────────────────────────
@@ -300,6 +416,73 @@ export class Horarios {
 
   isEliminando(): boolean {
     return this.eliminarHorarioMutation.isPending();
+  }
+
+  toCalendarEvent(horario: HorarioResponse): CalendarHorarioEvent {
+    return mapHorarioToCalendarEvent(horario);
+  }
+
+  eventsForDay(dayIndex: number): CalendarHorarioEvent[] {
+    return this.filteredCalendarEvents().filter((event) => event.dayIndex === dayIndex);
+  }
+
+  dayLabel(dayIndex: number): string {
+    return this.calendarDays[dayIndex] ?? this.calendarDays[0];
+  }
+
+  formatHour(hour: number): string {
+    return `${String(hour).padStart(2, '0')}:00`;
+  }
+
+  onDragStart(event: DragEvent, calendarEvent: CalendarHorarioEvent): void {
+    this.draggedEvent.set(calendarEvent);
+    event.dataTransfer?.setData('text/plain', String(calendarEvent.idHorario));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+  }
+
+  onDrop(event: DragEvent, dayIndex: number, hour: number): void {
+    event.preventDefault();
+    const dragged = this.draggedEvent();
+    this.draggedEvent.set(null);
+    if (!dragged) return;
+
+    this.moveCalendarEvent(dragged, dayIndex, hour);
+  }
+
+  moveCalendarEvent(event: CalendarHorarioEvent, dayIndex: number, hour: number): void {
+    const horario = moveEventToSlot(event, dayIndex, hour * 60);
+
+    this.actualizarHorarioMutation.mutate(
+      { id: event.idHorario, horario, idSeccion: event.idSeccion },
+      {
+        onSuccess: () => {
+          this.notifications
+            .open('Horario actualizado exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+            .subscribe();
+        },
+        onError: (error) => {
+          this.notifications
+            .open(this.errorMessage(error, 'Error al mover horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .subscribe();
+        },
+      },
+    );
+  }
+
+  resizeCalendarEvent(event: CalendarHorarioEvent, hours: number): void {
+    const payload: HorarioCreateRequest = {
+      diaSemana: event.diaSemana,
+      horaInicio: event.horaInicio,
+      horaFin: `${String(Math.min(END_HOUR, Number(event.horaFin.slice(0, 2)) + hours)).padStart(2, '0')}${event.horaFin.slice(2)}`,
+      aula: event.aula,
+    };
+
+    this.actualizarHorarioMutation.mutate({ id: event.idHorario, horario: payload, idSeccion: event.idSeccion });
   }
 
   // ─── Navegación de páginas ───────────────────────────────────────────
@@ -346,5 +529,15 @@ export class Horarios {
       horaFin: value.horaFin + ':00',
       aula: value.aula.trim() || null,
     };
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    if (error instanceof HttpErrorResponse) {
+      if (typeof error.error === 'string') return error.error;
+      const body = error.error as { mensaje?: string; message?: string } | null;
+      return body?.mensaje ?? body?.message ?? error.message ?? fallback;
+    }
+
+    return error instanceof Error ? error.message : fallback;
   }
 }

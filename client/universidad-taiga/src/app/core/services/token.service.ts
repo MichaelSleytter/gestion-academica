@@ -2,16 +2,22 @@ import { Injectable, signal, computed } from '@angular/core';
 import type { AuthStatus } from '../../models/auth.model';
 
 /**
- * TokenService: ciclo de vida del access token JWT en memoria y localStorage.
+ * TokenService: ciclo de vida del access token JWT en memoria.
  * Sin HttpClient para evitar dependencia circular con el interceptor.
+ *
+ * El access token se mantiene exclusivamente en memoria (nunca en localStorage)
+ * para prevenir ataques XSS. La persistencia de sesión se logra mediante la
+ * cookie httpOnly del refresh token, que el frontend no puede leer.
+ *
+ * @security
+ * - Access token: solo en memoria, nunca se persiste.
+ * - Refresh token: en cookie httpOnly (backend), JS no puede leerlo.
+ * - Al recargar la página, se llama a /auth/refresh con la cookie.
  */
 @Injectable({
   providedIn: 'root',
 })
 export class TokenService {
-  private readonly TOKEN_KEY = 'auth_token';
-  private readonly ROLES_KEY = 'auth_roles';
-
   /** Access token en memoria. */
   private accessToken = signal<string | null>(null);
 
@@ -41,7 +47,7 @@ export class TokenService {
   }
 
   /**
-   * Limpia token de memoria y localStorage, cancela refresh pendiente,
+   * Limpia el token de memoria, cancela refresh pendiente,
    * marca authStatus como 'unauthenticated'.
    */
   clearToken(): void {
@@ -49,43 +55,6 @@ export class TokenService {
     this.tokenExpiryMs.set(0);
     this.authStatus.set('unauthenticated');
     this.cancelRefresh();
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.ROLES_KEY);
-  }
-
-  /**
-   * Carga el token desde localStorage verificando expiración.
-   * Si expiró, lo limpia y retorna null.
-   *
-   * @returns El token si es válido, null si no hay o expiró
-   */
-  loadFromStorage(): string | null {
-    try {
-      const token = localStorage.getItem(this.TOKEN_KEY);
-      if (!token) return null;
-
-      const expiryMs = this.extractExpiryFromToken(token);
-      if (expiryMs && expiryMs < Date.now()) {
-        localStorage.removeItem(this.TOKEN_KEY);
-        localStorage.removeItem(this.ROLES_KEY);
-        return null;
-      }
-
-      this.accessToken.set(token);
-      this.authStatus.set('authenticated');
-      return token;
-    } catch {
-      return null;
-    }
-  }
-
-  /** Persiste el token en localStorage para sobrevivir recargas. */
-  saveToStorage(token: string): void {
-    try {
-      localStorage.setItem(this.TOKEN_KEY, token);
-    } catch {
-      // localStorage puede fallar si está lleno o deshabilitado
-    }
   }
 
   /**

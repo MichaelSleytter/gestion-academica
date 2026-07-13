@@ -301,3 +301,39 @@ export interface ResetPasswordRequest {
 export interface MessageResponse {
   message: string;
 }
+
+// ─── Perfil ──────────────────────────────────────────────
+
+/**
+ * Respuesta del perfil del usuario autenticado.
+ */
+export interface PerfilResponse {
+  idUsuario: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  emailPersonal: string | null;
+  numeroDocumento: string;
+  estado: boolean;
+  tipoDocumento: string | null;
+  roles: string[];
+}
+
+/**
+ * Solicitud de actualización de perfil.
+ */
+export interface ActualizarPerfilRequest {
+  nombre?: string;
+  apellido?: string;
+  emailPersonal?: string;
+}
+
+/**
+ * Solicitud de cambio de contraseña.
+ */
+export interface CambiarPasswordRequest {
+  passwordActual: string;
+  nuevaPassword: string;
+}
+
+export type CambiarPasswordResponse = MessageResponse;

@@ -8,15 +8,17 @@
           >Gestiona y administra {{ totalSecciones() }} secciones registradas</span
         >
       </div>
-      <button
-        appearance="primary"
-        size="m"
-        tuiButton
-        type="button"
-        (click)="openNuevaSeccionModal()"
-      >
-        + Nueva Sección
-      </button>
+      @if (isAdmin()) {
+        <button
+          appearance="primary"
+          size="m"
+          tuiButton
+          type="button"
+          (click)="openNuevaSeccionModal()"
+        >
+          + Nueva Sección
+        </button>
+      }
     </header>
   </div>
 
@@ -85,9 +87,11 @@
                       : 'No hay secciones registradas'
                   }}
                 </p>
-                <button appearance="secondary" tuiButton (click)="openNuevaSeccionModal()">
-                  Crear primera sección
-                </button>
+                @if (isAdmin()) {
+                  <button appearance="secondary" tuiButton (click)="openNuevaSeccionModal()">
+                    Crear primera sección
+                  </button>
+                }
               </div>
             </td>
           </tr>
@@ -133,33 +137,44 @@
                 <div
                   class="inline-flex items-center gap-1 opacity-0 pointer-events-none transition duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
                 >
-                  <button
-                    appearance="action"
-                    iconStart="@tui.users"
-                    size="xs"
-                    tuiIconButton
-                    type="button"
-                    aria-label="Ver matriculados"
-                    (click)="verMatriculados(seccion.idSeccion)"
-                  ></button>
-                  <button
-                    appearance="action"
-                    iconStart="@tui.pencil"
-                    size="xs"
-                    tuiIconButton
-                    type="button"
-                    aria-label="Editar sección"
-                    (click)="openEditarSeccionModal(seccion)"
-                  ></button>
-                  <button
-                    appearance="action"
-                    iconStart="@tui.trash-2"
-                    size="xs"
-                    tuiIconButton
-                    type="button"
-                    aria-label="Eliminar sección"
-                    (click)="openEliminarSeccionModal(seccion)"
-                  ></button>
+                  @if (isAdmin()) {
+                    <button
+                      appearance="action"
+                      iconStart="@tui.users"
+                      size="xs"
+                      tuiIconButton
+                      type="button"
+                      aria-label="Ver matriculados"
+                      (click)="verMatriculados(seccion.idSeccion)"
+                    ></button>
+                    <button
+                      appearance="action"
+                      iconStart="@tui.graduation-cap"
+                      size="xs"
+                      tuiIconButton
+                      type="button"
+                      aria-label="Asignar docentes"
+                      (click)="openDocentesModal(seccion)"
+                    ></button>
+                    <button
+                      appearance="action"
+                      iconStart="@tui.pencil"
+                      size="xs"
+                      tuiIconButton
+                      type="button"
+                      aria-label="Editar sección"
+                      (click)="openEditarSeccionModal(seccion)"
+                    ></button>
+                    <button
+                      appearance="action"
+                      iconStart="@tui.trash-2"
+                      size="xs"
+                      tuiIconButton
+                      type="button"
+                      aria-label="Eliminar sección"
+                      (click)="openEliminarSeccionModal(seccion)"
+                    ></button>
+                  }
                 </div>
               </td>
             </tr>
@@ -230,10 +245,52 @@
   >
     <form [formGroup]="seccionForm" class="flex flex-col gap-4 p-4">
       <!-- Código de sección -->
-      <tui-textfield tuiTextfieldSize="m">
-        <label tuiLabel>Código de sección</label>
-        <input tuiInput placeholder="Ej: SEC-001" formControlName="codigoSeccion" />
-      </tui-textfield>
+      <div
+        class="flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface-hover px-3 py-2"
+      >
+        <div>
+          <p class="text-sm font-semibold text-text-primary">Código automático</p>
+          <p class="text-xs text-text-secondary">
+            Activá el modo manual solo para un código personalizado
+          </p>
+        </div>
+        <label class="flex items-center gap-2 text-sm font-medium text-text-secondary">
+          Manual
+          <input
+            tuiSwitch
+            type="checkbox"
+            [checked]="!codigoAutomatico()"
+            (change)="activarCodigoManual($any($event.target).checked)"
+          />
+        </label>
+      </div>
+
+      <div class="flex items-start gap-2">
+        <tui-textfield tuiTextfieldSize="m" class="flex-1">
+          <label tuiLabel>Código de sección</label>
+          <input
+            tuiInput
+            placeholder="Seleccioná curso y ciclo"
+            formControlName="codigoSeccion"
+            [readOnly]="codigoAutomatico()"
+          />
+        </tui-textfield>
+        <button
+          appearance="secondary"
+          size="m"
+          tuiButton
+          type="button"
+          [disabled]="!codigoAutomatico() || codigoAutomaticoCargando()"
+          (click)="regenerarCodigoAutomatico()"
+        >
+          Regenerar
+        </button>
+      </div>
+      @if (codigoAutomaticoCargando()) {
+        <p class="text-xs text-text-secondary -mt-3">Generando código...</p>
+      } @else if (codigoAutomaticoError()) {
+        <p class="text-xs text-red-500 -mt-3">{{ codigoAutomaticoError() }}</p>
+      }
       @if (
         seccionForm.controls.codigoSeccion.touched && seccionForm.controls.codigoSeccion.invalid
       ) {
@@ -289,17 +346,14 @@
         </p>
       }
 
-      <!-- Nombre del ciclo académico (texto directo) -->
+      <!-- Color opcional -->
       <tui-textfield tuiTextfieldSize="m">
-        <label tuiLabel>Nombre del ciclo (texto)</label>
-        <input tuiInput placeholder="Ej: 2024-I" formControlName="cicloAcademicoNombre" />
+        <label tuiLabel>Color de sección (opcional)</label>
+        <input tuiInputColor format="hex" placeholder="#2563EB" formControlName="color" />
       </tui-textfield>
-      @if (
-        seccionForm.controls.cicloAcademicoNombre.touched &&
-        seccionForm.controls.cicloAcademicoNombre.invalid
-      ) {
-        <p class="text-xs text-red-500 -mt-3">El nombre del ciclo es obligatorio</p>
-      }
+
+      <!-- cicloAcademicoNombre se auto-puebla desde el select de ciclo -->
+      <input type="hidden" formControlName="cicloAcademicoNombre" />
 
       <!-- Acciones -->
       <div class="flex justify-end gap-2 pt-2">
@@ -357,6 +411,86 @@
           (click)="confirmarEliminar(observer)"
         >
           {{ isEliminando() ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- ─── Modal: Asignar Docentes ─────────────────────────────── -->
+  <ng-template
+    let-observer
+    [tuiDialogOptions]="{ label: 'Docentes de la sección', size: 'm' }"
+    [(tuiDialog)]="docentesModalAbierto"
+  >
+    <div class="flex flex-col gap-5 p-4">
+      <div class="rounded-2xl border border-border bg-surface-hover p-4">
+        <p class="text-sm font-semibold text-text-primary">
+          {{ seccionSeleccionada()?.curso?.nombre }} — {{ seccionSeleccionada()?.codigoSeccion }}
+        </p>
+        <p class="text-xs text-text-secondary">Asigná o remové docentes de esta sección.</p>
+      </div>
+
+      <form [formGroup]="asignacionDocenteForm" class="flex items-end gap-2">
+        <tui-textfield tuiTextfieldSize="m" class="flex-1">
+          <label tuiLabel>Docente</label>
+          <select tuiInput formControlName="idDocente">
+            <option [ngValue]="null" disabled>Seleccionar docente</option>
+            @for (docente of docentesDisponibles(); track docente.idUsuario) {
+              <option [ngValue]="docente.idUsuario">{{ docenteNombre(docente) }}</option>
+            }
+          </select>
+        </tui-textfield>
+        <button
+          appearance="primary"
+          size="m"
+          tuiButton
+          type="button"
+          [disabled]="asignacionDocenteGuardando() || docentesDisponibles().length === 0"
+          (click)="asignarDocente()"
+        >
+          Asignar
+        </button>
+      </form>
+
+      <div class="flex flex-col gap-2">
+        <p class="text-sm font-semibold text-text-primary">Docentes asignados</p>
+        @if (docentesAsignadosLoading()) {
+          <p class="text-sm text-text-secondary">Cargando docentes...</p>
+        } @else {
+          @for (docente of docentesAsignados(); track docente.idUsuario) {
+            <div class="flex items-center justify-between rounded-xl border border-border px-3 py-2">
+              <div>
+                <p class="text-sm font-medium text-text-primary">{{ docenteNombre(docente) }}</p>
+                <p class="text-xs text-text-secondary">{{ docente.email }}</p>
+              </div>
+              <button
+                appearance="flat"
+                size="s"
+                tuiButton
+                type="button"
+                [disabled]="asignacionDocenteGuardando()"
+                (click)="removerDocente(docente.idUsuario)"
+              >
+                Remover
+              </button>
+            </div>
+          } @empty {
+            <p class="rounded-xl border border-dashed border-border p-4 text-sm text-text-secondary">
+              No hay docentes asignados.
+            </p>
+          }
+        }
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          appearance="secondary"
+          size="m"
+          tuiButton
+          type="button"
+          (click)="closeDocentesModal(); observer.complete()"
+        >
+          Cerrar
         </button>
       </div>
     </div>

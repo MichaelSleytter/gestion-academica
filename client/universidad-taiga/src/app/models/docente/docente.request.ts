@@ -9,7 +9,10 @@ export interface DocenteCreateRequest {
   password: string;
   numeroDocumento: string;
   idTipoDocumento: number;
-  especialidad: string;
+  /** Legacy free-text specialization kept during backend transition. */
+  especialidad?: string | null;
+  /** Preferred specialization catalog ID. */
+  idEspecializacion: number;
   idGrado: number;
 }
 
@@ -20,6 +23,9 @@ export interface DocenteUpdateRequest {
   password: string;
   numeroDocumento: string;
   idTipoDocumento: number;
-  especialidad: string;
+  /** Legacy free-text specialization kept during backend transition. */
+  especialidad?: string | null;
+  /** Preferred specialization catalog ID. */
+  idEspecializacion: number;
   idGrado: number;
 }

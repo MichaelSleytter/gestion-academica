@@ -20,25 +20,169 @@
     </header>
   </div>
 
-  <!-- ─── Búsqueda ────────────────────────────────────────────── -->
+  <!-- ─── Navegación de semana ────────────────────────────────── -->
+  <div appearance="floating" tuiCardLarge class="flex flex-col gap-3">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <button appearance="action" iconStart="@tui.chevron-left" size="s" tuiIconButton type="button"
+          aria-label="Semana anterior" (click)="previousWeek()"></button>
+        <span class="min-w-[220px] text-center text-sm font-bold tabular-nums text-text-primary">{{ weekLabel() }}</span>
+        <button appearance="action" iconStart="@tui.chevron-right" size="s" tuiIconButton type="button"
+          aria-label="Semana siguiente" (click)="nextWeek()"></button>
+      </div>
+      <button appearance="outline" size="s" tuiButton type="button"
+        [disabled]="isCurrentWeek()" (click)="goToCurrentWeek()">Hoy</button>
+    </div>
+
+    @if (isMobile()) {
+    <div class="flex gap-1 overflow-x-auto">
+      @for (day of calendarDays; track day; let index = $index) {
+      <button appearance="flat" size="s" tuiButton type="button"
+        class="min-w-12 flex-1 text-xs"
+        [class.!bg-primary.!text-on-primary]="selectedDayIndex() === index"
+        (click)="selectedDayIndex.set(index)">{{ day.substring(0, 3) }}</button>
+      }
+      <button appearance="flat" size="s" tuiButton type="button" class="min-w-12 text-xs"
+        [class.!bg-primary.!text-on-primary]="selectedDayIndex() === null"
+        (click)="selectedDayIndex.set(null)">Todo</button>
+    </div>
+    }
+  </div>
+
+  <!-- ─── Filtros y leyenda ───────────────────────────────────── -->
   <div appearance="floating" tuiCardLarge>
-    <section>
-      <div class="flex items-center gap-4">
+    <section class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
         <div class="flex-1">
+          <label class="mb-1 block text-xs font-bold uppercase tracking-wide text-text-secondary">Buscar aula</label>
           <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
             <input
               placeholder="Buscar por día o aula"
               tuiInput
-              (input)="onBusquedaChange($any($event).target.value)"
+              [value]="aulaFilter()"
+              (input)="aulaFilter.set($any($event).target.value); onBusquedaChange($any($event).target.value)"
             />
           </tui-textfield>
         </div>
+
+        <label class="flex flex-col gap-1 text-sm font-medium text-text-secondary">
+          Sección
+          <select
+            class="min-h-11 rounded-xl border border-border bg-surface px-3 text-text-primary"
+            [value]="selectedSectionId() ?? ''"
+            (change)="selectedSectionId.set($any($event).target.value ? Number($any($event).target.value) : null)"
+          >
+            <option value="">Todas</option>
+            @for (section of calendarLegend(); track section.id) {
+            <option [value]="section.id">{{ section.label }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="flex flex-col gap-1 text-sm font-medium text-text-secondary">
+          Vista
+          <select
+            class="min-h-11 rounded-xl border border-border bg-surface px-3 text-text-primary"
+            [value]="selectedDayIndex() ?? ''"
+            (change)="selectedDayIndex.set($any($event).target.value ? Number($any($event).target.value) : null)"
+          >
+            <option value="">Semana completa</option>
+            @for (day of calendarDays; track day; let index = $index) {
+            <option [value]="index">{{ day }}</option>
+            }
+          </select>
+        </label>
       </div>
+
+      @if (calendarLegend().length > 0) {
+      <div class="flex flex-wrap gap-2" aria-label="Leyenda de colores por sección">
+        @for (section of calendarLegend(); track section.id) {
+        <span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-sm font-medium text-text-secondary">
+          <span class="size-3 rounded-full" [style.background]="section.color"></span>
+          {{ section.label }}
+        </span>
+        }
+      </div>
+      }
     </section>
   </div>
 
-  <!-- ─── Tabla ───────────────────────────────────────────────── -->
-  <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+  <!-- ─── Calendario semanal ──────────────────────────────────── -->
+  <section appearance="floating" tuiCardLarge class="overflow-hidden">
+    <div class="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h3 class="text-base font-bold text-text-primary">Vista semanal</h3>
+        <p class="text-sm text-text-secondary">Arrastra un horario a otra celda para moverlo.</p>
+      </div>
+      <button appearance="secondary" tuiButton type="button" (click)="selectedDayIndex.set(null)">Semana completa</button>
+    </div>
+
+    <div class="overflow-x-auto rounded-2xl border border-border bg-surface">
+      <div class="grid min-w-[760px]" [style.gridTemplateColumns]="'88px repeat(' + visibleCalendarDays().length + ', minmax(160px, 1fr))'">
+        <div class="sticky left-0 z-20 border-b border-r border-border bg-surface-hover p-3 text-xs font-bold uppercase text-text-secondary">Hora</div>
+        @for (dayIndex of visibleCalendarDays(); track dayIndex) {
+        <div class="border-b border-r border-border bg-surface-hover p-3 text-center text-sm font-bold text-text-primary">
+          {{ dayLabel(dayIndex) }}
+        </div>
+        }
+
+        @for (hour of calendarHours; track hour) {
+        <div class="sticky left-0 z-10 border-b border-r border-border bg-surface px-3 py-2 text-xs font-bold tabular-nums text-text-secondary" [style.height.px]="hourHeight">
+          {{ formatHour(hour) }}
+        </div>
+        @for (dayIndex of visibleCalendarDays(); track dayIndex) {
+        <button
+          class="relative border-b border-r border-border bg-surface text-left transition hover:bg-primary/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+          type="button"
+          [style.height.px]="hourHeight"
+          [attr.aria-label]="'Crear horario ' + dayLabel(dayIndex) + ' ' + formatHour(hour)"
+          (click)="openCrearDesdeSlot(dayIndex, hour)"
+          (dragover)="onDragOver($event)"
+          (drop)="onDrop($event, dayIndex, hour)"
+        >
+          @for (event of eventsForDay(dayIndex); track event.idHorario) {
+          @if (event.top >= (hour - 7) * hourHeight && event.top < (hour - 6) * hourHeight) {
+          <article
+            class="absolute inset-x-2 z-20 cursor-move overflow-hidden rounded-xl border border-border p-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            draggable="true"
+            tabindex="0"
+            tuiHint="{{ event.subtitle }}
+{{ event.title }}
+{{ event.horaInicio.substring(0, 5) }} – {{ event.horaFin.substring(0, 5) }}
+{{ event.aula || 'Sin aula' }}"
+            [style.top.px]="event.top - (hour - 7) * hourHeight"
+            [style.height.px]="event.height"
+            [style.background]="event.backgroundColor"
+            [style.borderLeft]="'4px solid ' + event.color"
+            [attr.aria-label]="event.title + ', ' + event.subtitle + ', ' + event.horaInicio.substring(0, 5) + ' a ' + event.horaFin.substring(0, 5)"
+            (click)="$event.stopPropagation(); openEditarHorarioModal(event.source)"
+            (dragstart)="onDragStart($event, event)"
+            (keydown.enter)="openEditarHorarioModal(event.source)"
+          >
+            <strong class="block truncate text-sm text-text-primary">{{ event.title }}</strong>
+            <span class="block truncate text-xs text-text-secondary">{{ event.aula || 'Sin aula' }}</span>
+            <span class="block truncate text-xs text-text-tertiary">{{ event.horaInicio.substring(0, 5) }}–{{ event.horaFin.substring(0, 5) }}</span>
+            <button
+              class="absolute bottom-1 right-1 min-h-8 rounded-lg border border-border bg-surface/80 px-2 text-xs font-bold text-text-secondary"
+              type="button"
+              aria-label="Extender horario una hora"
+              (click)="$event.stopPropagation(); resizeCalendarEvent(event, 1)"
+            >
+              ↧
+            </button>
+          </article>
+          }
+          }
+        </button>
+        }
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Tabla fallback ──────────────────────────────────────── -->
+  <details class="overflow-hidden rounded-2xl border border-border bg-surface">
+    <summary class="cursor-pointer bg-surface-hover px-4 py-3 text-sm font-bold text-text-secondary">Tabla de horarios</summary>
     <table tuiTable class="w-full border-separate border-spacing-0 table-auto" [columns]="columns">
       <thead tuiThead class="bg-surface-hover" [tuiSkeleton]="isLoading()">
         <tr
@@ -159,7 +303,7 @@
       </tbody>
       }
     </table>
-  </div>
+  </details>
 
   <!-- ─── Paginación ──────────────────────────────────────────── -->
   @if (totalPaginas() > 0) {
@@ -219,38 +363,35 @@
   >
     <form [formGroup]="horarioForm" class="flex flex-col gap-4 p-4">
       <!-- Día de la semana -->
-      <tui-textfield tuiTextfieldSize="m">
-        <label tuiLabel>Día de la semana</label>
-        <select tuiInput formControlName="diaSemana">
-          <option value="" disabled>Seleccionar día</option>
-          <option value="Lunes">Lunes</option>
-          <option value="Martes">Martes</option>
-          <option value="Miércoles">Miércoles</option>
-          <option value="Jueves">Jueves</option>
-          <option value="Viernes">Viernes</option>
-          <option value="Sábado">Sábado</option>
-        </select>
-      </tui-textfield>
+      <div class="flex flex-wrap gap-2">
+        <label class="mb-1 block w-full text-xs font-bold uppercase tracking-wide text-text-secondary">Día</label>
+        @for (day of calendarDays; track day; let idx = $index) {
+        <button appearance="flat" size="s" tuiButton type="button"
+          class="min-w-16 text-xs"
+          [class.!bg-primary.!text-on-primary]="horarioForm.controls.diaSemana.value === day"
+          (click)="horarioForm.controls.diaSemana.setValue(day)">{{ day.substring(0, 3) }}</button>
+        }
+      </div>
       @if (horarioForm.controls.diaSemana.touched && horarioForm.controls.diaSemana.invalid) {
-      <p class="text-xs text-red-500 -mt-3">El día de la semana es obligatorio</p>
+      <p class="-mt-3 text-xs text-red-500">Selecciona un día de la semana</p>
       }
 
       <!-- Hora inicio -->
       <tui-textfield tuiTextfieldSize="m">
         <label tuiLabel>Hora de inicio</label>
-        <input tuiInput type="time" formControlName="horaInicio" />
+        <input placeholder="Ej: 08:00" tuiInputTime [accept]="acceptableTimes" formControlName="horaInicio" />
       </tui-textfield>
       @if (horarioForm.controls.horaInicio.touched && horarioForm.controls.horaInicio.invalid) {
-      <p class="text-xs text-red-500 -mt-3">La hora de inicio es obligatoria</p>
+      <p class="-mt-3 text-xs text-red-500">La hora de inicio es obligatoria</p>
       }
 
       <!-- Hora fin -->
       <tui-textfield tuiTextfieldSize="m">
         <label tuiLabel>Hora de fin</label>
-        <input tuiInput type="time" formControlName="horaFin" />
+        <input placeholder="Ej: 10:00" tuiInputTime [accept]="acceptableTimes" formControlName="horaFin" />
       </tui-textfield>
       @if (horarioForm.controls.horaFin.touched && horarioForm.controls.horaFin.invalid) {
-      <p class="text-xs text-red-500 -mt-3">La hora de fin es obligatoria</p>
+      <p class="-mt-3 text-xs text-red-500">La hora de fin es obligatoria</p>
       }
 
       <!-- Aula -->
@@ -270,7 +411,13 @@
         </select>
       </tui-textfield>
       @if (horarioForm.controls.idSeccion.touched && horarioForm.controls.idSeccion.invalid) {
-      <p class="text-xs text-red-500 -mt-3">La sección es obligatoria</p>
+      <p class="-mt-3 text-xs text-red-500">La sección es obligatoria</p>
+      }
+
+      @if (horarioForm.controls.horaInicio.valid && horarioForm.controls.horaFin.valid &&
+        horarioForm.controls.horaInicio.value && horarioForm.controls.horaFin.value &&
+        horarioForm.controls.horaFin.value <= horarioForm.controls.horaInicio.value) {
+      <p class="-mt-3 text-xs text-red-500">La hora de fin debe ser posterior a la de inicio</p>
       }
 
       <!-- Acciones -->
@@ -298,39 +445,4 @@
     </form>
   </ng-template>
 
-  <!-- ─── Modal: Confirmar Eliminación ────────────────────────── -->
-  <ng-template
-    let-observer
-    [tuiDialogOptions]="{ label: 'Eliminar horario', size: 's' }"
-    [(tuiDialog)]="eliminarModalAbierto"
-  >
-    <div class="flex flex-col gap-6 p-4">
-      <p class="text-text-primary text-sm leading-relaxed">
-        ¿Estás seguro de que deseas eliminar el horario del
-        <strong>{{ horarioSeleccionado()?.diaSemana ?? '' }}</strong
-        >? Esta acción no se puede deshacer.
-      </p>
-      <div class="flex justify-end gap-2">
-        <button
-          appearance="secondary"
-          size="m"
-          tuiButton
-          type="button"
-          (click)="closeEliminarModal(); observer.complete()"
-        >
-          Cancelar
-        </button>
-        <button
-          appearance="accent"
-          size="m"
-          tuiButton
-          type="button"
-          [disabled]="isEliminando()"
-          (click)="confirmarEliminar(observer)"
-        >
-          {{ isEliminando() ? 'Eliminando...' : 'Eliminar' }}
-        </button>
-      </div>
-    </div>
-  </ng-template>
 </div>

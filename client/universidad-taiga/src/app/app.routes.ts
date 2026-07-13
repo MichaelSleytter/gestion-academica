@@ -119,6 +119,22 @@ export const routes: Routes = [
           import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
         canActivate: [requiresRole('ESTUDIANTE')],
       },
+      {
+        path: 'estudiante/mis-cursos/:id/contenido',
+        loadComponent: () =>
+          import('./features/estudiante/mis-notas/mis-notas.component').then((m) => m.MisNotas),
+        canActivate: [requiresRole('ESTUDIANTE')],
+      },
+
+      // ─── ESTUDIANTE: Mi horario (SOLO ESTUDIANTE) ─────────────────────
+      {
+        path: 'estudiante/horario',
+        loadComponent: () =>
+          import('./features/estudiante/horario/horario-estudiante.component').then(
+            (m) => m.HorarioEstudiante,
+          ),
+        canActivate: [requiresRole('ESTUDIANTE')],
+      },
 
       // ─── ESTUDIANTE: Historial (SOLO ESTUDIANTE) ─────────────────────
       // MUST GO BEFORE estudiante/:id para que Angular matchee primero la ruta fija
@@ -127,6 +143,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/estudiante/historial/historial.component').then((m) => m.Historial),
         canActivate: [requiresRole('ESTUDIANTE')],
+      },
+
+      // ─── Historial académico por estudiante (ADMIN + DOCENTE) ───────────
+      {
+        path: 'historial-academico/estudiante/:id',
+        loadComponent: () =>
+          import('./features/estudiante/historial/historial.component').then((m) => m.Historial),
+        canActivate: [requiresRole('ADMIN', 'DOCENTE')],
       },
 
       {
@@ -160,6 +184,12 @@ export const routes: Routes = [
           import('./features/docente/carga-notas/carga-notas.component').then((m) => m.CargaNotas),
         canActivate: [requiresRole('DOCENTE')],
       },
+      {
+        path: 'docente/mis-cursos/:id/contenido',
+        loadComponent: () =>
+          import('./features/docente/mis-cursos/contenido/contenido-curso.component').then((m) => m.ContenidoCurso),
+        canActivate: [requiresRole('DOCENTE')],
+      },
 
       // ─── Docentes (SOLO ADMIN) ────────────────────────────────────────
       {
@@ -187,6 +217,48 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/admin/cursos/cursos.component').then((m) => m.Cursos),
         canActivate: [requiresRole('ADMIN', 'DOCENTE')],
+      },
+
+      // ─── Catálogos (SOLO ADMIN) ──────────────────────────────────────
+      {
+        path: 'catalogos',
+        loadComponent: () =>
+          import('./features/admin/catalogos/catalogos-index/catalogos-index.component').then(
+            (m) => m.CatalogosIndex,
+          ),
+        canActivate: [requiresRole('ADMIN')],
+      },
+      {
+        path: 'catalogos/carreras',
+        loadComponent: () =>
+          import('./features/admin/catalogos/carreras/carreras.component').then(
+            (m) => m.CarrerasCatalogo,
+          ),
+        canActivate: [requiresRole('ADMIN')],
+      },
+      {
+        path: 'catalogos/grados-academicos',
+        loadComponent: () =>
+          import('./features/admin/catalogos/grados-academicos/grados-academicos.component').then(
+            (m) => m.GradosAcademicosCatalogo,
+          ),
+        canActivate: [requiresRole('ADMIN')],
+      },
+      {
+        path: 'catalogos/especializaciones',
+        loadComponent: () =>
+          import('./features/admin/catalogos/especializaciones/especializaciones.component').then(
+            (m) => m.EspecializacionesCatalogo,
+          ),
+        canActivate: [requiresRole('ADMIN')],
+      },
+      {
+        path: 'catalogos/ciclos',
+        loadComponent: () =>
+          import('./features/admin/catalogos/ciclos/ciclos.component').then(
+            (m) => m.CiclosCatalogo,
+          ),
+        canActivate: [requiresRole('ADMIN')],
       },
 
       // ─── Secciones (ADMIN + DOCENTE) ──────────────────────────────────

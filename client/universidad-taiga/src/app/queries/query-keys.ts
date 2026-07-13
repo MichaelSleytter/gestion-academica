@@ -13,6 +13,8 @@ export const ESTUDIANTE_ELIMINAR_MUTATION_KEY = ['estudiantes', 'eliminar'] as c
 export const CATALOGO_TIPOS_DOCUMENTO_KEY = ['catalogo', 'tipos-documento'] as const;
 export const CATALOGO_CARRERAS_KEY = ['catalogo', 'carreras'] as const;
 export const CATALOGO_GRADOS_KEY = ['catalogo', 'grados-academicos'] as const;
+export const CATALOGO_ESPECIALIZACIONES_KEY = ['catalogo', 'especializaciones'] as const;
+export const CATALOGO_CICLOS_KEY = ['catalogo', 'ciclos-academicos'] as const;
 
 export const CATALOGO_ITEM_KEY = (id: number) => ['catalogo-item', id] as const;
 

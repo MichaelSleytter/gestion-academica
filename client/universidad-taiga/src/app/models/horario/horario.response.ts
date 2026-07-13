@@ -17,6 +17,8 @@ export interface HorarioResponse {
   seccion: {
     idSeccion: number;
     codigoSeccion: string;
+    /** Visual color used by the calendar UI. */
+    color?: string | null;
     cicloAcademicoNombre: string;
     vacantes: number;
     curso: {

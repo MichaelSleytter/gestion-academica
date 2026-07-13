@@ -2,10 +2,12 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { APP_API_URL } from '../tokens/api.tokens';
 import { lastValueFrom } from 'rxjs';
-import { SeccionResponse } from '../../models/seccion/seccion.response';
-import { SeccionCreateRequest } from '../../models/seccion/seccion.request';
-import { PageResponse } from '../../models/shared/page.response';
-import { CursoResponse } from '../../models/curso/curso.response';
+import type { SeccionResponse } from '../../models/seccion/seccion.response';
+import type { SeccionCreateRequest } from '../../models/seccion/seccion.request';
+import type { PageResponse } from '../../models/shared/page.response';
+import type { CursoResponse } from '../../models/curso/curso.response';
+import type { DocenteResponse } from '../../models/docente/docente.response';
+import type { DocenteSeccionResponse } from '../../models/docente/docente-seccion.response';
 
 /**
  * Servicio para interactuar con el API de secciones.
@@ -32,9 +34,7 @@ export class SeccionService {
     busqueda?: string,
   ): Promise<PageResponse<SeccionResponse>> {
     const url = `${this.apiBaseUrl}/secciones`;
-    let params = new HttpParams()
-      .set('pagina', pagina.toString())
-      .set('tamaño', tamaño.toString());
+    let params = new HttpParams().set('pagina', pagina.toString()).set('tamaño', tamaño.toString());
 
     if (busqueda?.trim()) {
       params = params.set('busqueda', busqueda.trim());
@@ -51,10 +51,42 @@ export class SeccionService {
    */
   getCursosList(): Promise<PageResponse<CursoResponse>> {
     const url = `${this.apiBaseUrl}/cursos`;
-    const params = new HttpParams()
-      .set('pagina', '0')
-      .set('tamaño', '100');
+    const params = new HttpParams().set('pagina', '0').set('tamaño', '100');
     return lastValueFrom(this.http.get<PageResponse<CursoResponse>>(url, { params }));
+  }
+
+  getDocentesList(): Promise<PageResponse<DocenteResponse>> {
+    const url = `${this.apiBaseUrl}/docentes`;
+    const params = new HttpParams().set('pagina', '0').set('tamaño', '100');
+    return lastValueFrom(this.http.get<PageResponse<DocenteResponse>>(url, { params }));
+  }
+
+  async getDocentesAsignados(idSeccion: number): Promise<DocenteResponse[]> {
+    const asignaciones = await lastValueFrom(
+      this.http.get<DocenteSeccionResponse[]>(`${this.apiBaseUrl}/docentes-secciones/seccion/${idSeccion}`),
+    );
+
+    return Promise.all(
+      asignaciones.map((asignacion) =>
+        lastValueFrom(this.http.get<DocenteResponse>(`${this.apiBaseUrl}/docentes/${asignacion.id.idDocente}`)),
+      ),
+    );
+  }
+
+  asignarDocente(idSeccion: number, idDocente: number): Promise<DocenteSeccionResponse> {
+    const params = new HttpParams()
+      .set('idSeccion', idSeccion.toString())
+      .set('idDocente', idDocente.toString());
+
+    return lastValueFrom(
+      this.http.post<DocenteSeccionResponse>(`${this.apiBaseUrl}/docentes-secciones`, null, { params }),
+    );
+  }
+
+  removerDocente(idSeccion: number, idDocente: number): Promise<void> {
+    return lastValueFrom(
+      this.http.delete<void>(`${this.apiBaseUrl}/docentes-secciones/${idDocente}/${idSeccion}`),
+    );
   }
 
   /**
@@ -68,6 +100,20 @@ export class SeccionService {
   }
 
   /**
+   * Obtiene el próximo código disponible para un curso y ciclo académico.
+   */
+  async getProximoCodigo(idCurso: number, idCiclo: number): Promise<string> {
+    const url = `${this.apiBaseUrl}/secciones/proximo-codigo`;
+    const params = new HttpParams()
+      .set('idCurso', idCurso.toString())
+      .set('idCiclo', idCiclo.toString());
+    const response = await lastValueFrom(
+      this.http.get<ProximoCodigoSeccionResponse>(url, { params }),
+    );
+    return response.codigo;
+  }
+
+  /**
    * Crea una nueva sección.
    *
    * @param seccion datos de la sección
@@ -75,7 +121,11 @@ export class SeccionService {
    * @param idCiclo ID del ciclo académico
    * @returns sección creada
    */
-  crearSeccion(seccion: SeccionCreateRequest, idCurso: number, idCiclo: number): Promise<SeccionResponse> {
+  crearSeccion(
+    seccion: SeccionCreateRequest,
+    idCurso: number,
+    idCiclo: number,
+  ): Promise<SeccionResponse> {
     const url = `${this.apiBaseUrl}/secciones?idCurso=${idCurso}&idCiclo=${idCiclo}`;
     return lastValueFrom(this.http.post<SeccionResponse>(url, seccion));
   }
@@ -89,7 +139,12 @@ export class SeccionService {
    * @param idCiclo ID del ciclo académico
    * @returns sección actualizada
    */
-  actualizarSeccion(id: number, seccion: SeccionCreateRequest, idCurso: number, idCiclo: number): Promise<SeccionResponse> {
+  actualizarSeccion(
+    id: number,
+    seccion: SeccionCreateRequest,
+    idCurso: number,
+    idCiclo: number,
+  ): Promise<SeccionResponse> {
     const url = `${this.apiBaseUrl}/secciones/${id}?idCurso=${idCurso}&idCiclo=${idCiclo}`;
     return lastValueFrom(this.http.put<SeccionResponse>(url, seccion));
   }
@@ -108,6 +163,10 @@ export class SeccionService {
 /**
  * Respuesta mínima de un ciclo académico para el dropdown.
  */
+export interface ProximoCodigoSeccionResponse {
+  codigo: string;
+}
+
 export interface CicloAcademicoResponse {
   idCiclo: number;
   nombre: string;

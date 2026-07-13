@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { FormBuilder, Validators } from '@angular/forms';
 import {
@@ -67,6 +68,7 @@ interface DialogObserver {
 export class Estudiantes {
   private readonly formBuilder = inject(FormBuilder);
   private readonly notifications = inject(TuiNotificationService);
+  private readonly router = inject(Router);
 
   /** Columnas de la tabla de estudiantes. */
   readonly columns = ['estudiante', 'codigo', 'carrera', 'ciclo', 'estado', 'acciones'] as const;
@@ -304,12 +306,9 @@ export class Estudiantes {
     return this.eliminarEstudianteMutation.isPending();
   }
 
-  /**
-   * Navega al historial académico del estudiante.
-   * Reservado para implementación futura.
-   */
-  onVerHistorial(_estudiante: EstudianteResponse): void {
-    // Reservado para flujo de historial académico.
+  /** Navega al historial académico del estudiante. */
+  onVerHistorial(estudiante: EstudianteResponse): void {
+    void this.router.navigate(['/app/historial-academico/estudiante', estudiante.idUsuario]);
   }
 
   /**

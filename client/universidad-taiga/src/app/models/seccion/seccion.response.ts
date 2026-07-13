@@ -11,6 +11,8 @@ export interface SeccionResponse {
   cicloAcademicoNombre: string;
   /** Cantidad de vacantes disponibles */
   vacantes: number;
+  /** Color visual opcional para identificar la sección en horarios */
+  color?: string | null;
   /** Curso asociado a la sección */
   curso: {
     idCurso: number;

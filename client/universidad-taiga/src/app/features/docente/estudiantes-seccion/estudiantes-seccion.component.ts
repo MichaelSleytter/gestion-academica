@@ -35,6 +35,7 @@ import { useMatriculasBySeccionQuery } from '../../../queries/docente-role.query
                 <th class="px-5 py-3">Apellido</th>
                 <th class="px-5 py-3">Email</th>
                 <th class="px-5 py-3">Estado</th>
+                <th class="px-5 py-3 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -49,10 +50,17 @@ import { useMatriculasBySeccionQuery } from '../../../queries/docente-role.query
                       {{ matricula.estado }}
                     </span>
                   </td>
+                  <td class="px-5 py-3 text-right">
+                    @if (matricula.idEstudiante) {
+                      <button appearance="flat" size="xs" tuiButton type="button" (click)="verHistorial(matricula.idEstudiante)">
+                        Ver historial
+                      </button>
+                    }
+                  </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5" class="px-5 py-10 text-center text-text-secondary">
+                  <td colspan="6" class="px-5 py-10 text-center text-text-secondary">
                     No hay estudiantes matriculados en esta sección.
                   </td>
                 </tr>
@@ -80,5 +88,10 @@ export class EstudiantesSeccion {
 
   goBack(): void {
     void this.router.navigate(['/app/docente/mis-cursos']);
+  }
+
+  verHistorial(idEstudiante: number | undefined): void {
+    if (!idEstudiante) return;
+    void this.router.navigate(['/app/historial-academico/estudiante', idEstudiante]);
   }
 }

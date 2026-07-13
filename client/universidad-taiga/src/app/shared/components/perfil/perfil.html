@@ -1,1 +1,192 @@
-<p>perfil works!</p>
+<div tuiPlatform="web" class="mx-auto flex max-w-2xl flex-col gap-6 p-2.5">
+  <!-- ══════════════════════════════════════════════════
+       TÍTULO
+       ══════════════════════════════════════════════════ -->
+  <div appearance="floating" tuiCardLarge>
+    <header tuiHeader class="flex items-center gap-3">
+      <tui-icon icon="@tui.user-circle" class="text-primary" [style.fontSize]="'2rem'" />
+      <div>
+        <h2 tuiTitle>Mi Perfil</h2>
+        <span class="text-text-tertiary text-sm">Información personal y configuración de cuenta</span>
+      </div>
+    </header>
+  </div>
+
+  @if (loading()) {
+    <div class="flex min-h-48 items-center justify-center rounded-2xl border border-border bg-surface">
+      <tui-loader size="l">Cargando perfil...</tui-loader>
+    </div>
+  } @else if (loadError(); as err) {
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+      {{ err }}
+    </div>
+  } @else if (perfil(); as p) {
+    <!-- ══════════════════════════════════════════════════
+         INFORMACIÓN DEL USUARIO (SÓLO LECTURA)
+         ══════════════════════════════════════════════════ -->
+    <div appearance="floating" tuiCardLarge>
+      <header tuiHeader>
+        <h3 tuiTitle>
+          <tui-icon icon="@tui.id-card" class="mr-2 align-middle text-primary" />
+          Datos personales
+        </h3>
+      </header>
+
+      <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Nombre</label>
+          <p class="text-sm font-semibold text-text-primary">{{ p.nombre }} {{ p.apellido }}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Email institucional</label>
+          <p class="text-sm text-text-primary">{{ p.email }}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Email personal</label>
+          <p class="text-sm text-text-primary">{{ p.emailPersonal ?? '—' }}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">N° Documento</label>
+          <p class="text-sm text-text-primary">{{ p.numeroDocumento }}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Tipo documento</label>
+          <p class="text-sm text-text-primary">{{ p.tipoDocumento ?? '—' }}</p>
+        </div>
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Roles</label>
+          <div class="flex flex-wrap gap-1.5 mt-0.5">
+            @for (rol of p.roles; track rol) {
+              <span
+                class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary"
+              >
+                {{ rol }}
+              </span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         EDITAR PERFIL
+         ══════════════════════════════════════════════════ -->
+    <div appearance="floating" tuiCardLarge>
+      <header tuiHeader>
+        <h3 tuiTitle>
+          <tui-icon icon="@tui.pencil-line" class="mr-2 align-middle text-primary" />
+          Editar perfil
+        </h3>
+      </header>
+
+      <form [formGroup]="editForm" class="mt-4 flex flex-col gap-4" (ngSubmit)="guardarPerfil()">
+        <div>
+          <label tuiLabel="Nombre" class="text-xs font-medium text-text-tertiary">Nombre</label>
+          <tui-textfield>
+            <input formControlName="nombre" tuiTextfield placeholder="Tu nombre" />
+          </tui-textfield>
+          @if (editForm.controls.nombre.touched && editForm.controls.nombre.invalid) {
+            <tui-error formControlName="nombre" />
+          }
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Apellido</label>
+          <tui-textfield>
+            <input formControlName="apellido" tuiTextfield placeholder="Tu apellido" />
+          </tui-textfield>
+          @if (editForm.controls.apellido.touched && editForm.controls.apellido.invalid) {
+            <tui-error formControlName="apellido" />
+          }
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Email personal</label>
+          <tui-textfield>
+            <input formControlName="emailPersonal" tuiTextfield placeholder="opcional@ejemplo.com" type="email" />
+          </tui-textfield>
+        </div>
+
+        <button
+          appearance="primary"
+          iconStart="@tui.save"
+          size="m"
+          tuiButton
+          type="submit"
+          [disabled]="editSaving()"
+          class="self-start"
+        >
+          {{ editSaving() ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════
+         CAMBIAR CONTRASEÑA
+         ══════════════════════════════════════════════════ -->
+    <div appearance="floating" tuiCardLarge>
+      <header tuiHeader>
+        <h3 tuiTitle>
+          <tui-icon icon="@tui.lock" class="mr-2 align-middle text-primary" />
+          Cambiar contraseña
+        </h3>
+      </header>
+
+      @if (passwordSuccess()) {
+        <div class="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
+          Contraseña actualizada correctamente.
+        </div>
+      }
+
+      @if (passwordError(); as err) {
+        <div class="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+          {{ err }}
+        </div>
+      }
+
+      <form [formGroup]="passwordForm" class="mt-4 flex flex-col gap-4" (ngSubmit)="cambiarPassword()">
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Contraseña actual</label>
+          <tui-textfield>
+            <input formControlName="passwordActual" tuiTextfield placeholder="••••••••" type="password" />
+          </tui-textfield>
+          @if (passwordForm.controls.passwordActual.touched && passwordForm.controls.passwordActual.invalid) {
+            <tui-error formControlName="passwordActual" />
+          }
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Nueva contraseña</label>
+          <tui-textfield>
+            <input formControlName="nuevaPassword" tuiTextfield placeholder="Mín. 6 caracteres" type="password" />
+          </tui-textfield>
+          @if (passwordForm.controls.nuevaPassword.touched && passwordForm.controls.nuevaPassword.invalid) {
+            <tui-error formControlName="nuevaPassword" />
+          }
+        </div>
+
+        <div>
+          <label class="text-xs font-medium text-text-tertiary">Confirmar nueva contraseña</label>
+          <tui-textfield>
+            <input formControlName="confirmPassword" tuiTextfield placeholder="Repetí la nueva contraseña" type="password" />
+          </tui-textfield>
+          @if (passwordForm.controls.confirmPassword.touched && passwordForm.controls.confirmPassword.invalid) {
+            <tui-error formControlName="confirmPassword" />
+          }
+        </div>
+
+        <button
+          appearance="primary"
+          iconStart="@tui.lock-keyhole"
+          size="m"
+          tuiButton
+          type="submit"
+          [disabled]="passwordSaving()"
+          class="self-start"
+        >
+          {{ passwordSaving() ? 'Cambiando...' : 'Cambiar contraseña' }}
+        </button>
+      </form>
+    </div>
+  }
+</div>

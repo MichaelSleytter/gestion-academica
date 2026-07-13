@@ -1,11 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { type Observable, tap, catchError, throwError, finalize, shareReplay } from 'rxjs';
 import { APP_API_URL } from '../tokens/api.tokens';
 import { TokenService } from './token.service';
 import { RoleService } from './role.service';
-import { ForgotPasswordRequest, ResetPasswordRequest, MessageResponse } from '../../models/auth.model';
+import {
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  type MessageResponse,
+} from '../../models/auth.model';
 
 /**
  * AuthService: operaciones HTTP de autenticación.
@@ -25,16 +29,11 @@ export class AuthService {
   private readonly apiUrl = `${this.apiBaseUrl}/auth`;
 
   private isVerifying = false;
+  private refreshRequest$: Observable<{ accessToken: string; tokenType: string; expiresIn: number }> | null = null;
 
   constructor() {
-    const storedToken = this.tokenService.loadFromStorage();
-    if (storedToken) {
-      const roles = this.tokenService.extractRolesFromToken(storedToken);
-      this.roleService.setRoles(roles);
-      // El token del localStorage es válido — el refreshSession() es un intento
-      // silencioso de renovar el token. Si falla, no destruimos la sesión,
-      // el token actual sigue sirviendo hasta que expire naturalmente.
-    }
+    // Al iniciar, intentamos renovar la sesión mediante la cookie httpOnly.
+    // No cargamos el access token de localStorage por seguridad (XSS).
     this.refreshSession();
   }
 
@@ -51,7 +50,6 @@ export class AuthService {
       next: (response) => {
         if (response.accessToken && response.expiresIn) {
           this.tokenService.setToken(response.accessToken, response.expiresIn);
-          this.tokenService.saveToStorage(response.accessToken);
 
           const roles = this.tokenService.extractRolesFromToken(response.accessToken);
           this.roleService.setRoles(roles);
@@ -63,27 +61,27 @@ export class AuthService {
         this.isVerifying = false;
       },
       error: () => {
-        // Solo limpiamos la sesión si no hay token vigente. Si el token
-        // almacenado sigue siendo válido (no expiró), el refresh fallido
-        // no debe destruir la sesión — el token se usará hasta que expire
-        // naturalmente y el interceptor maneje el 401 en ese momento.
-        if (!this.tokenService.getToken()) {
-          this.tokenService.clearToken();
-          this.roleService.clearRoles();
-        }
+        // Si el refresh falla, no hay sesión que restaurar.
+        // El authStatus pasó de 'loading' a 'unauthenticated'.
+        this.tokenService.clearToken();
+        this.roleService.clearRoles();
         this.isVerifying = false;
       },
     });
   }
 
   /** Valida el token con el backend usando la cookie de refresh. */
-  private validateToken(): Observable<{ accessToken?: string; tokenType?: string; expiresIn?: number }> {
+  private validateToken(): Observable<{
+    accessToken?: string;
+    tokenType?: string;
+    expiresIn?: number;
+  }> {
     return this.http
-      .post<{ accessToken?: string; tokenType?: string; expiresIn?: number }>(
-        `${this.apiUrl}/refresh`,
-        {},
-        { withCredentials: true },
-      )
+      .post<{
+        accessToken?: string;
+        tokenType?: string;
+        expiresIn?: number;
+      }>(`${this.apiUrl}/refresh`, {}, { withCredentials: true })
       .pipe(
         tap(() => console.log('Sesión verificada exitosamente')),
         catchError((error) => {
@@ -101,17 +99,19 @@ export class AuthService {
    * @param password - Contraseña
    * @returns Observable con access token del backend
    */
-  login(email: string, password: string): Observable<{ accessToken: string; tokenType: string; expiresIn: number }> {
+  login(
+    email: string,
+    password: string,
+  ): Observable<{ accessToken: string; tokenType: string; expiresIn: number }> {
     return this.http
-      .post<{ accessToken: string; tokenType: string; expiresIn: number }>(
-        `${this.apiUrl}/login`,
-        { email, password },
-        { withCredentials: true },
-      )
+      .post<{
+        accessToken: string;
+        tokenType: string;
+        expiresIn: number;
+      }>(`${this.apiUrl}/login`, { email, password }, { withCredentials: true })
       .pipe(
         tap((response) => {
           this.tokenService.setToken(response.accessToken, response.expiresIn);
-          this.tokenService.saveToStorage(response.accessToken);
           this.tokenService.authStatus.set('authenticated');
 
           const roles = this.tokenService.extractRolesFromToken(response.accessToken);
@@ -134,16 +134,17 @@ export class AuthService {
    * @returns Observable con el nuevo access token
    */
   refresh(): Observable<{ accessToken: string; tokenType: string; expiresIn: number }> {
-    return this.http
-      .post<{ accessToken: string; tokenType: string; expiresIn: number }>(
-        `${this.apiUrl}/refresh`,
-        {},
-        { withCredentials: true },
-      )
+    if (this.refreshRequest$) return this.refreshRequest$;
+
+    this.refreshRequest$ = this.http
+      .post<{
+        accessToken: string;
+        tokenType: string;
+        expiresIn: number;
+      }>(`${this.apiUrl}/refresh`, {}, { withCredentials: true })
       .pipe(
         tap((response) => {
           this.tokenService.setToken(response.accessToken, response.expiresIn);
-          this.tokenService.saveToStorage(response.accessToken);
 
           const roles = this.tokenService.extractRolesFromToken(response.accessToken);
           this.roleService.setRoles(roles);
@@ -157,7 +158,13 @@ export class AuthService {
           this.router.navigate(['/login']);
           return throwError(() => error);
         }),
+        finalize(() => {
+          this.refreshRequest$ = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: false }),
       );
+
+    return this.refreshRequest$;
   }
 
   /**
@@ -178,7 +185,10 @@ export class AuthService {
    * @returns Observable con mensaje de confirmación
    */
   resetPassword(token: string, nuevaPassword: string): Observable<MessageResponse> {
-    return this.http.post<MessageResponse>(`${this.apiUrl}/reset-password`, { token, nuevaPassword });
+    return this.http.post<MessageResponse>(`${this.apiUrl}/reset-password`, {
+      token,
+      nuevaPassword,
+    });
   }
 
   /**
@@ -186,12 +196,10 @@ export class AuthService {
    * Notifica al backend, limpia estado local y redirige a login.
    */
   logout(): void {
-    this.http
-      .post(`${this.apiUrl}/logout`, {}, { withCredentials: true })
-      .subscribe({
-        next: () => console.log('Logout exitoso en backend'),
-        error: () => console.log('Logout parcial (backend no respondió)'),
-      });
+    this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true }).subscribe({
+      next: () => console.log('Logout exitoso en backend'),
+      error: () => console.log('Logout parcial (backend no respondió)'),
+    });
 
     this.tokenService.clearToken();
     this.roleService.clearRoles();

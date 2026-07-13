@@ -1,5 +1,7 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { of } from 'rxjs';
 import { HistorialProgresoService } from '../../../core/services/historial-progreso.service';
 
 import { Historial } from './historial.component';
@@ -38,6 +40,10 @@ describe('Historial', () => {
       imports: [Historial],
       providers: [
         provideTanStackQuery(new QueryClient()),
+        {
+          provide: ActivatedRoute,
+          useValue: { paramMap: of({ get: () => null }) },
+        },
         {
           provide: HistorialProgresoService,
           useValue: {

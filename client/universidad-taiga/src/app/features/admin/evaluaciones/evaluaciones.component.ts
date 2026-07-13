@@ -13,8 +13,8 @@ import { TuiPlatform } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
 import { TuiSkeleton } from '@taiga-ui/kit';
-import { EvaluacionResponse } from '../../../models/evaluacion/evaluacion.response';
-import { EvaluacionCreateRequest } from '../../../models/evaluacion/evaluacion.request';
+import type { EvaluacionResponse } from '../../../models/evaluacion/evaluacion.response';
+import type { EvaluacionCreateRequest } from '../../../models/evaluacion/evaluacion.request';
 import {
   useEvaluacionesPaginadosQuery,
   useCrearEvaluacionMutation,
@@ -22,6 +22,7 @@ import {
   useEliminarEvaluacionMutation,
 } from '../../../queries/evaluacion.query';
 import { EvaluacionService } from '../../../core/services/evaluacion.service';
+import type { CursoResponse } from '../../../models/curso/curso.response';
 
 type ModoFormulario = 'crear' | 'editar';
 
@@ -76,7 +77,11 @@ export class Evaluaciones {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** Query paginada que se refresca al cambiar página, tamaño o búsqueda. */
-  readonly evaluacionesQuery = useEvaluacionesPaginadosQuery(this.pagina, this.tamaño, this.busqueda);
+  readonly evaluacionesQuery = useEvaluacionesPaginadosQuery(
+    this.pagina,
+    this.tamaño,
+    this.busqueda,
+  );
 
   /** Total de elementos (de la respuesta paginada). */
   readonly totalEvaluaciones = computed(() => this.evaluacionesQuery.data()?.totalElements ?? 0);
@@ -87,12 +92,25 @@ export class Evaluaciones {
 
   // ─── Listas para dropdowns ───────────────────────────────────────────
 
-  /** Lista de secciones para el select del formulario. */
+  /** Lista de cursos para el selector del formulario. */
+  readonly cursosList = signal<CursoResponse[]>([]);
+  /** Lista de secciones para el checkbox group del formulario. */
   readonly seccionesList = signal<EvaluacionResponse['seccion'][]>([]);
+  /** Curso seleccionado para filtrar secciones. */
+  readonly selectedCursoId = signal<number | null>(null);
+  /** Secciones seleccionadas (checkboxes). */
+  readonly seccionesSeleccionadas = signal<Set<number>>(new Set());
   /** Indica si las listas de catálogo están cargando. */
   readonly catalogosLoading = signal(true);
   /** Error al cargar catálogos. */
   readonly catalogosError = signal<string | null>(null);
+
+  /** Secciones filtradas por el curso seleccionado. */
+  readonly seccionesPorCurso = computed(() => {
+    const cursoId = this.selectedCursoId();
+    if (!cursoId) return [];
+    return this.seccionesList().filter((s) => s.curso.idCurso === cursoId);
+  });
 
   constructor() {
     this.cargarCatalogos();
@@ -102,10 +120,10 @@ export class Evaluaciones {
     this.catalogosLoading.set(true);
     this.catalogosError.set(null);
 
-    this.evaluacionService
-      .getSeccionesList()
-      .then((page) => {
-        this.seccionesList.set(page.content);
+    Promise.all([this.evaluacionService.getCursosList(), this.evaluacionService.getSeccionesList()])
+      .then(([cursosPage, seccionesPage]) => {
+        this.cursosList.set(cursosPage.content);
+        this.seccionesList.set(seccionesPage.content);
         this.catalogosLoading.set(false);
       })
       .catch(() => {
@@ -128,9 +146,16 @@ export class Evaluaciones {
   // ─── Formulario ──────────────────────────────────────────────────────
 
   readonly evaluacionForm = this.formBuilder.group({
-    nombre: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
-    porcentaje: this.formBuilder.nonNullable.control<number>(10, [Validators.required, Validators.min(0.1), Validators.max(100)]),
-    idSeccion: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
+    nombre: this.formBuilder.nonNullable.control('', [
+      Validators.required,
+      Validators.minLength(2),
+    ]),
+    porcentaje: this.formBuilder.nonNullable.control<number>(10, [
+      Validators.required,
+      Validators.min(0.1),
+      Validators.max(100),
+    ]),
+    idCurso: this.formBuilder.nonNullable.control<number | null>(null),
   });
 
   // ─── Mutaciones ──────────────────────────────────────────────────────
@@ -189,6 +214,8 @@ export class Evaluaciones {
     this.modoFormulario.set('editar');
     this.evaluacionSeleccionada.set(evaluacion);
     this.cargarFormulario(evaluacion);
+    this.setCursoFromSeccion(evaluacion.seccion);
+    this.seccionesSeleccionadas.set(new Set([evaluacion.seccion.idSeccion]));
     this.evaluacionModalAbierto.set(true);
   }
 
@@ -196,7 +223,41 @@ export class Evaluaciones {
   closeEvaluacionModal(): void {
     this.evaluacionModalAbierto.set(false);
     this.evaluacionSeleccionada.set(null);
+    this.selectedCursoId.set(null);
+    this.seccionesSeleccionadas.set(new Set());
     this.resetFormulario();
+  }
+
+  /** Maneja cambio de curso en el selector: filtra secciones y resetea selección. */
+  onCursoChange(cursoId: number | null): void {
+    this.selectedCursoId.set(cursoId);
+    this.seccionesSeleccionadas.set(new Set());
+  }
+
+  /** Toggle selección de una sección. */
+  toggleSeccion(idSeccion: number): void {
+    this.seccionesSeleccionadas.update((prev) => {
+      const next = new Set(prev);
+      if (next.has(idSeccion)) {
+        next.delete(idSeccion);
+      } else {
+        next.add(idSeccion);
+      }
+      return next;
+    });
+  }
+
+  /** Selecciona o deselecciona todas las secciones filtradas. */
+  toggleAllSecciones(): void {
+    const secciones = this.seccionesPorCurso();
+    const selected = this.seccionesSeleccionadas();
+    const allSelected = secciones.length > 0 && secciones.every((s) => selected.has(s.idSeccion));
+
+    if (allSelected) {
+      this.seccionesSeleccionadas.set(new Set());
+    } else {
+      this.seccionesSeleccionadas.set(new Set(secciones.map((s) => s.idSeccion)));
+    }
   }
 
   /** Abre diálogo de confirmación para eliminación. */
@@ -219,49 +280,114 @@ export class Evaluaciones {
       return;
     }
 
+    if (this.modoFormulario() === 'crear') {
+      this.guardarEvaluacionNueva(observer);
+      return;
+    }
+
+    this.guardarEvaluacionEditada(observer);
+  }
+
+  private guardarEvaluacionNueva(observer: DialogObserver): void {
     const payload = this.construirPayload();
     if (!payload) return;
 
-    const raw = this.evaluacionForm.getRawValue();
-    const idSeccion = raw.idSeccion!;
+    const idsSeccion = Array.from(this.seccionesSeleccionadas());
+    if (idsSeccion.length === 0) {
+      this.notifications
+        .open('Seleccioná al menos una sección para asignar la evaluación', {
+          label: 'Aviso',
+          appearance: 'warning',
+          autoClose: 4000,
+        })
+        .subscribe();
+      return;
+    }
 
-    if (this.modoFormulario() === 'crear') {
+    let creadas = 0;
+    let errores = 0;
+    let ultimoError: string | null = null;
+
+    for (const idSeccion of idsSeccion) {
       this.crearEvaluacionMutation.mutate(
         { evaluacion: payload, idSeccion },
         {
           onSuccess: () => {
-            this.notifications
-              .open('Evaluación creada exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
-              .subscribe();
-            observer.complete();
-            this.closeEvaluacionModal();
+            creadas++;
+            if (creadas + errores === idsSeccion.length) {
+              this.finalizarCreacionBatch(observer, creadas, errores, ultimoError);
+            }
           },
           onError: (error) => {
-            this.notifications
-              .open(error?.message ?? 'Error al crear evaluación', { label: 'Error', appearance: 'error', autoClose: 5000 })
-              .subscribe();
+            errores++;
+            ultimoError = error?.message ?? 'Error al crear evaluación';
+            if (creadas + errores === idsSeccion.length) {
+              this.finalizarCreacionBatch(observer, creadas, errores, ultimoError);
+            }
           },
         },
       );
-      return;
     }
+  }
+
+  private finalizarCreacionBatch(
+    observer: DialogObserver,
+    creadas: number,
+    errores: number,
+    ultimoError: string | null,
+  ): void {
+    if (errores === 0) {
+      this.notifications
+        .open(`Evaluación creada en ${creadas} sección${creadas > 1 ? 'es' : ''}`, {
+          label: 'Éxito',
+          appearance: 'success',
+          autoClose: 3000,
+        })
+        .subscribe();
+    } else {
+      this.notifications
+        .open(
+          `Creada en ${creadas} sección${creadas !== 1 ? 'es' : ''}, ${errores} error${errores > 1 ? 'es' : ''}${ultimoError ? ': ' + ultimoError : ''}`,
+          { label: 'Completado con errores', appearance: 'warning', autoClose: 5000 },
+        )
+        .subscribe();
+    }
+    observer.complete();
+    this.closeEvaluacionModal();
+  }
+
+  private guardarEvaluacionEditada(observer: DialogObserver): void {
+    const payload = this.construirPayload();
+    if (!payload) return;
 
     const seleccionado = this.evaluacionSeleccionada();
     if (!seleccionado) return;
 
     this.actualizarEvaluacionMutation.mutate(
-      { id: seleccionado.idEvaluacion, evaluacion: payload, idSeccion },
+      {
+        id: seleccionado.idEvaluacion,
+        evaluacion: payload,
+        idSeccion: seleccionado.seccion.idSeccion,
+      },
       {
         onSuccess: () => {
           this.notifications
-            .open('Evaluación actualizada exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+            .open('Evaluación actualizada exitosamente', {
+              label: 'Éxito',
+              appearance: 'success',
+              autoClose: 3000,
+            })
             .subscribe();
           observer.complete();
           this.closeEvaluacionModal();
         },
         onError: (error) => {
           this.notifications
-            .open(error?.message ?? 'Error al actualizar evaluación', { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .open(error?.message ?? 'Error al actualizar evaluación', {
+              label: 'Error',
+              appearance: 'error',
+              autoClose: 5000,
+            })
             .subscribe();
         },
       },
@@ -277,14 +403,22 @@ export class Evaluaciones {
     this.eliminarEvaluacionMutation.mutate(seleccionado.idEvaluacion, {
       onSuccess: () => {
         this.notifications
-          .open('Evaluación eliminada exitosamente', { label: 'Eliminado', appearance: 'success', autoClose: 3000 })
+          .open('Evaluación eliminada exitosamente', {
+            label: 'Eliminado',
+            appearance: 'success',
+            autoClose: 3000,
+          })
           .subscribe();
         observer.complete();
         this.closeEliminarModal();
       },
       onError: (error) => {
         this.notifications
-          .open(error?.message ?? 'Error al eliminar evaluación', { label: 'Error', appearance: 'error', autoClose: 5000 })
+          .open(error?.message ?? 'Error al eliminar evaluación', {
+            label: 'Error',
+            appearance: 'error',
+            autoClose: 5000,
+          })
           .subscribe();
       },
     });
@@ -293,7 +427,9 @@ export class Evaluaciones {
   // ─── Estado de carga ─────────────────────────────────────────────────
 
   isGuardando(): boolean {
-    return this.crearEvaluacionMutation.isPending() || this.actualizarEvaluacionMutation.isPending();
+    return (
+      this.crearEvaluacionMutation.isPending() || this.actualizarEvaluacionMutation.isPending()
+    );
   }
 
   isEliminando(): boolean {
@@ -303,30 +439,38 @@ export class Evaluaciones {
   // ─── Navegación de páginas ───────────────────────────────────────────
 
   paginaAnterior(): void {
-    if (this.pagina() > 0) this.pagina.update(p => p - 1);
+    if (this.pagina() > 0) this.pagina.update((p) => p - 1);
   }
 
   paginaSiguiente(): void {
-    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update(p => p + 1);
+    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update((p) => p + 1);
   }
 
   // ─── Métodos privados ────────────────────────────────────────────────
 
+  private setCursoFromSeccion(seccion: EvaluacionResponse['seccion']): void {
+    this.selectedCursoId.set(seccion.curso.idCurso);
+    this.evaluacionForm.controls.idCurso.setValue(seccion.curso.idCurso);
+  }
+
   private resetFormulario(): void {
+    this.selectedCursoId.set(null);
+    this.seccionesSeleccionadas.set(new Set());
     this.evaluacionForm.reset({
       nombre: '',
       porcentaje: 10,
-      idSeccion: null,
+      idCurso: null,
     });
     this.evaluacionForm.markAsPristine();
     this.evaluacionForm.markAsUntouched();
   }
 
   private cargarFormulario(evaluacion: EvaluacionResponse): void {
+    this.selectedCursoId.set(evaluacion.seccion.curso.idCurso);
     this.evaluacionForm.reset({
       nombre: evaluacion.nombre,
       porcentaje: evaluacion.porcentaje,
-      idSeccion: evaluacion.seccion.idSeccion,
+      idCurso: evaluacion.seccion.curso.idCurso,
     });
     this.evaluacionForm.markAsPristine();
     this.evaluacionForm.markAsUntouched();

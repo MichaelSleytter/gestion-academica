@@ -1,6 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  type OnDestroy,
+  signal,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import {
   TuiButton,
   TuiDialog,
@@ -13,7 +21,7 @@ import {
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import { TuiSkeleton, TuiSelect } from '@taiga-ui/kit';
+import { TuiInputColor, TuiSkeleton, TuiSelect, TuiSwitch } from '@taiga-ui/kit';
 import type { SeccionResponse } from '../../../models/seccion/seccion.response';
 import type { SeccionCreateRequest } from '../../../models/seccion/seccion.request';
 import {
@@ -26,7 +34,9 @@ import {
   SeccionService,
   type CicloAcademicoResponse,
 } from '../../../core/services/seccion.service';
+import { RoleService } from '../../../core/services/role.service';
 import type { CursoResponse } from '../../../models/curso/curso.response';
+import type { DocenteResponse } from '../../../models/docente/docente.response';
 
 type ModoFormulario = 'crear' | 'editar';
 
@@ -48,8 +58,10 @@ interface DialogObserver {
     TuiTable,
     TuiTitle,
     TuiIcon,
+    TuiInputColor,
     TuiSkeleton,
     TuiSelect,
+    TuiSwitch,
   ],
   templateUrl: './secciones.html',
   styles: ``,
@@ -62,11 +74,14 @@ interface DialogObserver {
  *
  * Accesible para: ADMIN, DOCENTE
  */
-export class Secciones {
+export class Secciones implements OnDestroy {
   private readonly router = inject(Router);
   private readonly formBuilder = inject(FormBuilder);
   private readonly notifications = inject(TuiNotificationService);
   private readonly seccionService = inject(SeccionService);
+  private readonly roleService = inject(RoleService);
+
+  readonly isAdmin = this.roleService.isAdmin;
 
   /** Columnas de la tabla de secciones. */
   readonly columns = ['codigo', 'curso', 'ciclo', 'vacantes', 'acciones'] as const;
@@ -81,6 +96,8 @@ export class Secciones {
   readonly busqueda = signal('');
   /** Timer para debounce del search. */
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly formSubscriptions = new Subscription();
+  private codigoSolicitudSecuencia = 0;
 
   /** Query paginada que se refresca al cambiar página, tamaño o búsqueda. */
   readonly seccionesQuery = useSeccionesPaginadosQuery(this.pagina, this.tamaño, this.busqueda);
@@ -98,6 +115,8 @@ export class Secciones {
   readonly cursosList = signal<CursoResponse[]>([]);
   /** Lista de ciclos académicos para el select del formulario. */
   readonly ciclosList = signal<CicloAcademicoResponse[]>([]);
+  /** Lista de docentes para asignar a una sección. */
+  readonly docentesList = signal<DocenteResponse[]>([]);
   /** Indica si las listas de catálogo están cargando. */
   readonly catalogosLoading = signal(true);
   /** Error al cargar catálogos. */
@@ -105,6 +124,34 @@ export class Secciones {
 
   constructor() {
     this.cargarCatalogos();
+    this.sincronizarFormularioConCatalogos();
+  }
+
+  ngOnDestroy(): void {
+    this.formSubscriptions.unsubscribe();
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+  }
+
+  private sincronizarFormularioConCatalogos(): void {
+    const actualizarCodigo = () => {
+      this.actualizarNombreCicloSeleccionado();
+      void this.solicitarCodigoAutomatico();
+    };
+
+    this.formSubscriptions.add(
+      this.seccionForm.controls.idCurso.valueChanges.subscribe(actualizarCodigo),
+    );
+    this.formSubscriptions.add(
+      this.seccionForm.controls.idCiclo.valueChanges.subscribe(actualizarCodigo),
+    );
+  }
+
+  private actualizarNombreCicloSeleccionado(): void {
+    const idCiclo = this.seccionForm.controls.idCiclo.value;
+    const ciclo = this.ciclosList().find((item) => item.idCiclo === idCiclo);
+    if (ciclo && this.seccionForm.controls.cicloAcademicoNombre.value !== ciclo.nombre) {
+      this.seccionForm.controls.cicloAcademicoNombre.setValue(ciclo.nombre);
+    }
   }
 
   private cargarCatalogos(): void {
@@ -114,13 +161,15 @@ export class Secciones {
     Promise.all([
       this.seccionService.getCursosList(),
       this.seccionService.getCiclosAcademicosList(),
+      this.seccionService.getDocentesList(),
     ])
-      .then(([cursosPage, ciclos]) => {
+      .then(([cursosPage, ciclos, docentesPage]) => {
         this.cursosList.set(cursosPage.content);
         this.ciclosList.set(ciclos);
+        this.docentesList.set(docentesPage.content);
         this.catalogosLoading.set(false);
       })
-      .catch((err) => {
+      .catch(() => {
         this.catalogosError.set('Error al cargar datos del formulario');
         this.catalogosLoading.set(false);
       });
@@ -132,10 +181,18 @@ export class Secciones {
   readonly seccionModalAbierto = signal(false);
   /** Controla la apertura/cierre del diálogo de confirmación de eliminación. */
   readonly eliminarModalAbierto = signal(false);
+  /** Controla la apertura/cierre del modal de asignación docente. */
+  readonly docentesModalAbierto = signal(false);
   /** Modo actual del formulario: 'crear' o 'editar'. */
   readonly modoFormulario = signal<ModoFormulario>('crear');
   /** Sección seleccionada para edición o eliminación. */
   readonly seccionSeleccionada = signal<SeccionResponse | null>(null);
+  /** Indica si el código se mantiene sincronizado con el backend. */
+  readonly codigoAutomatico = signal(true);
+  /** Indica si se está consultando el próximo código. */
+  readonly codigoAutomaticoCargando = signal(false);
+  /** Error al generar el próximo código. */
+  readonly codigoAutomaticoError = signal<string | null>(null);
 
   // ─── Formulario ──────────────────────────────────────────────────────
 
@@ -148,6 +205,20 @@ export class Secciones {
     cicloAcademicoNombre: this.formBuilder.nonNullable.control('', [Validators.required]),
     idCurso: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
     idCiclo: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
+    color: this.formBuilder.control<string | null>(null),
+  });
+
+  readonly asignacionDocenteForm = this.formBuilder.group({
+    idDocente: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
+  });
+
+  readonly docentesAsignados = signal<DocenteResponse[]>([]);
+  readonly docentesAsignadosLoading = signal(false);
+  readonly asignacionDocenteGuardando = signal(false);
+
+  readonly docentesDisponibles = computed(() => {
+    const asignados = new Set(this.docentesAsignados().map((docente) => docente.idUsuario));
+    return this.docentesList().filter((docente) => !asignados.has(docente.idUsuario));
   });
 
   // ─── Mutaciones ──────────────────────────────────────────────────────
@@ -198,6 +269,23 @@ export class Secciones {
     }, 300);
   }
 
+  activarCodigoManual(manual: boolean): void {
+    this.codigoAutomatico.set(!manual);
+    this.codigoAutomaticoError.set(null);
+    if (manual) {
+      this.codigoSolicitudSecuencia++;
+      this.codigoAutomaticoCargando.set(false);
+      return;
+    }
+
+    void this.solicitarCodigoAutomatico();
+  }
+
+  regenerarCodigoAutomatico(): void {
+    this.codigoAutomatico.set(true);
+    void this.solicitarCodigoAutomatico();
+  }
+
   // ─── Modales ─────────────────────────────────────────────────────────
 
   /** Abre modal de creación con formulario limpio. */
@@ -205,6 +293,7 @@ export class Secciones {
     this.modoFormulario.set('crear');
     this.seccionSeleccionada.set(null);
     this.resetFormulario();
+    this.codigoAutomatico.set(true);
     this.seccionModalAbierto.set(true);
   }
 
@@ -213,6 +302,7 @@ export class Secciones {
     this.modoFormulario.set('editar');
     this.seccionSeleccionada.set(seccion);
     this.cargarFormulario(seccion);
+    this.codigoAutomatico.set(false);
     this.seccionModalAbierto.set(true);
   }
 
@@ -233,6 +323,21 @@ export class Secciones {
   closeEliminarModal(): void {
     this.eliminarModalAbierto.set(false);
     this.seccionSeleccionada.set(null);
+  }
+
+  openDocentesModal(seccion: SeccionResponse): void {
+    if (!this.isAdmin()) return;
+    this.seccionSeleccionada.set(seccion);
+    this.asignacionDocenteForm.reset({ idDocente: null });
+    this.docentesModalAbierto.set(true);
+    void this.cargarDocentesAsignados(seccion.idSeccion);
+  }
+
+  closeDocentesModal(): void {
+    this.docentesModalAbierto.set(false);
+    this.seccionSeleccionada.set(null);
+    this.docentesAsignados.set([]);
+    this.asignacionDocenteForm.reset({ idDocente: null });
   }
 
   // ─── Guardar (crear/editar) ──────────────────────────────────────────
@@ -339,6 +444,60 @@ export class Secciones {
     });
   }
 
+  async asignarDocente(): Promise<void> {
+    const seccion = this.seccionSeleccionada();
+    const idDocente = this.asignacionDocenteForm.controls.idDocente.value;
+
+    if (!seccion || !idDocente || this.asignacionDocenteForm.invalid) {
+      this.asignacionDocenteForm.markAllAsTouched();
+      return;
+    }
+
+    this.asignacionDocenteGuardando.set(true);
+    try {
+      await this.seccionService.asignarDocente(seccion.idSeccion, idDocente);
+      await this.cargarDocentesAsignados(seccion.idSeccion);
+      this.asignacionDocenteForm.reset({ idDocente: null });
+      this.notifications.open('Docente asignado exitosamente', {
+        label: 'Éxito',
+        appearance: 'success',
+        autoClose: 3000,
+      }).subscribe();
+    } catch (error) {
+      this.notifications.open(error instanceof Error ? error.message : 'Error al asignar docente', {
+        label: 'Error',
+        appearance: 'error',
+        autoClose: 5000,
+      }).subscribe();
+    } finally {
+      this.asignacionDocenteGuardando.set(false);
+    }
+  }
+
+  async removerDocente(idDocente: number): Promise<void> {
+    const seccion = this.seccionSeleccionada();
+    if (!seccion) return;
+
+    this.asignacionDocenteGuardando.set(true);
+    try {
+      await this.seccionService.removerDocente(seccion.idSeccion, idDocente);
+      await this.cargarDocentesAsignados(seccion.idSeccion);
+      this.notifications.open('Docente removido de la sección', {
+        label: 'Actualizado',
+        appearance: 'success',
+        autoClose: 3000,
+      }).subscribe();
+    } catch (error) {
+      this.notifications.open(error instanceof Error ? error.message : 'Error al remover docente', {
+        label: 'Error',
+        appearance: 'error',
+        autoClose: 5000,
+      }).subscribe();
+    } finally {
+      this.asignacionDocenteGuardando.set(false);
+    }
+  }
+
   // ─── Estado de carga ─────────────────────────────────────────────────
 
   isGuardando(): boolean {
@@ -347,6 +506,10 @@ export class Secciones {
 
   isEliminando(): boolean {
     return this.eliminarSeccionMutation.isPending();
+  }
+
+  docenteNombre(docente: DocenteResponse): string {
+    return `${docente.nombre} ${docente.apellido}`;
   }
 
   // ─── Navegación de páginas ───────────────────────────────────────────
@@ -361,6 +524,36 @@ export class Secciones {
 
   // ─── Métodos privados ────────────────────────────────────────────────
 
+  private async solicitarCodigoAutomatico(): Promise<void> {
+    const value = this.seccionForm.getRawValue();
+    const idCurso = value.idCurso;
+    const idCiclo = value.idCiclo;
+
+    if (this.modoFormulario() !== 'crear' || !this.codigoAutomatico() || !idCurso || !idCiclo) {
+      return;
+    }
+
+    const solicitudActual = ++this.codigoSolicitudSecuencia;
+    this.codigoAutomaticoCargando.set(true);
+    this.codigoAutomaticoError.set(null);
+
+    try {
+      const codigo = await this.seccionService.getProximoCodigo(idCurso, idCiclo);
+      if (solicitudActual === this.codigoSolicitudSecuencia && this.codigoAutomatico()) {
+        this.seccionForm.controls.codigoSeccion.setValue(codigo);
+        this.seccionForm.controls.codigoSeccion.markAsDirty();
+      }
+    } catch {
+      if (solicitudActual === this.codigoSolicitudSecuencia && this.codigoAutomatico()) {
+        this.codigoAutomaticoError.set('No se pudo generar el código automáticamente');
+      }
+    } finally {
+      if (solicitudActual === this.codigoSolicitudSecuencia && this.codigoAutomatico()) {
+        this.codigoAutomaticoCargando.set(false);
+      }
+    }
+  }
+
   private resetFormulario(): void {
     this.seccionForm.reset({
       codigoSeccion: '',
@@ -368,6 +561,7 @@ export class Secciones {
       cicloAcademicoNombre: '',
       idCurso: null,
       idCiclo: null,
+      color: null,
     });
     this.seccionForm.markAsPristine();
     this.seccionForm.markAsUntouched();
@@ -380,6 +574,7 @@ export class Secciones {
       cicloAcademicoNombre: seccion.cicloAcademicoNombre,
       idCurso: seccion.curso.idCurso,
       idCiclo: seccion.cicloAcademico.idCiclo,
+      color: seccion.color ?? null,
     });
     this.seccionForm.markAsPristine();
     this.seccionForm.markAsUntouched();
@@ -387,10 +582,28 @@ export class Secciones {
 
   private construirPayload(): SeccionCreateRequest | null {
     const value = this.seccionForm.getRawValue();
+    const color = value.color?.trim() || null;
     return {
       codigoSeccion: value.codigoSeccion.trim(),
       vacantes: Number(value.vacantes),
       cicloAcademicoNombre: value.cicloAcademicoNombre.trim(),
+      color,
     };
+  }
+
+  private async cargarDocentesAsignados(idSeccion: number): Promise<void> {
+    this.docentesAsignadosLoading.set(true);
+    try {
+      this.docentesAsignados.set(await this.seccionService.getDocentesAsignados(idSeccion));
+    } catch {
+      this.docentesAsignados.set([]);
+      this.notifications.open('No se pudieron cargar los docentes asignados', {
+        label: 'Error',
+        appearance: 'error',
+        autoClose: 5000,
+      }).subscribe();
+    } finally {
+      this.docentesAsignadosLoading.set(false);
+    }
   }
 }

@@ -1,16 +1,16 @@
 <div class="flex flex-col gap-5 p-2.5">
-  @if (historialQuery.isPending()) {
+  @if (historialQuery().isPending()) {
     <div
       class="flex min-h-96 items-center justify-center rounded-2xl border border-border bg-surface"
     >
-      <tui-loader size="l">Cargando tu historial académico...</tui-loader>
+      <tui-loader size="l">Cargando historial académico...</tui-loader>
     </div>
-  } @else if (historialQuery.isError()) {
+  } @else if (historialQuery().isError()) {
     <div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-800">
       <div class="flex items-start gap-3">
         <tui-icon icon="@tui.file-text" class="mt-0.5" />
         <div>
-          <p class="text-base font-bold">No se pudo cargar tu historial académico</p>
+          <p class="text-base font-bold">No se pudo cargar el historial académico</p>
           <p class="mt-1 text-sm">{{ errorMessage() }}</p>
         </div>
       </div>
@@ -110,7 +110,7 @@
           Todavía no hay malla curricular cargada
         </p>
         <p class="mt-1 text-sm text-text-secondary">
-          Cuando administración cargue los cursos de tu carrera, tu progreso aparecerá aquí.
+          Cuando administración cargue los cursos de la carrera, el progreso aparecerá aquí.
         </p>
       </section>
     } @else {

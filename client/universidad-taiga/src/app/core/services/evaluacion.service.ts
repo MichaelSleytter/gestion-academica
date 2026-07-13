@@ -2,9 +2,10 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { APP_API_URL } from '../tokens/api.tokens';
 import { lastValueFrom } from 'rxjs';
-import { EvaluacionResponse } from '../../models/evaluacion/evaluacion.response';
-import { EvaluacionCreateRequest } from '../../models/evaluacion/evaluacion.request';
-import { PageResponse } from '../../models/shared/page.response';
+import type { EvaluacionResponse } from '../../models/evaluacion/evaluacion.response';
+import type { EvaluacionCreateRequest } from '../../models/evaluacion/evaluacion.request';
+import type { PageResponse } from '../../models/shared/page.response';
+import type { CursoResponse } from '../../models/curso/curso.response';
 
 /**
  * Servicio para interactuar con el API de evaluaciones.
@@ -30,16 +31,16 @@ export class EvaluacionService {
     tamaño: number,
     busqueda?: string,
   ): Promise<PageResponse<EvaluacionResponse>> {
-    let params = new HttpParams()
-      .set('pagina', pagina.toString())
-      .set('tamano', tamaño.toString());
+    let params = new HttpParams().set('pagina', pagina.toString()).set('tamano', tamaño.toString());
 
     if (busqueda?.trim()) {
       params = params.set('busqueda', busqueda.trim());
     }
 
     return lastValueFrom(
-      this.http.get<PageResponse<EvaluacionResponse>>(`${this.apiBaseUrl}/evaluaciones`, { params }),
+      this.http.get<PageResponse<EvaluacionResponse>>(`${this.apiBaseUrl}/evaluaciones`, {
+        params,
+      }),
     );
   }
 
@@ -50,7 +51,10 @@ export class EvaluacionService {
    * @param idSeccion  ID de la sección asociada
    * @returns evaluación creada
    */
-  crearEvaluacion(evaluacion: EvaluacionCreateRequest, idSeccion: number): Promise<EvaluacionResponse> {
+  crearEvaluacion(
+    evaluacion: EvaluacionCreateRequest,
+    idSeccion: number,
+  ): Promise<EvaluacionResponse> {
     const url = `${this.apiBaseUrl}/evaluaciones?idSeccion=${idSeccion}`;
     return lastValueFrom(this.http.post<EvaluacionResponse>(url, evaluacion));
   }
@@ -63,7 +67,11 @@ export class EvaluacionService {
    * @param idSeccion  ID de la sección asociada
    * @returns evaluación actualizada
    */
-  actualizarEvaluacion(id: number, evaluacion: EvaluacionCreateRequest, idSeccion: number): Promise<EvaluacionResponse> {
+  actualizarEvaluacion(
+    id: number,
+    evaluacion: EvaluacionCreateRequest,
+    idSeccion: number,
+  ): Promise<EvaluacionResponse> {
     const url = `${this.apiBaseUrl}/evaluaciones/${id}?idSeccion=${idSeccion}`;
     return lastValueFrom(this.http.put<EvaluacionResponse>(url, evaluacion));
   }
@@ -86,9 +94,20 @@ export class EvaluacionService {
    */
   getSeccionesList(): Promise<PageResponse<EvaluacionResponse['seccion']>> {
     const url = `${this.apiBaseUrl}/secciones`;
-    const params = new HttpParams()
-      .set('pagina', '0')
-      .set('tamano', '100');
-    return lastValueFrom(this.http.get<PageResponse<EvaluacionResponse['seccion']>>(url, { params }));
+    const params = new HttpParams().set('pagina', '0').set('tamano', '100');
+    return lastValueFrom(
+      this.http.get<PageResponse<EvaluacionResponse['seccion']>>(url, { params }),
+    );
+  }
+
+  /**
+   * Obtiene la lista de cursos para el selector del formulario.
+   *
+   * @returns lista de cursos
+   */
+  getCursosList(): Promise<PageResponse<CursoResponse>> {
+    const url = `${this.apiBaseUrl}/cursos`;
+    const params = new HttpParams().set('pagina', '0').set('tamano', '200');
+    return lastValueFrom(this.http.get<PageResponse<CursoResponse>>(url, { params }));
   }
 }

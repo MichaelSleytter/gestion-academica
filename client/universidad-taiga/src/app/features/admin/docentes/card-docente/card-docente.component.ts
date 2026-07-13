@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { TuiButton, TuiIcon } from '@taiga-ui/core';
-import { DocenteResponse } from '../../../../models/docente/docente.response';
+import type { DocenteResponse } from '../../../../models/docente/docente.response';
 import { getIniciales } from '../../../../shared/utils/estudiante.util';
 
 @Component({
@@ -27,6 +27,12 @@ export class CardDocente {
   readonly iniciales = computed(() =>
     getIniciales(`${this.docente().nombre} ${this.docente().apellido}`),
   );
+
+  /** Especialización formateada, con fallback legacy. */
+  readonly especialidad = computed(() => {
+    const d = this.docente();
+    return d.nombreEspecializacion ?? d.especialidad ?? 'Sin especialización';
+  });
 
   /** Estado formateado. */
   readonly estado = computed(() => {

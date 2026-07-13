@@ -1,111 +1,254 @@
 <div class="flex flex-col gap-4 p-2.5">
+  <!-- ─── Header ────────────────────────────────────────────────── -->
   <div appearance="floating" tuiCardLarge>
     <header tuiHeader class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex flex-col gap-1">
-        <a routerLink="/app/docente/mis-cursos" class="text-sm font-semibold text-primary">← Volver a mis cursos</a>
-        <h2 class="text-2xl font-bold text-text-primary">Carga de notas</h2>
+        <a routerLink="/app/docente/mis-cursos" class="text-sm font-semibold text-primary"
+          >← Volver a mis cursos</a
+        >
+        <h2 class="text-2xl font-bold text-text-primary">📊 Carga de notas</h2>
         <span class="text-sm font-medium text-text-secondary">Sección #{{ sectionId() }}</span>
       </div>
-      @if (selectedEvaluation()) {
-        <span class="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-on-primary">{{ selectedEvaluation()?.nombre }} · {{ selectedEvaluation()?.porcentaje }}%</span>
-      }
+
+      <div class="flex items-center gap-3">
+        <!-- Progreso -->
+        @if (evaluations().length > 0 && enrollments().length > 0) {
+          <div class="flex items-center gap-2 text-xs text-text-tertiary">
+            <tui-icon icon="@tui.check-check" />
+            <span>{{ progressLabel() }}</span>
+          </div>
+        }
+
+        <!-- Botón Guardar todo -->
+        @if (hasUnsavedChanges() || isSaving()) {
+          <button
+            appearance="primary"
+            size="m"
+            tuiButton
+            type="button"
+            [disabled]="isSaving()"
+            (click)="guardarTodas()"
+          >
+            @if (isSaving()) {
+              Guardando...
+            } @else {
+              Guardar {{ pendingCount() }} nota{{ pendingCount() !== 1 ? 's' : '' }}
+            }
+          </button>
+        }
+      </div>
     </header>
   </div>
 
+  <!-- ─── Estados de carga / error / vacío ──────────────────────── -->
   @if (!sectionId()) {
-    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">La ruta no contiene una sección válida.</div>
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+      La ruta no contiene una sección válida.
+    </div>
   } @else if (isLoading()) {
-    <div class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface">
+    <div
+      class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface"
+    >
       <tui-loader size="l">Cargando estudiantes y evaluaciones...</tui-loader>
     </div>
   } @else if (evaluationsQuery.isError() || enrollmentsQuery.isError()) {
-    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">No se pudieron cargar los datos de la sección.</div>
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+      No se pudieron cargar los datos de la sección.
+    </div>
   } @else if (evaluations().length === 0) {
-    <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-medium text-yellow-800">
-      Esta sección todavía no tiene evaluaciones configuradas. Crea una evaluación antes de cargar notas.
+    <div
+      class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-medium text-yellow-800"
+    >
+      Esta sección todavía no tiene evaluaciones configuradas.
+      <a routerLink="/app/evaluaciones" class="ml-1 font-bold underline">Crear evaluaciones</a>
     </div>
   } @else if (enrollments().length === 0) {
-    <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-medium text-yellow-800">
+    <div
+      class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm font-medium text-yellow-800"
+    >
       Esta sección no tiene estudiantes matriculados.
     </div>
   } @else {
-    <div appearance="floating" tuiCardLarge>
-      <div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-        <tui-textfield tuiTextfieldSize="m">
-          <label tuiLabel>Evaluación</label>
-          <select tuiInput [value]="selectedEvaluationId()" (change)="onEvaluationChange($any($event).target.value)">
-            @for (evaluation of evaluations(); track evaluation.idEvaluacion) {
-              <option [value]="evaluation.idEvaluacion">{{ evaluation.nombre }} · {{ evaluation.porcentaje }}%</option>
-            }
-          </select>
-        </tui-textfield>
-
-        @if (notesQuery.isPending()) {
-          <tui-loader size="m">Cargando notas...</tui-loader>
-        }
+    <!-- ─── Barra de progreso ──────────────────────────────────── -->
+    <div class="flex items-center gap-3">
+      <div class="h-2 flex-1 overflow-hidden rounded-full bg-surface-hover">
+        <div
+          class="h-full rounded-full bg-primary transition-all duration-300"
+          [style.width.%]="progressFraction() * 100"
+        ></div>
       </div>
+      <span class="text-xs font-medium text-text-tertiary">
+        {{ (progressFraction() * 100).toFixed(0) }}%
+      </span>
     </div>
 
-    <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-      <table tuiTable class="w-full border-separate border-spacing-0 table-auto" [columns]="columns">
-        <thead tuiThead class="bg-surface-hover">
-          <tr tuiThGroup class="h-12 border-b border-border text-xs font-bold uppercase tracking-wider text-text-secondary">
-            <th *tuiHead="'student'" tuiTh class="px-6 text-left">Estudiante</th>
-            <th *tuiHead="'status'" tuiTh class="px-6 text-left">Matrícula</th>
-            <th *tuiHead="'grade'" tuiTh class="px-6 text-left">Nota</th>
-            <th *tuiHead="'actions'" tuiTh class="px-6 text-right">Acciones</th>
+    <!-- ─── Tabla planilla (spreadsheet) ───────────────────────── -->
+    <div class="overflow-auto rounded-2xl border border-border bg-surface">
+      <table class="min-w-full border-separate border-spacing-0 text-sm">
+        <!-- Cabecera fija -->
+        <thead class="sticky top-0 z-10">
+          <tr class="bg-surface-hover">
+            <th
+              class="sticky left-0 z-20 border-b border-border bg-surface-hover px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-text-secondary min-w-[220px]"
+            >
+              <div class="flex items-center gap-2">
+                <tui-icon icon="@tui.user" class="text-text-muted" />
+                Estudiante
+              </div>
+            </th>
+            <th
+              class="border-b border-border px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-text-secondary min-w-[100px]"
+            >
+              Matrícula
+            </th>
+
+            @for (evaluation of evaluations(); track evaluation.idEvaluacion) {
+              <th
+                class="border-b border-border px-3 py-3 text-center text-xs font-bold uppercase tracking-wider min-w-[100px]"
+                [class.bg-primary/5]="evaluation.porcentaje >= 30"
+              >
+                <div class="flex flex-col gap-0.5">
+                  <span class="truncate max-w-[100px]">{{ evaluation.nombre }}</span>
+                  <span class="text-[10px] font-normal text-text-tertiary"
+                    >{{ evaluation.porcentaje }}%</span
+                  >
+                </div>
+              </th>
+            }
           </tr>
         </thead>
 
-        <tbody tuiTbody [data]="enrollments()">
+        <!-- Cuerpo -->
+        <tbody>
           @for (enrollment of enrollments(); track enrollment.idMatricula) {
             @if (getStudentId(enrollment); as idEstudiante) {
-              <tr tuiTr class="hover:bg-surface-hover focus-within:bg-surface-hover">
-                <td *tuiCell="'student'" tuiTd class="border-b border-border px-6 py-4">
+              <tr
+                class="group transition-colors hover:bg-surface-hover/50 [&:nth-child(even)]:bg-surface-hover/30 [&:nth-child(even):hover]:bg-surface-hover/50"
+              >
+                <!-- Columna fija: Estudiante (sticky izquierda) -->
+                <td
+                  class="sticky left-0 z-10 border-b border-border bg-surface px-4 py-3 group-hover:bg-surface-hover/50 [&:nth-child(even)]:bg-surface-hover/30 group-[&:nth-child(even)]:hover:bg-surface-hover/50"
+                >
                   <div class="flex items-center gap-3">
-                    <div class="flex size-10 items-center justify-center rounded-2xl border border-border bg-surface-hover">
-                      <tui-icon icon="@tui.user" />
+                    <div
+                      class="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface-hover"
+                    >
+                      <tui-icon icon="@tui.user" class="text-xs text-text-muted" />
                     </div>
-                    <div class="flex flex-col">
-                      <span class="font-bold text-text-primary">{{ getStudentLabel(enrollment) }}</span>
-                      <span class="text-xs text-text-tertiary">ID {{ idEstudiante }}</span>
+                    <div class="flex flex-col min-w-0">
+                      <span class="truncate text-sm font-semibold text-text-primary">{{
+                        getStudentLabel(enrollment)
+                      }}</span>
+                      <span class="text-[11px] text-text-tertiary">ID {{ idEstudiante }}</span>
                     </div>
                   </div>
                 </td>
 
-                <td *tuiCell="'status'" tuiTd class="border-b border-border px-6 py-4">
-                  <span class="rounded-full bg-surface-hover px-3 py-1 text-xs font-semibold text-text-secondary">{{ enrollment.estado }}</span>
-                </td>
-
-                <td *tuiCell="'grade'" tuiTd class="border-b border-border px-6 py-4">
-                  <input
-                    class="w-28 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-primary"
-                    type="number"
-                    min="0"
-                    max="20"
-                    step="0.01"
-                    [value]="getGradeValue(idEstudiante) ?? ''"
-                    (input)="onGradeInput(idEstudiante, $any($event).target.value)"
-                  />
-                </td>
-
-                <td *tuiCell="'actions'" tuiTd class="border-b border-border px-6 py-4 text-right">
-                  <button
-                    appearance="primary"
-                    size="s"
-                    tuiButton
-                    type="button"
-                    [disabled]="saveNotaMutation.isPending()"
-                    (click)="saveGrade(enrollment)"
+                <!-- Matrícula -->
+                <td class="border-b border-border px-4 py-3">
+                  <span
+                    class="inline-flex rounded-full bg-surface-hover px-2.5 py-0.5 text-xs font-semibold text-text-secondary"
                   >
-                    Guardar
-                  </button>
+                    {{ enrollment.estado }}
+                  </span>
                 </td>
+
+                <!-- Celdas de nota por evaluación -->
+                @for (evaluation of evaluations(); track evaluation.idEvaluacion) {
+                  @let cellStatus = getCellStatus(evaluation.idEvaluacion, idEstudiante);
+                  @let gradeValue = getGradeValue(evaluation.idEvaluacion, idEstudiante);
+
+                  <td class="border-b border-border px-3 py-2 text-center">
+                    <div class="relative inline-flex items-center gap-1">
+                      <input
+                        [id]="'grade-' + evaluation.idEvaluacion + '-' + idEstudiante"
+                        class="w-20 rounded-lg border px-2.5 py-2 text-center text-sm font-medium tabular-nums outline-none transition-all duration-150 focus:border-primary focus:ring-2 focus:ring-primary/20 [&.saved]:border-green-400 [&.saved]:bg-green-50 [&.error]:border-red-400 [&.error]:bg-red-50"
+                        type="number"
+                        min="0"
+                        max="20"
+                        step="0.01"
+                        placeholder="—"
+                        autocomplete="off"
+                        [class.border-primary/50]="cellStatus === 'dirty'"
+                        [class.border-green-400]="cellStatus === 'saved'"
+                        [class.bg-green-50]="cellStatus === 'saved'"
+                        [class.border-red-400]="cellStatus === 'error'"
+                        [class.bg-red-50]="cellStatus === 'error'"
+                        [class.opacity-60]="cellStatus === 'saving'"
+                        [value]="gradeValue ?? ''"
+                        (input)="
+                          onGradeInput(
+                            evaluation.idEvaluacion,
+                            idEstudiante,
+                            $any($event).target.value
+                          )
+                        "
+                        (keydown)="onCellKeydown(evaluation.idEvaluacion, idEstudiante, $event)"
+                      />
+
+                      <!-- Indicador de estado -->
+                      @if (cellStatus === 'dirty') {
+                        <tui-icon
+                          icon="@tui.pencil"
+                          class="text-amber-500 shrink-0"
+                          [style.fontSize]="'12px'"
+                        />
+                      } @else if (cellStatus === 'saving') {
+                        <div
+                          class="size-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
+                        ></div>
+                      } @else if (cellStatus === 'saved') {
+                        <tui-icon
+                          icon="@tui.check"
+                          class="text-green-500 shrink-0"
+                          [style.fontSize]="'12px'"
+                        />
+                      } @else if (cellStatus === 'error') {
+                        <tui-icon
+                          icon="@tui.alert-circle"
+                          class="text-red-500 shrink-0"
+                          [style.fontSize]="'12px'"
+                        />
+                      }
+                    </div>
+                  </td>
+                }
               </tr>
             }
           }
         </tbody>
       </table>
+    </div>
+
+    <!-- ─── Leyenda ─────────────────────────────────────────────── -->
+    <div class="flex flex-wrap items-center gap-4 text-xs text-text-tertiary">
+      <span class="flex items-center gap-1">
+        <tui-icon icon="@tui.pencil" class="text-amber-500" [style.fontSize]="'12px'" /> Sin guardar
+      </span>
+      <span class="flex items-center gap-1">
+        <tui-icon icon="@tui.check" class="text-green-500" [style.fontSize]="'12px'" /> Guardado
+      </span>
+      <span class="flex items-center gap-1">
+        <tui-icon icon="@tui.alert-circle" class="text-red-500" [style.fontSize]="'12px'" /> Error
+      </span>
+      <span class="ml-auto">
+        <kbd class="rounded border border-border bg-surface-hover px-1.5 py-0.5 font-mono text-xs"
+          >Tab</kbd
+        >
+        siguiente celda ·
+        <kbd class="rounded border border-border bg-surface-hover px-1.5 py-0.5 font-mono text-xs"
+          >Enter</kbd
+        >
+        siguiente fila ·
+        <kbd class="rounded border border-border bg-surface-hover px-1.5 py-0.5 font-mono text-xs"
+          >Shift+Tab</kbd
+        >
+        /
+        <kbd class="rounded border border-border bg-surface-hover px-1.5 py-0.5 font-mono text-xs"
+          >Shift+Enter</kbd
+        >
+        anterior
+      </span>
     </div>
   }
 </div>

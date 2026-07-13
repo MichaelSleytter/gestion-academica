@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { TuiNotificationService } from '@taiga-ui/core';
 import {
   TuiButton,
@@ -14,8 +21,8 @@ import { FormBuilder, FormsModule, Validators } from '@angular/forms';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
 import { TuiSegmented, TuiSkeleton } from '@taiga-ui/kit';
-import { DocenteResponse } from '../../../models/docente/docente.response';
-import { DocenteCreateRequest } from '../../../models/docente/docente.request';
+import type { DocenteResponse } from '../../../models/docente/docente.response';
+import type { DocenteCreateRequest } from '../../../models/docente/docente.request';
 import {
   useDocentesPaginadosQuery,
   useCrearDocenteMutation,
@@ -23,7 +30,12 @@ import {
   useEliminarDocenteMutation,
 } from '../../../queries/docente.query';
 import { useGradosAcademicosQuery, useTiposDocumentoQuery } from '../../../queries/catalogo.query';
-import type { GradoAcademico, TipoDocumento } from '../../../models/catalogos/catalogo.response';
+import { useEspecializacionesQuery } from '../../../queries/especializacion.query';
+import type {
+  Especializacion,
+  GradoAcademico,
+  TipoDocumento,
+} from '../../../models/catalogos/catalogo.response';
 import { getIniciales } from '../../../shared/utils/estudiante.util';
 import { CardDocente } from './card-docente/card-docente.component';
 import { DocenteForm } from './docente-form/docente-form.component';
@@ -67,7 +79,14 @@ export class Docentes {
   private readonly notifications = inject(TuiNotificationService);
 
   /** Columnas de la tabla. */
-  readonly columns = ['nombre', 'documento', 'especialidad', 'grado', 'estado', 'acciones'] as const;
+  readonly columns = [
+    'nombre',
+    'documento',
+    'especialidad',
+    'grado',
+    'estado',
+    'acciones',
+  ] as const;
 
   /** Modo de visualización. */
   readonly viewMode = signal<'grid' | 'row'>('row');
@@ -87,13 +106,25 @@ export class Docentes {
   // ─── Formulario ───────────────────────────────────────────────────────
 
   readonly docenteForm = this.formBuilder.group({
-    nombre: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
-    apellido: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(2)]),
+    nombre: this.formBuilder.nonNullable.control('', [
+      Validators.required,
+      Validators.minLength(2),
+    ]),
+    apellido: this.formBuilder.nonNullable.control('', [
+      Validators.required,
+      Validators.minLength(2),
+    ]),
     email: this.formBuilder.nonNullable.control('', [Validators.required, Validators.email]),
-    password: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(8)]),
-    numeroDocumento: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(8)]),
+    password: this.formBuilder.nonNullable.control('', [
+      Validators.required,
+      Validators.minLength(8),
+    ]),
+    numeroDocumento: this.formBuilder.nonNullable.control('', [
+      Validators.required,
+      Validators.minLength(8),
+    ]),
     tipoDocumento: this.formBuilder.control<TipoDocumento | null>(null, Validators.required),
-    especialidad: this.formBuilder.nonNullable.control('', [Validators.required, Validators.minLength(3)]),
+    especializacion: this.formBuilder.control<Especializacion | null>(null, Validators.required),
     grado: this.formBuilder.control<GradoAcademico | null>(null, Validators.required),
   });
 
@@ -104,9 +135,36 @@ export class Docentes {
 
   readonly tiposDocumentoQuery = useTiposDocumentoQuery();
   readonly gradosQuery = useGradosAcademicosQuery();
+  readonly especializacionesQuery = useEspecializacionesQuery();
   readonly crearDocenteMutation = useCrearDocenteMutation();
   readonly actualizarDocenteMutation = useActualizarDocenteMutation();
   readonly eliminarDocenteMutation = useEliminarDocenteMutation();
+
+  constructor() {
+    effect(() => {
+      const docente = this.docenteSeleccionado();
+      const especializaciones = this.especializacionesQuery.data() ?? [];
+      const control = this.docenteForm.controls.especializacion;
+
+      if (
+        !this.docenteModalAbierto() ||
+        this.modoFormulario() !== 'editar' ||
+        !docente ||
+        control.dirty ||
+        control.value ||
+        especializaciones.length === 0
+      ) {
+        return;
+      }
+
+      const especializacion = this.buscarEspecializacion(docente, especializaciones);
+      if (!especializacion) return;
+
+      control.setValue(especializacion);
+      control.markAsPristine();
+      control.markAsUntouched();
+    });
+  }
 
   // ─── View mode ───────────────────────────────────────────────────────
 
@@ -127,19 +185,17 @@ export class Docentes {
   // ─── Paginación ──────────────────────────────────────────────────────
 
   paginaAnterior(): void {
-    if (this.pagina() > 0) this.pagina.update(p => p - 1);
+    if (this.pagina() > 0) this.pagina.update((p) => p - 1);
   }
 
   paginaSiguiente(): void {
-    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update(p => p + 1);
+    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update((p) => p + 1);
   }
 
   readonly hayPaginaAnterior = computed(() => this.pagina() > 0);
   readonly hayPaginaSiguiente = computed(() => this.pagina() < this.totalPaginas() - 1);
 
-  readonly paginasArray = computed(() =>
-    Array.from({ length: this.totalPaginas() }, (_, i) => i),
-  );
+  readonly paginasArray = computed(() => Array.from({ length: this.totalPaginas() }, (_, i) => i));
 
   readonly infoPaginacion = computed(() => {
     const data = this.docentesQuery.data();
@@ -168,7 +224,10 @@ export class Docentes {
   openNuevoDocenteModal(): void {
     this.modoFormulario.set('crear');
     this.docenteSeleccionado.set(null);
-    this.docenteForm.controls.password.setValidators([Validators.required, Validators.minLength(8)]);
+    this.docenteForm.controls.password.setValidators([
+      Validators.required,
+      Validators.minLength(8),
+    ]);
     this.docenteForm.controls.password.updateValueAndValidity();
     this.resetFormulario();
     this.docenteModalAbierto.set(true);
@@ -202,14 +261,22 @@ export class Docentes {
       this.crearDocenteMutation.mutate(payload, {
         onSuccess: () => {
           this.notifications
-            .open('Docente creado exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+            .open('Docente creado exitosamente', {
+              label: 'Éxito',
+              appearance: 'success',
+              autoClose: 3000,
+            })
             .subscribe();
           observer.complete();
           this.closeDocenteModal();
         },
         onError: (error) => {
           this.notifications
-            .open(error?.message ?? 'Error al crear docente', { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .open(error?.message ?? 'Error al crear docente', {
+              label: 'Error',
+              appearance: 'error',
+              autoClose: 5000,
+            })
             .subscribe();
         },
       });
@@ -224,14 +291,22 @@ export class Docentes {
       {
         onSuccess: () => {
           this.notifications
-            .open('Docente actualizado exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+            .open('Docente actualizado exitosamente', {
+              label: 'Éxito',
+              appearance: 'success',
+              autoClose: 3000,
+            })
             .subscribe();
           observer.complete();
           this.closeDocenteModal();
         },
         onError: (error) => {
           this.notifications
-            .open(error?.message ?? 'Error al actualizar docente', { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .open(error?.message ?? 'Error al actualizar docente', {
+              label: 'Error',
+              appearance: 'error',
+              autoClose: 5000,
+            })
             .subscribe();
         },
       },
@@ -261,14 +336,22 @@ export class Docentes {
     this.eliminarDocenteMutation.mutate(seleccionado.idUsuario, {
       onSuccess: () => {
         this.notifications
-          .open('Docente eliminado exitosamente', { label: 'Eliminado', appearance: 'success', autoClose: 3000 })
+          .open('Docente eliminado exitosamente', {
+            label: 'Eliminado',
+            appearance: 'success',
+            autoClose: 3000,
+          })
           .subscribe();
         observer.complete();
         this.closeEliminarModal();
       },
       onError: (error) => {
         this.notifications
-          .open(error?.message ?? 'Error al eliminar docente', { label: 'Error', appearance: 'error', autoClose: 5000 })
+          .open(error?.message ?? 'Error al eliminar docente', {
+            label: 'Error',
+            appearance: 'error',
+            autoClose: 5000,
+          })
           .subscribe();
       },
     });
@@ -288,7 +371,7 @@ export class Docentes {
       password: '',
       numeroDocumento: '',
       tipoDocumento: null,
-      especialidad: '',
+      especializacion: null,
       grado: null,
     });
     this.docenteForm.markAsPristine();
@@ -297,7 +380,9 @@ export class Docentes {
 
   private cargarFormularioDesdeDocente(docente: DocenteResponse): void {
     const tipoDocumento = this.buscarTipoDocumento(docente.tipoDocumento);
-    const grado = (this.gradosQuery.data() ?? []).find((g) => g.idGrado === docente.idGrado) ?? null;
+    const grado =
+      (this.gradosQuery.data() ?? []).find((g) => g.idGrado === docente.idGrado) ?? null;
+    const especializacion = this.buscarEspecializacion(docente);
     const nombreCompleto = (docente.nombre ?? '').split(' ');
     const apellidoCompleto = (docente.apellido ?? '').split(' ');
 
@@ -308,26 +393,51 @@ export class Docentes {
       password: '',
       numeroDocumento: docente.numeroDocumento,
       tipoDocumento,
-      especialidad: docente.especialidad,
+      especializacion,
       grado,
     });
     this.docenteForm.markAsPristine();
     this.docenteForm.markAsUntouched();
   }
 
+  getEspecialidadDocente(docente: DocenteResponse): string {
+    return docente.nombreEspecializacion ?? docente.especialidad ?? 'Sin especialización';
+  }
+
   private buscarTipoDocumento(nombre: string): TipoDocumento | null {
     const normalizado = nombre.trim().toLowerCase();
-    return (this.tiposDocumentoQuery.data() ?? []).find(
-      (t) => t.nombre.trim().toLowerCase() === normalizado,
-    ) ?? null;
+    return (
+      (this.tiposDocumentoQuery.data() ?? []).find(
+        (t) => t.nombre.trim().toLowerCase() === normalizado,
+      ) ?? null
+    );
+  }
+
+  private buscarEspecializacion(
+    docente: DocenteResponse,
+    especializaciones = this.especializacionesQuery.data() ?? [],
+  ): Especializacion | null {
+    if (docente.idEspecializacion) {
+      return (
+        especializaciones.find((e) => e.idEspecializacion === docente.idEspecializacion) ?? null
+      );
+    }
+
+    const nombre = (docente.nombreEspecializacion ?? docente.especialidad ?? '')
+      .trim()
+      .toLowerCase();
+    if (!nombre) return null;
+
+    return especializaciones.find((e) => e.nombre.trim().toLowerCase() === nombre) ?? null;
   }
 
   private construirPayload(): DocenteCreateRequest | null {
     const value = this.docenteForm.getRawValue();
     const tipoDocumento = value.tipoDocumento;
     const grado = value.grado;
+    const especializacion = value.especializacion;
 
-    if (!tipoDocumento || !grado) return null;
+    if (!tipoDocumento || !grado || !especializacion) return null;
 
     return {
       nombre: value.nombre.trim(),
@@ -336,7 +446,8 @@ export class Docentes {
       password: value.password.trim(),
       numeroDocumento: value.numeroDocumento.trim(),
       idTipoDocumento: tipoDocumento.idTipoDocumento,
-      especialidad: value.especialidad.trim(),
+      especialidad: especializacion.nombre,
+      idEspecializacion: especializacion.idEspecializacion,
       idGrado: grado.idGrado,
     };
   }

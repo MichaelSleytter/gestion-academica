@@ -4,7 +4,7 @@ import type { FormGroup } from '@angular/forms';
 import { TuiButton, TuiInput, TuiTextfield } from '@taiga-ui/core';
 import { TuiChevron, TuiDataListWrapper, TuiSelect } from '@taiga-ui/kit';
 import { TuiForm } from '@taiga-ui/layout';
-import type { GradoAcademico, TipoDocumento } from '../../../../models/catalogos/catalogo.response';
+import type { Especializacion, GradoAcademico, TipoDocumento } from '../../../../models/catalogos/catalogo.response';
 
 type ModoFormulario = 'crear' | 'editar';
 
@@ -25,6 +25,7 @@ export class DocenteForm {
   readonly modo = input.required<ModoFormulario>();
   readonly tiposDocumento = input<TipoDocumento[]>([]);
   readonly grados = input<GradoAcademico[]>([]);
+  readonly especializaciones = input<Especializacion[]>([]);
   readonly isGuardando = input(false);
   readonly guardar = output();
   readonly cancelar = output();
@@ -52,6 +53,10 @@ export class DocenteForm {
   }
 
   stringifyGrado(item: GradoAcademico | null): string {
+    return item?.nombre ?? '';
+  }
+
+  stringifyEspecializacion(item: Especializacion | null): string {
     return item?.nombre ?? '';
   }
 }

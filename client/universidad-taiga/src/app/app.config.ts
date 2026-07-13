@@ -11,7 +11,13 @@
  * - Cualquier otro provider global
  */
 
-import { ApplicationConfig, APP_INITIALIZER, inject, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import {
+  type ApplicationConfig,
+  APP_INITIALIZER,
+  inject,
+  provideBrowserGlobalErrorListeners,
+  provideZoneChangeDetection,
+} from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -25,6 +31,7 @@ import {
   tablerBook,
   tablerClipboardList,
   tablerLayoutGrid,
+  tablerCategory,
   tablerClipboardCheck,
   tablerStackBack,
   tablerSettings,
@@ -32,6 +39,7 @@ import {
   tablerMenu,
   tablerSearch,
   tablerBell,
+  tablerCalendar,
   tablerUser,
 } from '@ng-icons/tabler-icons';
 import { provideTanStackQuery, QueryClient } from '@tanstack/angular-query-experimental';
@@ -74,9 +82,7 @@ export const appConfig: ApplicationConfig = {
     // =======================================================================
     // HTTP CLIENT CON INTERCEPTORS
     // =======================================================================
-    provideHttpClient(
-      withInterceptors([authInterceptor]),
-    ),
+    provideHttpClient(withInterceptors([authInterceptor])),
 
     // =======================================================================
     // ZONE CHANGE DETECTION
@@ -124,7 +130,9 @@ export const appConfig: ApplicationConfig = {
       tablerBook,
       tablerClipboardList,
       tablerLayoutGrid,
+      tablerCategory,
       tablerClipboardCheck,
+      tablerCalendar,
       tablerStackBack,
       tablerSettings,
       tablerLogout,

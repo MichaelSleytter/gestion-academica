@@ -53,4 +53,8 @@ export class MisCursos {
   navigateToEstudiantes(idSeccion: number): void {
     void this.router.navigate(['/app/docente/mis-cursos', idSeccion, 'estudiantes']);
   }
+
+  navigateToContenido(idSeccion: number): void {
+    void this.router.navigate(['/app/docente/mis-cursos', idSeccion, 'contenido']);
+  }
 }

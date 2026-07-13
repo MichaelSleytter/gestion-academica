@@ -144,7 +144,7 @@
                   {{ docente.numeroDocumento }}
                 </td>
                 <td *tuiCell="'especialidad'" tuiTd class="border-b border-border px-6 py-4 text-sm font-medium text-text-secondary">
-                  {{ docente.especialidad }}
+                  {{ getEspecialidadDocente(docente) }}
                 </td>
                 <td *tuiCell="'grado'" tuiTd class="border-b border-border px-6 py-4 text-sm font-medium text-text-secondary">
                   {{ docente.nombreGrado }}
@@ -201,6 +201,7 @@
       [modo]="modoFormulario()"
       [tiposDocumento]="tiposDocumentoQuery.data() ?? []"
       [grados]="gradosQuery.data() ?? []"
+      [especializaciones]="especializacionesQuery.data() ?? []"
       [isGuardando]="isGuardandoDocente()"
       (guardar)="guardarDocente(observer)"
       (cancelar)="closeDocenteModal(); observer.complete()"
