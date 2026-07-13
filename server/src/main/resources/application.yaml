@@ -2,7 +2,7 @@
 # SERVIDOR
 # ============================================
 server:
-  port: ${PORT_BACKEND:8080}
+  port: ${PORT:${PORT_BACKEND:8080}}
   forward-headers-strategy: framework
 
 # ============================================
