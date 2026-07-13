@@ -1,11 +1,14 @@
 package com.example.gestionacademica.cursos.service;
 
+import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.cursos.domain.Horario;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.cursos.repository.HorarioRepository;
 import com.example.gestionacademica.cursos.repository.SeccionRepository;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion;
 import com.example.gestionacademica.docentes.repository.DocenteSeccionRepository;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
+import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 
 /**
  * Servicio de negocio para {@link Horario}.
@@ -26,6 +31,7 @@ public class HorarioService {
     private final HorarioRepository horarioRepository;
     private final SeccionRepository seccionRepository;
     private final DocenteSeccionRepository docenteSeccionRepository;
+    private final MatriculaRepository matriculaRepository;
 
     /**
      * Lista todos los horarios.
@@ -72,8 +78,39 @@ public class HorarioService {
      * @param idSeccion identificador de seccion
      * @return horarios de la seccion
      */
-    public List<Horario> listarPorSeccion(Integer idSeccion) {
+    public List<Horario> listarPorSeccion(Integer idSeccion, Authentication authentication) {
+        requireCanListSection(idSeccion, authentication);
         return horarioRepository.findBySeccion_IdSeccion(idSeccion);
+    }
+
+    private void requireCanListSection(Integer idSeccion, Authentication authentication) {
+        if (hasRole(authentication, "ADMIN")) {
+            return;
+        }
+
+        Integer userId = currentUserId(authentication);
+        if (hasRole(authentication, "DOCENTE")
+                && docenteSeccionRepository.existsByDocente_IdUsuarioAndSeccion_IdSeccion(userId, idSeccion)) {
+            return;
+        }
+        if (hasRole(authentication, "ESTUDIANTE")
+                && matriculaRepository.existsByEstudiante_IdUsuarioAndSeccion_IdSeccionAndEstado(
+                        userId, idSeccion, MatriculaEstado.ACTIVA)) {
+            return;
+        }
+        throw new AccessDeniedException("No tiene permiso para consultar los horarios de esta sección.");
+    }
+
+    private Integer currentUserId(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof Usuario usuario) {
+            return usuario.getIdUsuario();
+        }
+        throw new AccessDeniedException("Usuario autenticado inválido.");
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        return authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_" + role));
     }
 
     /**

@@ -23,6 +23,7 @@ import java.net.http.HttpResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
@@ -197,12 +198,7 @@ public class CursoContenidoService {
 
         try {
             String boundary = "----gestion-academica-" + UUID.randomUUID();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(expectedStorageUrl(key)))
-                    .header("Authorization", "Bearer " + storageAnonKey)
-                    .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                    .PUT(multipartBody(boundary, file))
-                    .build();
+            HttpRequest request = buildUploadRequest(file, key, boundary);
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
@@ -221,6 +217,16 @@ public class CursoContenidoService {
             Thread.currentThread().interrupt();
             throw new RuntimeException("La subida a Storage fue interrumpida.", exception);
         }
+    }
+
+    HttpRequest buildUploadRequest(MultipartFile file, String key, String boundary) {
+        return HttpRequest.newBuilder()
+                .uri(URI.create(expectedStorageUrl(key)))
+                .timeout(Duration.ofSeconds(60))
+                .header("Authorization", "Bearer " + storageAnonKey)
+                .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .PUT(multipartBody(boundary, file))
+                .build();
     }
 
     private HttpRequest.BodyPublisher multipartBody(String boundary, MultipartFile file) {

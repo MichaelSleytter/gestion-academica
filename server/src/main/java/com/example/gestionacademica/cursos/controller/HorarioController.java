@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -70,8 +71,9 @@ public class HorarioController {
     @Operation(summary = "Listar horarios por seccion")
     public ResponseEntity<List<Horario>> listarPorSeccion(
             @Parameter(description = "ID de la seccion", example = "1")
-            @PathVariable Integer idSeccion) {
-        return ResponseEntity.ok(horarioService.listarPorSeccion(idSeccion));
+            @PathVariable Integer idSeccion,
+            Authentication authentication) {
+        return ResponseEntity.ok(horarioService.listarPorSeccion(idSeccion, authentication));
     }
 
     /**

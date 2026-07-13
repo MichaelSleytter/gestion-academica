@@ -1,5 +1,6 @@
 package com.example.gestionacademica.docentes.service;
 
+import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.docentes.domain.Docente;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion.DocenteSeccionId;
@@ -11,6 +12,8 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 
 /**
  * Servicio de negocio para asignaciones {@link DocenteSeccion}.
@@ -53,8 +56,21 @@ public class DocenteSeccionService {
      * @param idDocente identificador del docente
      * @return asignaciones del docente
      */
-    public List<DocenteSeccion> listarPorDocente(Integer idDocente) {
+    public List<DocenteSeccion> listarPorDocente(Integer idDocente, Authentication authentication) {
+        requireCanListDocente(idDocente, authentication);
         return docenteSeccionRepository.findByDocente_IdUsuario(idDocente);
+    }
+
+    private void requireCanListDocente(Integer idDocente, Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOwnDocente = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_DOCENTE"))
+                && authentication.getPrincipal() instanceof Usuario usuario
+                && idDocente.equals(usuario.getIdUsuario());
+        if (!isAdmin && !isOwnDocente) {
+            throw new AccessDeniedException("No tiene permiso para consultar las asignaciones del docente.");
+        }
     }
 
     /**

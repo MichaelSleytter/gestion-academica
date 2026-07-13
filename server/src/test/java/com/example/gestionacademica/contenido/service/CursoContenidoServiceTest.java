@@ -14,6 +14,8 @@ import com.example.gestionacademica.contenido.repository.CursoContenidoRepositor
 import com.example.gestionacademica.docentes.repository.DocenteSeccionRepository;
 import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.http.HttpRequest;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.mock.web.MockMultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas - CursoContenidoService")
@@ -94,6 +97,17 @@ class CursoContenidoServiceTest {
 
         assertThat(saved.getKey()).isEqualTo(validKey());
         assertThat(saved.getSemana()).isEqualTo(18);
+    }
+
+    @Test
+    @DisplayName("upload: debe configurar timeout finito en la solicitud a Storage")
+    void uploadRequest_debeTenerTimeoutFinito() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "clase.pdf", "application/pdf", "contenido".getBytes());
+
+        HttpRequest request = service.buildUploadRequest(file, validKey(), "boundary");
+
+        assertThat(request.timeout()).contains(Duration.ofSeconds(60));
     }
 
     private CursoContenidoRequest validRequest(Integer semana, String url) {

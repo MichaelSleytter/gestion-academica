@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -61,8 +62,9 @@ public class DocenteSeccionController {
     @Operation(summary = "Listar asignaciones por docente")
     public ResponseEntity<List<DocenteSeccion>> listarPorDocente(
             @Parameter(description = "ID del docente", example = "1")
-            @PathVariable Integer idDocente) {
-        return ResponseEntity.ok(docenteSeccionService.listarPorDocente(idDocente));
+            @PathVariable Integer idDocente,
+            Authentication authentication) {
+        return ResponseEntity.ok(docenteSeccionService.listarPorDocente(idDocente, authentication));
     }
 
     /**

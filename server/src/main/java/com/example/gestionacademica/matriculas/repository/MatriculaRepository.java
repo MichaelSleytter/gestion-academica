@@ -1,6 +1,7 @@
 package com.example.gestionacademica.matriculas.repository;
 
 import com.example.gestionacademica.matriculas.domain.Matricula;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,6 +26,9 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Integer> {
 
     boolean existsByEstudiante_IdUsuarioAndSeccion_IdSeccion(
             Integer idUsuario, Integer idSeccion);
+
+    boolean existsByEstudiante_IdUsuarioAndSeccion_IdSeccionAndEstado(
+            Integer idUsuario, Integer idSeccion, MatriculaEstado estado);
 
     @Query("SELECT COUNT(m) FROM Matricula m WHERE m.seccion.idSeccion = :idSeccion AND m.estado = 'ACTIVA'")
     Long countMatriculadosActivos(@Param("idSeccion") Integer idSeccion);

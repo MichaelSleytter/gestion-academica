@@ -7,12 +7,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.cursos.domain.Horario;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.cursos.repository.HorarioRepository;
 import com.example.gestionacademica.cursos.repository.SeccionRepository;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion;
 import com.example.gestionacademica.docentes.repository.DocenteSeccionRepository;
+import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
+import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +25,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -42,8 +49,68 @@ class HorarioServiceTest {
     @Mock
     private DocenteSeccionRepository docenteSeccionRepository;
 
+    @Mock
+    private MatriculaRepository matriculaRepository;
+
     @InjectMocks
     private HorarioService horarioService;
+
+    @Test
+    @DisplayName("listarPorSeccion: ADMIN puede consultar cualquier sección")
+    void listarPorSeccion_conAdmin_debePermitir() {
+        Horario horario = new Horario();
+        when(horarioRepository.findBySeccion_IdSeccion(7)).thenReturn(List.of(horario));
+
+        List<Horario> resultado = horarioService.listarPorSeccion(7, auth(1, "ROLE_ADMIN"));
+
+        assertThat(resultado).containsExactly(horario);
+    }
+
+    @Test
+    @DisplayName("listarPorSeccion: DOCENTE asignado puede consultar")
+    void listarPorSeccion_conDocenteAsignado_debePermitir() {
+        Horario horario = new Horario();
+        when(docenteSeccionRepository.existsByDocente_IdUsuarioAndSeccion_IdSeccion(20, 7)).thenReturn(true);
+        when(horarioRepository.findBySeccion_IdSeccion(7)).thenReturn(List.of(horario));
+
+        List<Horario> resultado = horarioService.listarPorSeccion(7, auth(20, "ROLE_DOCENTE"));
+
+        assertThat(resultado).containsExactly(horario);
+    }
+
+    @Test
+    @DisplayName("listarPorSeccion: DOCENTE no asignado no puede consultar")
+    void listarPorSeccion_conDocenteNoAsignado_debeDenegar() {
+        assertThatThrownBy(() -> horarioService.listarPorSeccion(7, auth(20, "ROLE_DOCENTE")))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(horarioRepository, never()).findBySeccion_IdSeccion(7);
+    }
+
+    @Test
+    @DisplayName("listarPorSeccion: ESTUDIANTE con matrícula activa puede consultar")
+    void listarPorSeccion_conEstudianteMatriculadoActivo_debePermitir() {
+        Horario horario = new Horario();
+        when(matriculaRepository.existsByEstudiante_IdUsuarioAndSeccion_IdSeccionAndEstado(
+                30, 7, MatriculaEstado.ACTIVA)).thenReturn(true);
+        when(horarioRepository.findBySeccion_IdSeccion(7)).thenReturn(List.of(horario));
+
+        List<Horario> resultado = horarioService.listarPorSeccion(7, auth(30, "ROLE_ESTUDIANTE"));
+
+        assertThat(resultado).containsExactly(horario);
+    }
+
+    @Test
+    @DisplayName("listarPorSeccion: ESTUDIANTE sin matrícula activa no puede consultar")
+    void listarPorSeccion_conEstudianteSinMatriculaActiva_debeDenegar() {
+        when(matriculaRepository.existsByEstudiante_IdUsuarioAndSeccion_IdSeccionAndEstado(
+                30, 7, MatriculaEstado.ACTIVA)).thenReturn(false);
+
+        assertThatThrownBy(() -> horarioService.listarPorSeccion(7, auth(30, "ROLE_ESTUDIANTE")))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(horarioRepository, never()).findBySeccion_IdSeccion(7);
+    }
 
     /** Verifica que listarTodos retorna los registros del repositorio. */
     @Test
@@ -228,5 +295,14 @@ class HorarioServiceTest {
         ReflectionTestUtils.setField(id, "idSeccion", idSeccion);
         ReflectionTestUtils.setField(docenteSeccion, "id", id);
         return docenteSeccion;
+    }
+
+    private Authentication auth(Integer userId, String role) {
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(userId);
+        return new UsernamePasswordAuthenticationToken(
+                usuario,
+                null,
+                List.of(new SimpleGrantedAuthority(role)));
     }
 }

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion;
 import com.example.gestionacademica.docentes.domain.DocenteSeccion.DocenteSeccionId;
 import com.example.gestionacademica.docentes.repository.DocenteRepository;
@@ -20,6 +21,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Pruebas unitarias para DocenteSeccionService con Mockito puro.
@@ -41,6 +46,46 @@ class DocenteSeccionServiceTest {
 
     @InjectMocks
     private DocenteSeccionService docenteSeccionService;
+
+    @Test
+    @DisplayName("listarPorDocente: ADMIN puede consultar cualquier docente")
+    void listarPorDocente_conAdmin_debePermitirCualquierDocente() {
+        DocenteSeccion asignacion = new DocenteSeccion();
+        when(docenteSeccionRepository.findByDocente_IdUsuario(20)).thenReturn(List.of(asignacion));
+
+        List<DocenteSeccion> resultado = docenteSeccionService.listarPorDocente(20, auth(1, "ROLE_ADMIN"));
+
+        assertThat(resultado).containsExactly(asignacion);
+    }
+
+    @Test
+    @DisplayName("listarPorDocente: DOCENTE solo puede consultar sus asignaciones")
+    void listarPorDocente_conDocentePropio_debePermitir() {
+        DocenteSeccion asignacion = new DocenteSeccion();
+        when(docenteSeccionRepository.findByDocente_IdUsuario(20)).thenReturn(List.of(asignacion));
+
+        List<DocenteSeccion> resultado = docenteSeccionService.listarPorDocente(20, auth(20, "ROLE_DOCENTE"));
+
+        assertThat(resultado).containsExactly(asignacion);
+    }
+
+    @Test
+    @DisplayName("listarPorDocente: DOCENTE no puede consultar otro docente")
+    void listarPorDocente_conDocenteAjeno_debeDenegar() {
+        assertThatThrownBy(() -> docenteSeccionService.listarPorDocente(21, auth(20, "ROLE_DOCENTE")))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(docenteSeccionRepository, never()).findByDocente_IdUsuario(21);
+    }
+
+    @Test
+    @DisplayName("listarPorDocente: ESTUDIANTE no puede consultar asignaciones")
+    void listarPorDocente_conEstudiante_debeDenegar() {
+        assertThatThrownBy(() -> docenteSeccionService.listarPorDocente(20, auth(20, "ROLE_ESTUDIANTE")))
+                .isInstanceOf(AccessDeniedException.class);
+
+        verify(docenteSeccionRepository, never()).findByDocente_IdUsuario(20);
+    }
 
     /** Verifica que listarTodas retorna los registros del repositorio. */
     @Test
@@ -107,5 +152,14 @@ class DocenteSeccionServiceTest {
             .hasMessageContaining("no encontrada");
 
         verify(docenteSeccionRepository, never()).deleteById(id);
+    }
+
+    private Authentication auth(Integer userId, String role) {
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(userId);
+        return new UsernamePasswordAuthenticationToken(
+                usuario,
+                null,
+                List.of(new SimpleGrantedAuthority(role)));
     }
 }
