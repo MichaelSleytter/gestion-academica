@@ -15,6 +15,13 @@ spring:
       - optional:file:./.env[.properties]
       - optional:file:./src/.env[.properties]
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${MAX_UPLOAD_FILE_SIZE:25MB}
+      max-request-size: ${MAX_UPLOAD_REQUEST_SIZE:30MB}
+      file-size-threshold: 2KB
+
   # ============================================
   # BASE DE DATOS - PostgreSQL
   # Conecta a la BD existente con las siguientes credenciales:

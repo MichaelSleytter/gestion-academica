@@ -14,8 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -201,7 +201,7 @@ public class CursoContenidoService {
                     .uri(URI.create(expectedStorageUrl(key)))
                     .header("Authorization", "Bearer " + storageAnonKey)
                     .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                    .PUT(HttpRequest.BodyPublishers.ofByteArray(multipartBody(boundary, file)))
+                    .PUT(multipartBody(boundary, file))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -215,7 +215,7 @@ public class CursoContenidoService {
                     json.path("url").asText(expectedStorageUrl(key)),
                     json.path("mimeType").asText(contentType(file)),
                     json.path("size").asLong(file.getSize()));
-        } catch (IOException exception) {
+        } catch (IOException | UncheckedIOException exception) {
             throw new RuntimeException("No se pudo preparar el archivo para Storage.", exception);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
@@ -223,15 +223,22 @@ public class CursoContenidoService {
         }
     }
 
-    private byte[] multipartBody(String boundary, MultipartFile file) throws IOException {
-        ByteArrayOutputStream body = new ByteArrayOutputStream();
-        body.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
-        body.write(("Content-Disposition: form-data; name=\"file\"; filename=\"" + safeName(file) + "\"\r\n")
-                .getBytes(StandardCharsets.UTF_8));
-        body.write(("Content-Type: " + contentType(file) + "\r\n\r\n").getBytes(StandardCharsets.UTF_8));
-        body.write(file.getBytes());
-        body.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
-        return body.toByteArray();
+    private HttpRequest.BodyPublisher multipartBody(String boundary, MultipartFile file) {
+        byte[] header = (("--" + boundary + "\r\n")
+                + "Content-Disposition: form-data; name=\"file\"; filename=\"" + safeName(file) + "\"\r\n"
+                + "Content-Type: " + contentType(file) + "\r\n\r\n").getBytes(StandardCharsets.UTF_8);
+        byte[] footer = ("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8);
+
+        return HttpRequest.BodyPublishers.concat(
+                HttpRequest.BodyPublishers.ofByteArray(header),
+                HttpRequest.BodyPublishers.ofInputStream(() -> {
+                    try {
+                        return file.getInputStream();
+                    } catch (IOException exception) {
+                        throw new UncheckedIOException(exception);
+                    }
+                }),
+                HttpRequest.BodyPublishers.ofByteArray(footer));
     }
 
     private String safeName(MultipartFile file) {
