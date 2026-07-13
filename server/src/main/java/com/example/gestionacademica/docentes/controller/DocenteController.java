@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -77,6 +78,7 @@ public class DocenteController {
 
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear nuevo docente")
     public ResponseEntity<DocenteResponseDTO> crear(
         @Valid @RequestBody DocenteRequestDTO requestDTO
@@ -89,12 +91,14 @@ public class DocenteController {
             usuario,
             docente,
             requestDTO.getIdGrado(),
-            requestDTO.getIdTipoDocumento()
+            requestDTO.getIdTipoDocumento(),
+            requestDTO.getIdEspecializacion()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(docenteMapper.aDto(nuevoDocente));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar docente")
     public ResponseEntity<DocenteResponseDTO> actualizar(
         @Parameter(description = "ID del docente a actualizar", example = "1")
@@ -107,7 +111,8 @@ public class DocenteController {
         Docente actualizado = docenteService.actualizar(
             id,
             datos,
-            requestDTO.getIdGrado()
+            requestDTO.getIdGrado(),
+            requestDTO.getIdEspecializacion()
         );
         return ResponseEntity.ok(docenteMapper.aDto(actualizado));
     }
@@ -137,6 +142,7 @@ public class DocenteController {
      * @return respuesta HTTP sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar docente por ID")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del docente a eliminar", example = "1")

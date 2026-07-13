@@ -56,9 +56,17 @@ public class DocenteRequestDTO {
 
     // ── Datos del Docente ───────────────────────────────
 
-    @NotBlank(message = "La especialidad es obligatoria")
+    /**
+     * Legacy free-text specialization. Prefer {@link #idEspecializacion}.
+     */
+    @Deprecated
     @Size(max = 100, message = "La especialidad no puede superar 100 caracteres")
     private String especialidad;
+
+    /**
+     * Preferred catalog specialization. Optional during the transition from legacy free text.
+     */
+    private Integer idEspecializacion;
 
     @NotNull(message = "El grado académico es obligatorio")
     private Integer idGrado;

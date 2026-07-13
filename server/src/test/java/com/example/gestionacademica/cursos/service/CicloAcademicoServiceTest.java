@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.gestionacademica.cursos.domain.CicloAcademico;
 import com.example.gestionacademica.cursos.repository.CicloAcademicoRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -94,4 +95,43 @@ class CicloAcademicoServiceTest {
 
         verify(cicloAcademicoRepository, never()).deleteById(999);
     }
+
+    /** Verifica que generarAnio cree los dos periodos academicos esperados. */
+    @Test
+    @DisplayName("generarAnio: debe crear periodos I y II")
+    void generarAnio_debeCrearPeriodosIyII() {
+        when(cicloAcademicoRepository.findByNombre("2026-I")).thenReturn(Optional.empty());
+        when(cicloAcademicoRepository.findByNombre("2026-II")).thenReturn(Optional.empty());
+        when(cicloAcademicoRepository.save(org.mockito.ArgumentMatchers.any(CicloAcademico.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        List<CicloAcademico> resultado = cicloAcademicoService.generarAnio(2026);
+
+        assertThat(resultado).hasSize(2);
+        assertThat(resultado.get(0).getNombre()).isEqualTo("2026-I");
+        assertThat(resultado.get(0).getFechaInicio()).isEqualTo(LocalDate.of(2026, 1, 1));
+        assertThat(resultado.get(0).getFechaFin()).isEqualTo(LocalDate.of(2026, 6, 30));
+        assertThat(resultado.get(1).getNombre()).isEqualTo("2026-II");
+        assertThat(resultado.get(1).getFechaInicio()).isEqualTo(LocalDate.of(2026, 7, 1));
+        assertThat(resultado.get(1).getFechaFin()).isEqualTo(LocalDate.of(2026, 12, 31));
+    }
+
+    /** Verifica que generarAnio sea idempotente cuando los periodos existen. */
+    @Test
+    @DisplayName("generarAnio: no debe duplicar periodos existentes")
+    void generarAnio_conPeriodosExistentes_noDebeDuplicar() {
+        CicloAcademico periodoI = new CicloAcademico();
+        periodoI.setNombre("2026-I");
+        CicloAcademico periodoII = new CicloAcademico();
+        periodoII.setNombre("2026-II");
+
+        when(cicloAcademicoRepository.findByNombre("2026-I")).thenReturn(Optional.of(periodoI));
+        when(cicloAcademicoRepository.findByNombre("2026-II")).thenReturn(Optional.of(periodoII));
+
+        List<CicloAcademico> resultado = cicloAcademicoService.generarAnio(2026);
+
+        assertThat(resultado).containsExactly(periodoI, periodoII);
+        verify(cicloAcademicoRepository, never()).save(org.mockito.ArgumentMatchers.any(CicloAcademico.class));
+    }
 }
+

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,6 +57,7 @@ public class TipoDocumentoController {
      * @return respuesta HTTP con el tipo de documento creado
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear tipo de documento")
     public ResponseEntity<TipoDocumento> crear(@RequestBody TipoDocumento tipoDocumento) {
         return ResponseEntity.status(HttpStatus.CREATED).body(tipoDocumentoService.crear(tipoDocumento));
@@ -69,6 +71,7 @@ public class TipoDocumentoController {
      * @return respuesta HTTP con el tipo de documento actualizado
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar tipo de documento")
     public ResponseEntity<TipoDocumento> actualizar(
             @Parameter(description = "ID del tipo de documento", example = "1")
@@ -84,6 +87,7 @@ public class TipoDocumentoController {
      * @return respuesta HTTP sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar tipo de documento")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del tipo de documento", example = "1")

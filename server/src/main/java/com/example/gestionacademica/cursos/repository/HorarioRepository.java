@@ -19,4 +19,9 @@ public interface HorarioRepository extends JpaRepository<Horario, Integer>, JpaS
      * @return horarios asociados
      */
     List<Horario> findBySeccion_IdSeccion(Integer idSeccion);
+
+    List<Horario> findByDiaSemanaAndHoraInicioBeforeAndHoraFinAfter(
+            String diaSemana,
+            java.time.LocalTime horaFin,
+            java.time.LocalTime horaInicio);
 }

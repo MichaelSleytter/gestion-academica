@@ -1,6 +1,7 @@
 package com.example.gestionacademica.docentes.domain;
 
 import com.example.gestionacademica.auth.domain.Usuario;
+import com.example.gestionacademica.catalogos.domain.Especializacion;
 import com.example.gestionacademica.catalogos.domain.GradoAcademico;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -25,7 +26,13 @@ public class Docente {
     private Integer idUsuario;
 
     @Column(name = "especialidad", length = 100)
+    @Deprecated
     private String especialidad;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_especializacion")
+    @JsonIgnore
+    private Especializacion especializacion;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId

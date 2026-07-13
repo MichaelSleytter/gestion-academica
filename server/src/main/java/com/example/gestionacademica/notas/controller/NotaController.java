@@ -1,6 +1,8 @@
 package com.example.gestionacademica.notas.controller;
 
+import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.notas.domain.Nota;
+import com.example.gestionacademica.notas.dto.MisNotasResponseDTO;
 import com.example.gestionacademica.notas.dto.NotaResponseDTO;
 import com.example.gestionacademica.notas.service.NotaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +12,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -69,6 +73,26 @@ public class NotaController {
     }
 
     /**
+     * Obtiene las notas del estudiante autenticado para todas las evaluaciones
+     * de una sección.
+     *
+     * @param authentication Contexto de seguridad (inyectado automáticamente).
+     * @param idSeccion      ID de la sección.
+     * @return Lista de notas con ID de evaluación asociada.
+     */
+    @GetMapping("/mis-notas/seccion/{idSeccion}")
+    @PreAuthorize("hasRole('ESTUDIANTE')")
+    @Operation(summary = "Obtener notas del estudiante autenticado en una sección")
+    public ResponseEntity<List<MisNotasResponseDTO>> misNotasPorSeccion(
+            Authentication authentication,
+            @Parameter(description = "ID de la sección", example = "1")
+            @PathVariable Integer idSeccion) {
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        return ResponseEntity.ok(
+                notaService.listarMisNotasPorSeccion(usuario.getIdUsuario(), idSeccion));
+    }
+
+    /**
      * Lista notas por estudiante.
      *
      * @param idEstudiante identificador de estudiante
@@ -97,8 +121,10 @@ public class NotaController {
             @Parameter(description = "ID de la evaluacion", example = "1")
             @RequestParam Integer idEvaluacion,
             @Parameter(description = "ID del estudiante", example = "1")
-            @RequestParam Integer idEstudiante) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(notaService.crear(nota, idEvaluacion, idEstudiante));
+            @RequestParam Integer idEstudiante,
+            Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(notaService.crear(nota, idEvaluacion, idEstudiante, authentication));
     }
 
     /**
@@ -119,8 +145,9 @@ public class NotaController {
             @Parameter(description = "ID de la evaluacion", example = "1")
             @RequestParam Integer idEvaluacion,
             @Parameter(description = "ID del estudiante", example = "1")
-            @RequestParam Integer idEstudiante) {
-        return ResponseEntity.ok(notaService.actualizar(id, nota, idEvaluacion, idEstudiante));
+            @RequestParam Integer idEstudiante,
+            Authentication authentication) {
+        return ResponseEntity.ok(notaService.actualizar(id, nota, idEvaluacion, idEstudiante, authentication));
     }
 
     /**
@@ -133,8 +160,9 @@ public class NotaController {
     @Operation(summary = "Eliminar nota")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID de la nota", example = "1")
-            @PathVariable Integer id) {
-        notaService.eliminar(id);
+            @PathVariable Integer id,
+            Authentication authentication) {
+        notaService.eliminar(id, authentication);
         return ResponseEntity.noContent().build();
     }
 }

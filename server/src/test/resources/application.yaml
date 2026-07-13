@@ -1,0 +1,29 @@
+jwt:
+  secret: test-only-jwt-secret-at-least-256-bits-long
+  access-token-expiration: 900000
+  refresh-token-expiration-days: 7
+
+spring:
+  profiles:
+    active: test
+  datasource:
+    url: jdbc:h2:mem:gestion_academica_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ''
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  mail:
+    host: localhost
+    port: 2525
+    from: test@example.com
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      jakarta:
+        persistence:
+          schema-generation:
+            database:
+              action: drop-and-create

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.example.gestionacademica.auth.domain.Rol;
+import com.example.gestionacademica.auth.repository.RolRepository;
 import com.example.gestionacademica.auth.repository.UsuarioRepository;
 import com.example.gestionacademica.catalogos.domain.Carrera;
 import com.example.gestionacademica.catalogos.domain.TipoDocumento;
@@ -12,6 +14,7 @@ import com.example.gestionacademica.catalogos.repository.TipoDocumentoRepository
 import com.example.gestionacademica.catalogos.service.CatalogoService;
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.estudiantes.domain.EstudianteEstadoAcademico;
+import com.example.gestionacademica.estudiantes.dto.EstudianteCrearDTO;
 import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
 import com.example.gestionacademica.estudiantes.util.EstudianteUtil;
 import com.example.gestionacademica.auth.domain.Usuario;
@@ -41,6 +44,9 @@ class EstudianteServiceTest {
 
     @Mock
     private UsuarioRepository usuarioRepository;
+
+    @Mock
+    private RolRepository rolRepository;
 
     @Mock
     private CarreraRepository carreraRepository;
@@ -165,14 +171,14 @@ class EstudianteServiceTest {
     @DisplayName("buscarPorId: debe lanzar excepción cuando el ID no existe")
     void buscarPorId_cuandoNoExiste_debeLanzarExcepcion() {
         // Arrange
-        when(estudianteRepository.findById(999)).thenReturn(Optional.empty());
+        when(estudianteRepository.findByIdUsuarioAndUsuario_EstadoTrue(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> estudianteService.buscarPorId(999))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("999");
 
-        verify(estudianteRepository, times(1)).findById(999);
+        verify(estudianteRepository, times(1)).findByIdUsuarioAndUsuario_EstadoTrue(999);
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -183,20 +189,31 @@ class EstudianteServiceTest {
     @DisplayName("crear: debe crear estudiante correctamente cuando los datos son válidos")
     void crear_conDatosValidos_debeCrearEstudiante() {
         // Arrange
-        when(usuarioRepository.existsByEmail(anyString())).thenReturn(false);
-        when(usuarioRepository.existsByNumeroDocumento(anyString())).thenReturn(
-                false);
-        when(
-                estudianteRepository.existsByCodigoEstudiante(anyString())).thenReturn(false);
-        when(tipoDocumentoRepository.findById(1)).thenReturn(
-                Optional.of(tipoDocumentoBase));
-        when(carreraRepository.findById(1)).thenReturn(
-                Optional.of(carreraBase));
-        when(usuarioRepository.save(any(Usuario.class))).thenReturn(
-                usuarioBase);
-        when(estudianteRepository.save(any(Estudiante.class))).thenReturn(
-                estudianteBase);
+        EstudianteCrearDTO comando = crearComandoValido();
+        Rol rolEstudiante = new Rol(1, "ESTUDIANTE", List.of());
 
+        when(usuarioFactory.crearDesdeComando(comando)).thenReturn(usuarioBase);
+        when(estudianteFactory.crearDesdeComando(comando)).thenReturn(estudianteBase);
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded-password");
+        when(catalogoService.buscarTipoDocumentoPorId(1)).thenReturn(tipoDocumentoBase);
+        when(catalogoService.buscarCarreraPorId(1)).thenReturn(carreraBase);
+        when(rolRepository.findByNombreIgnoreCase("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuarioBase);
+        when(estudianteRepository.save(any(Estudiante.class))).thenReturn(estudianteBase);
+
+        // Act
+        EstudianteService.ResultadoCreacion resultado = estudianteService.crearConCredenciales(comando);
+
+        // Assert
+        assertThat(resultado.estudianteCreado()).isSameAs(estudianteBase);
+        assertThat(resultado.contrasenaPlano()).isNotBlank();
+        assertThat(usuarioBase.getEmail()).isEqualTo("2024-is-001@institution.edu.pe");
+        assertThat(usuarioBase.getPassword()).isEqualTo("encoded-password");
+        assertThat(usuarioBase.getRoles()).containsExactly(rolEstudiante);
+
+        verify(estudianteValidator).validarDocumentoNoDuplicado("12345678");
+        verify(estudianteValidator).asegurarCodigoEstudiante(estudianteBase);
+        verify(estudianteValidator).validarCorreoNoDuplicado("2024-is-001@institution.edu.pe");
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
         verify(estudianteRepository, times(1)).save(any(Estudiante.class));
     }
@@ -206,30 +223,45 @@ class EstudianteServiceTest {
     // ────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("crear: debe lanzar excepción si el email ya está registrado")
+    @DisplayName("crear: debe lanzar excepción si el email generado ya está registrado")
     void crear_conEmailDuplicado_debeLanzarExcepcion() {
         // Arrange
-        when(usuarioRepository.existsByEmail(anyString())).thenReturn(true);
+        EstudianteCrearDTO comando = crearComandoValido();
+        when(usuarioFactory.crearDesdeComando(comando)).thenReturn(usuarioBase);
+        when(estudianteFactory.crearDesdeComando(comando)).thenReturn(estudianteBase);
+        doThrow(new RuntimeException("Ya existe un usuario con el email generado"))
+                .when(estudianteValidator)
+                .validarCorreoNoDuplicado("2024-is-001@institution.edu.pe");
 
-        // Verificar que nunca llegó a guardar
+        // Act & Assert
+        assertThatThrownBy(() -> estudianteService.crearConCredenciales(comando))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("email generado");
+
         verify(usuarioRepository, never()).save(any());
         verify(estudianteRepository, never()).save(any());
     }
 
     // ────────────────────────────────────────────────────────────────
-    // TEST 6: crear — codigo de estudiante duplicado → excepción
+    // TEST 6: crear — documento duplicado → excepción
     // ────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("crear: debe lanzar excepción si el codigo de estudiante ya existe")
-    void crear_conCodigoDuplicado_debeLanzarExcepcion() {
+    @DisplayName("crear: debe lanzar excepción si el documento ya existe")
+    void crear_conDocumentoDuplicado_debeLanzarExcepcion() {
         // Arrange
-        when(usuarioRepository.existsByEmail(anyString())).thenReturn(false);
-        when(usuarioRepository.existsByNumeroDocumento(anyString())).thenReturn(
-                false);
-        when(
-                estudianteRepository.existsByCodigoEstudiante(anyString())).thenReturn(true);
+        EstudianteCrearDTO comando = crearComandoValido();
+        doThrow(new RuntimeException("Ya existe un usuario con el documento"))
+                .when(estudianteValidator)
+                .validarDocumentoNoDuplicado("12345678");
 
+        // Act & Assert
+        assertThatThrownBy(() -> estudianteService.crearConCredenciales(comando))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("documento");
+
+        verify(usuarioFactory, never()).crearDesdeComando(any());
+        verify(usuarioRepository, never()).save(any());
         verify(estudianteRepository, never()).save(any());
     }
 
@@ -248,8 +280,7 @@ class EstudianteServiceTest {
 
         when(estudianteRepository.findByIdUsuarioAndUsuario_EstadoTrue(1)).thenReturn(
                 Optional.of(estudianteBase));
-        when(carreraRepository.findById(1)).thenReturn(
-                Optional.of(carreraBase));
+        when(catalogoService.buscarCarreraPorId(1)).thenReturn(carreraBase);
         when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // Act
@@ -310,13 +341,14 @@ class EstudianteServiceTest {
     @DisplayName("eliminar: debe lanzar excepción cuando el ID no existe")
     void eliminar_cuandoNoExiste_debeLanzarExcepcion() {
         // Arrange
-        when(estudianteRepository.existsById(999)).thenReturn(false);
+        when(estudianteRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> estudianteService.eliminar(999))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("999");
 
+        verify(estudianteRepository, times(1)).findById(999);
         verify(estudianteRepository, never()).deleteById(any());
     }
 
@@ -324,4 +356,16 @@ class EstudianteServiceTest {
     // TEST 10: listarPorCarrera — retorna lista filtrada
     // ────────────────────────────────────────────────────────────────
 
+    private EstudianteCrearDTO crearComandoValido() {
+        return EstudianteCrearDTO.builder()
+                .nombre("Ana")
+                .apellido("García")
+                .numeroDocumento("12345678")
+                .idTipoDocumento(1)
+                .emailPersonal("ana.garcia@test.com")
+                .ciclo(4)
+                .idCarrera(1)
+                .build();
+    }
 }
+

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -56,6 +57,7 @@ public class CarreraController {
      * @return respuesta HTTP con la carrera creada
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear nueva carrera")
     public ResponseEntity<Carrera> crear(@RequestBody Carrera carrera) {
         return ResponseEntity.status(HttpStatus.CREATED).body(carreraService.crear(carrera));
@@ -69,6 +71,7 @@ public class CarreraController {
      * @return respuesta HTTP con la carrera actualizada
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar carrera")
     public ResponseEntity<Carrera> actualizar(
             @Parameter(description = "ID de la carrera", example = "1")
@@ -84,6 +87,7 @@ public class CarreraController {
      * @return respuesta HTTP sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar carrera")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID de la carrera", example = "1")

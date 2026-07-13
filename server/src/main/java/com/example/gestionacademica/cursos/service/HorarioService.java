@@ -4,8 +4,12 @@ import com.example.gestionacademica.cursos.domain.Horario;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.cursos.repository.HorarioRepository;
 import com.example.gestionacademica.cursos.repository.SeccionRepository;
+import com.example.gestionacademica.docentes.domain.DocenteSeccion;
+import com.example.gestionacademica.docentes.repository.DocenteSeccionRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +25,7 @@ public class HorarioService {
 
     private final HorarioRepository horarioRepository;
     private final SeccionRepository seccionRepository;
+    private final DocenteSeccionRepository docenteSeccionRepository;
 
     /**
      * Lista todos los horarios.
@@ -83,6 +88,7 @@ public class HorarioService {
         validarRangoHorario(horario);
 
         Seccion seccion = obtenerSeccion(idSeccion);
+        validarConflictos(horario, seccion, null);
         horario.setSeccion(seccion);
 
         return horarioRepository.save(horario);
@@ -102,6 +108,7 @@ public class HorarioService {
         validarRangoHorario(datos);
 
         Seccion seccion = obtenerSeccion(idSeccion);
+        validarConflictos(datos, seccion, id);
         existente.setDiaSemana(datos.getDiaSemana());
         existente.setHoraInicio(datos.getHoraInicio());
         existente.setHoraFin(datos.getHoraFin());
@@ -139,5 +146,66 @@ public class HorarioService {
         if (!horario.getHoraInicio().isBefore(horario.getHoraFin())) {
             throw new RuntimeException("La hora de inicio debe ser anterior a la hora fin.");
         }
+    }
+
+    private void validarConflictos(Horario horario, Seccion seccion, Integer idHorarioActual) {
+        List<Horario> cruces = horarioRepository.findByDiaSemanaAndHoraInicioBeforeAndHoraFinAfter(
+                horario.getDiaSemana(), horario.getHoraFin(), horario.getHoraInicio());
+
+        for (Horario cruce : cruces) {
+            if (esHorarioActual(cruce, idHorarioActual)) continue;
+            if (esMismaSeccion(cruce, seccion)) {
+                throw new RuntimeException("La sección ya tiene un horario que se cruza en ese rango.");
+            }
+        }
+
+        for (Horario cruce : cruces) {
+            if (esHorarioActual(cruce, idHorarioActual)) continue;
+            if (esMismaAula(cruce.getAula(), horario.getAula())) {
+                throw new RuntimeException("Ya existe un horario en el aula " + horario.getAula().trim()
+                        + " que se cruza con " + codigoSeccion(cruce) + ".");
+            }
+        }
+
+        Set<Integer> docentesSeccion = idsDocentes(seccion.getIdSeccion());
+        if (docentesSeccion.isEmpty()) return;
+
+        for (Horario cruce : cruces) {
+            if (esHorarioActual(cruce, idHorarioActual)) continue;
+            if (comparteDocente(docentesSeccion, cruce.getSeccion().getIdSeccion())) {
+                throw new RuntimeException("El docente ya tiene una sección asignada en ese horario: "
+                        + codigoSeccion(cruce) + ".");
+            }
+        }
+    }
+
+    private boolean esHorarioActual(Horario horario, Integer idHorarioActual) {
+        return idHorarioActual != null && idHorarioActual.equals(horario.getIdHorario());
+    }
+
+    private boolean esMismaSeccion(Horario horario, Seccion seccion) {
+        return horario.getSeccion().getIdSeccion().equals(seccion.getIdSeccion());
+    }
+
+    private boolean esMismaAula(String aulaExistente, String aulaNueva) {
+        if (aulaExistente == null || aulaNueva == null) return false;
+        String existente = aulaExistente.trim();
+        String nueva = aulaNueva.trim();
+        return !existente.isEmpty() && !nueva.isEmpty() && existente.equalsIgnoreCase(nueva);
+    }
+
+    private boolean comparteDocente(Set<Integer> docentesSeccion, Integer idSeccionCruzada) {
+        return idsDocentes(idSeccionCruzada).stream().anyMatch(docentesSeccion::contains);
+    }
+
+    private Set<Integer> idsDocentes(Integer idSeccion) {
+        return docenteSeccionRepository.findBySeccion_IdSeccion(idSeccion).stream()
+                .map(DocenteSeccion::getId)
+                .map(DocenteSeccion.DocenteSeccionId::getIdDocente)
+                .collect(Collectors.toSet());
+    }
+
+    private String codigoSeccion(Horario horario) {
+        return horario.getSeccion().getCodigoSeccion();
     }
 }

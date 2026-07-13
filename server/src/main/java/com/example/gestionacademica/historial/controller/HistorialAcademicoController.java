@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -28,6 +29,7 @@ public class HistorialAcademicoController {
      * @return lista del historial
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Listar todo el historial academico")
     public ResponseEntity<List<HistorialAcademico>> listarTodos() {
         return ResponseEntity.ok(historialAcademicoService.listarTodos());
@@ -40,6 +42,7 @@ public class HistorialAcademicoController {
      * @return historial encontrado
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Buscar historial academico por ID")
     public ResponseEntity<HistorialAcademico> buscarPorId(
             @Parameter(description = "ID del historial academico", example = "1")
@@ -84,6 +87,7 @@ public class HistorialAcademicoController {
      * @return historial creado
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear historial academico", description = "Requiere idEstudiante e idSeccion como query params")
     public ResponseEntity<HistorialAcademico> crear(
             @RequestBody HistorialAcademico historial,
@@ -105,6 +109,7 @@ public class HistorialAcademicoController {
      * @return historial actualizado
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar historial academico")
     public ResponseEntity<HistorialAcademico> actualizar(
             @Parameter(description = "ID del historial academico", example = "1")
@@ -124,6 +129,7 @@ public class HistorialAcademicoController {
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar historial academico")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del historial academico", example = "1")

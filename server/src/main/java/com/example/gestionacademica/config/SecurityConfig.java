@@ -54,7 +54,9 @@ public class SecurityConfig {
                                 "/api-docs/**",
                                 "/scalar",
                                 "/scalar/",
-                                "/scalar.html")
+                                "/scalar.html",
+                                "/actuator/health",
+                                "/actuator/health/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

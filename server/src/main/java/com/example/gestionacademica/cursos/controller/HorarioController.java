@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -81,6 +82,7 @@ public class HorarioController {
      * @return horario creado
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear horario", description = "Requiere idSeccion como parametro de query")
     public ResponseEntity<Horario> crear(
             @RequestBody Horario horario,
@@ -98,6 +100,7 @@ public class HorarioController {
      * @return horario actualizado
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar horario")
     public ResponseEntity<Horario> actualizar(
             @Parameter(description = "ID del horario", example = "1")
@@ -115,6 +118,7 @@ public class HorarioController {
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar horario")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del horario", example = "1")

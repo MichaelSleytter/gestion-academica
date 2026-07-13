@@ -8,8 +8,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.example.gestionacademica.cursos.domain.Horario;
+import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.cursos.repository.HorarioRepository;
 import com.example.gestionacademica.cursos.repository.SeccionRepository;
+import com.example.gestionacademica.docentes.domain.DocenteSeccion;
+import com.example.gestionacademica.docentes.repository.DocenteSeccionRepository;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +22,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Pruebas unitarias para HorarioService con Mockito puro.
@@ -33,6 +38,9 @@ class HorarioServiceTest {
 
     @Mock
     private SeccionRepository seccionRepository;
+
+    @Mock
+    private DocenteSeccionRepository docenteSeccionRepository;
 
     @InjectMocks
     private HorarioService horarioService;
@@ -97,5 +105,128 @@ class HorarioServiceTest {
             .hasMessageContaining("999");
 
         verify(horarioRepository, never()).deleteById(999);
+    }
+
+    @Test
+    @DisplayName("crear: permite mismo rango si aula y docentes no chocan")
+    void crear_mismoRangoSinConflictos_debeGuardar() {
+        Seccion seccion = seccion(1, "SEC-1");
+        Horario nuevo = horario(null, seccion, "Aula 1");
+        Horario cruce = horario(2, seccion(2, "SEC-2"), "Aula 2");
+
+        when(seccionRepository.findById(1)).thenReturn(Optional.of(seccion));
+        when(horarioRepository.findByDiaSemanaAndHoraInicioBeforeAndHoraFinAfter(
+                "Lunes", LocalTime.of(11, 0), LocalTime.of(9, 0))).thenReturn(List.of(cruce));
+        when(docenteSeccionRepository.findBySeccion_IdSeccion(1)).thenReturn(List.of(docenteSeccion(10, 1)));
+        when(docenteSeccionRepository.findBySeccion_IdSeccion(2)).thenReturn(List.of(docenteSeccion(20, 2)));
+        when(horarioRepository.save(nuevo)).thenReturn(nuevo);
+
+        Horario resultado = horarioService.crear(nuevo, 1);
+
+        assertThat(resultado).isSameAs(nuevo);
+        verify(horarioRepository).save(nuevo);
+    }
+
+    @Test
+    @DisplayName("crear: bloquea cruce en la misma aula")
+    void crear_mismaAulaSolapada_debeLanzarExcepcion() {
+        Seccion seccion = seccion(1, "SEC-1");
+        Horario nuevo = horario(null, seccion, " aula 1 ");
+        Horario cruce = horario(2, seccion(2, "SEC-2"), "AULA 1");
+
+        when(seccionRepository.findById(1)).thenReturn(Optional.of(seccion));
+        when(horarioRepository.findByDiaSemanaAndHoraInicioBeforeAndHoraFinAfter(
+                "Lunes", LocalTime.of(11, 0), LocalTime.of(9, 0))).thenReturn(List.of(cruce));
+
+        assertThatThrownBy(() -> horarioService.crear(nuevo, 1))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Ya existe un horario en el aula aula 1 que se cruza con SEC-2.");
+
+        verify(horarioRepository, never()).save(nuevo);
+    }
+
+    @Test
+    @DisplayName("crear: bloquea cruce de la misma sección")
+    void crear_mismaSeccionSolapada_debeLanzarExcepcion() {
+        Seccion seccion = seccion(1, "SEC-1");
+        Horario nuevo = horario(null, seccion, "Aula 1");
+        Horario cruce = horario(2, seccion, "Aula 2");
+
+        when(seccionRepository.findById(1)).thenReturn(Optional.of(seccion));
+        when(horarioRepository.findByDiaSemanaAndHoraInicioBeforeAndHoraFinAfter(
+                "Lunes", LocalTime.of(11, 0), LocalTime.of(9, 0))).thenReturn(List.of(cruce));
+
+        assertThatThrownBy(() -> horarioService.crear(nuevo, 1))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("La sección ya tiene un horario que se cruza en ese rango.");
+
+        verify(horarioRepository, never()).save(nuevo);
+    }
+
+    @Test
+    @DisplayName("crear: bloquea cruce por docente compartido")
+    void crear_docenteCompartido_debeLanzarExcepcion() {
+        Seccion seccion = seccion(1, "SEC-1");
+        Horario nuevo = horario(null, seccion, "Aula 1");
+        Horario cruce = horario(2, seccion(2, "SEC-2"), "Aula 2");
+
+        when(seccionRepository.findById(1)).thenReturn(Optional.of(seccion));
+        when(horarioRepository.findByDiaSemanaAndHoraInicioBeforeAndHoraFinAfter(
+                "Lunes", LocalTime.of(11, 0), LocalTime.of(9, 0))).thenReturn(List.of(cruce));
+        when(docenteSeccionRepository.findBySeccion_IdSeccion(1)).thenReturn(List.of(docenteSeccion(10, 1)));
+        when(docenteSeccionRepository.findBySeccion_IdSeccion(2)).thenReturn(List.of(docenteSeccion(10, 2)));
+
+        assertThatThrownBy(() -> horarioService.crear(nuevo, 1))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("El docente ya tiene una sección asignada en ese horario: SEC-2.");
+
+        verify(horarioRepository, never()).save(nuevo);
+    }
+
+    @Test
+    @DisplayName("actualizar: excluye el horario actual al validar cruces")
+    void actualizar_excluyeHorarioActual_debeGuardar() {
+        Seccion seccion = seccion(1, "SEC-1");
+        Horario existente = horario(1, seccion, "Aula 1");
+        Horario datos = horario(null, seccion, "Aula 1");
+
+        when(horarioRepository.findById(1)).thenReturn(Optional.of(existente));
+        when(seccionRepository.findById(1)).thenReturn(Optional.of(seccion));
+        when(horarioRepository.findByDiaSemanaAndHoraInicioBeforeAndHoraFinAfter(
+                "Lunes", LocalTime.of(11, 0), LocalTime.of(9, 0))).thenReturn(List.of(existente));
+        when(docenteSeccionRepository.findBySeccion_IdSeccion(1)).thenReturn(List.of(docenteSeccion(10, 1)));
+        when(horarioRepository.save(existente)).thenReturn(existente);
+
+        Horario resultado = horarioService.actualizar(1, datos, 1);
+
+        assertThat(resultado).isSameAs(existente);
+        verify(horarioRepository).save(existente);
+    }
+
+    private Horario horario(Integer id, Seccion seccion, String aula) {
+        Horario horario = new Horario();
+        ReflectionTestUtils.setField(horario, "idHorario", id);
+        ReflectionTestUtils.setField(horario, "diaSemana", "Lunes");
+        ReflectionTestUtils.setField(horario, "horaInicio", LocalTime.of(9, 0));
+        ReflectionTestUtils.setField(horario, "horaFin", LocalTime.of(11, 0));
+        ReflectionTestUtils.setField(horario, "aula", aula);
+        ReflectionTestUtils.setField(horario, "seccion", seccion);
+        return horario;
+    }
+
+    private Seccion seccion(Integer id, String codigo) {
+        Seccion seccion = new Seccion();
+        ReflectionTestUtils.setField(seccion, "idSeccion", id);
+        ReflectionTestUtils.setField(seccion, "codigoSeccion", codigo);
+        return seccion;
+    }
+
+    private DocenteSeccion docenteSeccion(Integer idDocente, Integer idSeccion) {
+        DocenteSeccion docenteSeccion = new DocenteSeccion();
+        DocenteSeccion.DocenteSeccionId id = new DocenteSeccion.DocenteSeccionId();
+        ReflectionTestUtils.setField(id, "idDocente", idDocente);
+        ReflectionTestUtils.setField(id, "idSeccion", idSeccion);
+        ReflectionTestUtils.setField(docenteSeccion, "id", id);
+        return docenteSeccion;
     }
 }

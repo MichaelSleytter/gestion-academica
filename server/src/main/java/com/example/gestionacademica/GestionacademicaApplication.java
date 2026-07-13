@@ -33,6 +33,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.transaction.support.TransactionTemplate;
@@ -70,6 +71,7 @@ public class GestionacademicaApplication {
     }
 
     @Bean
+    @Profile("!test")
     CommandLineRunner commandLineRunner(
             AdministradorService administradorService,
             UsuarioRepository usuarioRepository,

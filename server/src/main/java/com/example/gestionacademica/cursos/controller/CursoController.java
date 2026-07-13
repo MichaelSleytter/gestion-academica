@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -84,6 +85,7 @@ public class CursoController {
      * @return respuesta HTTP con el curso creado
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear nuevo curso")
     public ResponseEntity<Curso> crear(@Valid @RequestBody Curso curso) {
         return ResponseEntity
@@ -99,6 +101,7 @@ public class CursoController {
      * @return respuesta HTTP con el curso actualizado
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar curso")
     public ResponseEntity<Curso> actualizar(
             @Parameter(description = "ID del curso", example = "1")
@@ -114,6 +117,7 @@ public class CursoController {
      * @return respuesta HTTP sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar curso")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del curso a eliminar", example = "1")

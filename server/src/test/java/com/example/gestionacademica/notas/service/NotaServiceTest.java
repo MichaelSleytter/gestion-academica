@@ -2,11 +2,14 @@ package com.example.gestionacademica.notas.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.gestionacademica.auth.domain.Usuario;
+import com.example.gestionacademica.docentes.repository.DocenteSeccionRepository;
 import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
 import com.example.gestionacademica.notas.domain.Nota;
 import com.example.gestionacademica.notas.repository.NotaRepository;
@@ -19,6 +22,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 /**
  * Pruebas unitarias para NotaService con Mockito puro.
@@ -37,6 +43,9 @@ class NotaServiceTest {
 
     @Mock
     private EstudianteRepository estudianteRepository;
+
+    @Mock
+    private DocenteSeccionRepository docenteSeccionRepository;
 
     @InjectMocks
     private NotaService notaService;
@@ -83,23 +92,33 @@ class NotaServiceTest {
     @Test
     @DisplayName("eliminar: debe eliminar nota cuando existe")
     void eliminar_cuandoExiste_debeEliminar() {
-        when(notaRepository.existsById(1)).thenReturn(true);
+        Nota nota = new Nota();
+        when(notaRepository.findById(1)).thenReturn(Optional.of(nota));
 
-        notaService.eliminar(1);
+        notaService.eliminar(1, adminAuth());
 
-        verify(notaRepository, times(1)).deleteById(1);
+        verify(notaRepository, times(1)).delete(nota);
     }
 
     /** Verifica que eliminar no permita borrar cuando no existe el ID. */
     @Test
     @DisplayName("eliminar: debe lanzar excepcion cuando no existe")
     void eliminar_cuandoNoExiste_debeLanzarExcepcion() {
-        when(notaRepository.existsById(999)).thenReturn(false);
+        when(notaRepository.findById(999)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> notaService.eliminar(999))
+        assertThatThrownBy(() -> notaService.eliminar(999, adminAuth()))
             .isInstanceOf(RuntimeException.class)
             .hasMessageContaining("999");
 
-        verify(notaRepository, never()).deleteById(999);
+        verify(notaRepository, never()).delete(any());
+    }
+
+    private Authentication adminAuth() {
+        Usuario usuario = new Usuario();
+        usuario.setIdUsuario(1);
+        return new UsernamePasswordAuthenticationToken(
+                usuario,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
     }
 }

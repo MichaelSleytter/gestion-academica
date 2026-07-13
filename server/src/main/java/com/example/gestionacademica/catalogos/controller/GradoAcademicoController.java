@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -54,6 +55,7 @@ public class GradoAcademicoController {
      * @return grado creado
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear grado academico")
     public ResponseEntity<GradoAcademico> crear(@RequestBody GradoAcademico grado) {
         return ResponseEntity.status(HttpStatus.CREATED).body(gradoAcademicoService.crear(grado));
@@ -67,6 +69,7 @@ public class GradoAcademicoController {
      * @return grado actualizado
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar grado academico")
     public ResponseEntity<GradoAcademico> actualizar(
             @Parameter(description = "ID del grado academico", example = "1")
@@ -82,6 +85,7 @@ public class GradoAcademicoController {
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar grado academico")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del grado academico", example = "1")

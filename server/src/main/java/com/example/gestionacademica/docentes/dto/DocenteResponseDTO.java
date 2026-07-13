@@ -30,6 +30,8 @@ public class DocenteResponseDTO {
 
     // ── Datos del Docente ────────────────────────────────
     private String especialidad;
+    private Integer idEspecializacion;
+    private String nombreEspecializacion;
     private Integer idGrado;
     private String nombreGrado;
 }

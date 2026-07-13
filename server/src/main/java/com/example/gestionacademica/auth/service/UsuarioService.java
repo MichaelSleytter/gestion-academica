@@ -165,4 +165,47 @@ public class UsuarioService {
         return usuarioRepository.findByEmailWithRoles(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con email: " + email));
     }
+
+    /**
+     * Busca usuario por ID con roles y tipoDocumento cargados (JOIN FETCH).
+     * Útil para endpoints como /me que necesitan acceder a relaciones lazy.
+     */
+    public Usuario buscarPorIdConTodo(Integer id) {
+        return usuarioRepository.findByIdWithRolesAndTipoDocumento(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+    }
+
+    /**
+     * Actualiza los datos editables del perfil del usuario autenticado.
+     * Solo permite modificar nombre, apellido y email personal.
+     */
+    @Transactional
+    public Usuario actualizarPerfil(Integer id, String nombre, String apellido, String emailPersonal) {
+        Usuario existente = buscarPorId(id);
+
+        if (nombre != null && !nombre.trim().isEmpty()) {
+            existente.setNombre(nombre.trim());
+        }
+        if (apellido != null && !apellido.trim().isEmpty()) {
+            existente.setApellido(apellido.trim());
+        }
+        existente.setEmailPersonal(emailPersonal != null ? emailPersonal.trim() : null);
+
+        return usuarioRepository.save(existente);
+    }
+
+    /**
+     * Cambia la contraseña del usuario validando la contraseña actual.
+     */
+    @Transactional
+    public void cambiarPassword(Integer id, String passwordActual, String nuevaPassword) {
+        Usuario existente = buscarPorId(id);
+
+        if (!passwordEncoder.matches(passwordActual, existente.getPassword())) {
+            throw new RuntimeException("La contraseña actual no es correcta");
+        }
+
+        existente.setPassword(passwordEncoder.encode(nuevaPassword));
+        usuarioRepository.save(existente);
+    }
 }

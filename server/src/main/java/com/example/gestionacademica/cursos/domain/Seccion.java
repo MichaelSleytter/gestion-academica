@@ -34,6 +34,9 @@ public class Seccion {
     @Column(name = "vacantes", nullable = false)
     private Integer vacantes;
 
+    @Column(name = "color", length = 7)
+    private String color;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_curso", nullable = false)
     @JsonIgnoreProperties({"secciones"})

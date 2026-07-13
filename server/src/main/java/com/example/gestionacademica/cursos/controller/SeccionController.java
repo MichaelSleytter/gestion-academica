@@ -10,9 +10,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Controlador REST para la gestión de Secciones.
@@ -82,6 +84,17 @@ public class SeccionController {
      * @param idCiclo identificador del ciclo académico
      * @return respuesta HTTP con secciones del ciclo
      */
+    @GetMapping("/proximo-codigo")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Generar proximo codigo de seccion")
+    public ResponseEntity<Map<String, String>> generarProximoCodigo(
+            @Parameter(description = "ID del curso", example = "1")
+            @RequestParam Integer idCurso,
+            @Parameter(description = "ID del ciclo academico", example = "1")
+            @RequestParam Integer idCiclo) {
+        return ResponseEntity.ok(Map.of("codigo", seccionService.generarProximoCodigo(idCurso, idCiclo)));
+    }
+
     @GetMapping("/ciclo/{idCiclo}")
     @Operation(summary = "Listar secciones por ciclo academico")
     public ResponseEntity<List<Seccion>> listarPorCiclo(
@@ -99,6 +112,7 @@ public class SeccionController {
      * @return respuesta HTTP con la sección creada
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear nueva sección",
                description = "Requiere idCurso e idCiclo como parámetros de query")
     public ResponseEntity<Seccion> crear(
@@ -122,6 +136,7 @@ public class SeccionController {
      * @return respuesta HTTP con la sección actualizada
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar sección")
     public ResponseEntity<Seccion> actualizar(
             @Parameter(description = "ID de la sección", example = "1")
@@ -141,6 +156,7 @@ public class SeccionController {
      * @return respuesta HTTP sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar sección")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID de la sección a eliminar", example = "1")

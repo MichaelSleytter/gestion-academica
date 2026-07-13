@@ -3,6 +3,7 @@ package com.example.gestionacademica.matriculas.controller;
 import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.matriculas.domain.Matricula;
 import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
+import com.example.gestionacademica.matriculas.dto.MatriculaMisCursosDTO;
 import com.example.gestionacademica.matriculas.dto.MatriculaSeccionResponseDTO;
 import com.example.gestionacademica.matriculas.service.MatriculaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,11 +31,25 @@ public class MatriculaController {
     private final MatriculaService matriculaService;
 
     /**
+     * Obtiene los cursos activos del estudiante autenticado.
+     *
+     * @return Lista de DTOs con datos de matrícula, sección y curso.
+     */
+    @GetMapping("/mis-cursos")
+    @PreAuthorize("hasRole('ESTUDIANTE')")
+    @Operation(summary = "Obtener cursos del estudiante autenticado")
+    public ResponseEntity<List<MatriculaMisCursosDTO>> misCursos(Authentication authentication) {
+        Usuario usuario = (Usuario) authentication.getPrincipal();
+        return ResponseEntity.ok(matriculaService.listarMisCursos(usuario.getIdUsuario()));
+    }
+
+    /**
      * Lista todas las matrículas registradas.
      *
      * @return respuesta HTTP con matrículas
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Listar todas las matrículas")
     public ResponseEntity<List<Matricula>> listarTodas() {
         return ResponseEntity.ok(matriculaService.listarTodas());
@@ -45,6 +62,7 @@ public class MatriculaController {
      * @return respuesta HTTP con la matrícula encontrada
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Buscar matrícula por ID")
     public ResponseEntity<Matricula> buscarPorId(
             @Parameter(description = "ID de la matrícula", example = "1")
@@ -59,6 +77,7 @@ public class MatriculaController {
      * @return respuesta HTTP con matrículas del estudiante
      */
     @GetMapping("/estudiante/{idEstudiante}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Listar matrículas de un estudiante")
     public ResponseEntity<List<Matricula>> listarPorEstudiante(
             @Parameter(description = "ID del estudiante (id_usuario)", example = "1")
@@ -103,6 +122,7 @@ public class MatriculaController {
      * @return respuesta HTTP con la matrícula creada
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Registrar nueva matrícula",
         description = "Matricula a un estudiante en una sección. Valida duplicados y vacantes."
@@ -125,6 +145,7 @@ public class MatriculaController {
      * @return respuesta HTTP con la matrícula actualizada
      */
     @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Cambiar estado de matrícula",
         description = "Estados válidos: ACTIVA, RETIRADA, APROBADA, DESAPROBADA"
@@ -144,6 +165,7 @@ public class MatriculaController {
      * @return respuesta HTTP sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar matrícula")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID de la matrícula a eliminar", example = "1")

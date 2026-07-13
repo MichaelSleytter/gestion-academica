@@ -1,10 +1,14 @@
 package com.example.gestionacademica.auth.controller;
 
 import com.example.gestionacademica.auth.domain.RefreshToken;
+import com.example.gestionacademica.auth.domain.Rol;
 import com.example.gestionacademica.auth.domain.Usuario;
+import com.example.gestionacademica.auth.dto.ActualizarPerfilRequest;
 import com.example.gestionacademica.auth.dto.AuthRequest;
 import com.example.gestionacademica.auth.dto.AuthResponse;
+import com.example.gestionacademica.auth.dto.CambiarPasswordRequest;
 import com.example.gestionacademica.auth.dto.ForgotPasswordRequest;
+import com.example.gestionacademica.auth.dto.PerfilResponse;
 import com.example.gestionacademica.auth.dto.ResetPasswordRequest;
 import com.example.gestionacademica.auth.service.JwtService;
 import com.example.gestionacademica.auth.service.PasswordResetService;
@@ -26,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -237,6 +242,74 @@ public class AuthController {
                 "Bearer",
                 900 // 15 minutos
         ));
+    }
+
+    /**
+     * Obtiene el perfil del usuario autenticado.
+     * Recarga el usuario con JOIN FETCH para evitar LazyInitializationException.
+     */
+    @GetMapping("/me")
+    @Operation(summary = "Obtener perfil del usuario autenticado")
+    public ResponseEntity<PerfilResponse> getPerfil(@AuthenticationPrincipal Usuario usuario) {
+        Usuario completo = usuarioService.buscarPorIdConTodo(usuario.getIdUsuario());
+        return ResponseEntity.ok(toPerfilResponse(completo));
+    }
+
+    /**
+     * Actualiza los datos editables del perfil (nombre, apellido, email personal).
+     */
+    @PutMapping("/me")
+    @Operation(summary = "Actualizar perfil del usuario autenticado")
+    public ResponseEntity<PerfilResponse> actualizarPerfil(
+            @AuthenticationPrincipal Usuario usuario,
+            @Valid @RequestBody ActualizarPerfilRequest request) {
+
+        Usuario actualizado = usuarioService.actualizarPerfil(
+                usuario.getIdUsuario(),
+                request.nombre(),
+                request.apellido(),
+                request.emailPersonal());
+
+        Usuario completo = usuarioService.buscarPorIdConTodo(actualizado.getIdUsuario());
+        return ResponseEntity.ok(toPerfilResponse(completo));
+    }
+
+    /**
+     * Cambia la contraseña del usuario autenticado.
+     */
+    @PutMapping("/me/password")
+    @Operation(summary = "Cambiar contraseña del usuario autenticado")
+    public ResponseEntity<?> cambiarPassword(
+            @AuthenticationPrincipal Usuario usuario,
+            @Valid @RequestBody CambiarPasswordRequest request) {
+
+        usuarioService.cambiarPassword(
+                usuario.getIdUsuario(),
+                request.passwordActual(),
+                request.nuevaPassword());
+
+        return ResponseEntity.ok(Map.of("message", "Contraseña actualizada correctamente"));
+    }
+
+    /**
+     * Convierte un Usuario completo (con roles y tipoDocumento cargados) a PerfilResponse.
+     */
+    private PerfilResponse toPerfilResponse(Usuario u) {
+        return new PerfilResponse(
+                u.getIdUsuario(),
+                u.getNombre(),
+                u.getApellido(),
+                u.getEmail(),
+                u.getEmailPersonal(),
+                u.getNumeroDocumento(),
+                u.getEstado(),
+                u.getTipoDocumento() != null
+                        ? u.getTipoDocumento().getNombre()
+                        : null,
+                u.getRoles().stream()
+                        .map(Rol::getNombre)
+                        .toList()
+        );
     }
 
     /**

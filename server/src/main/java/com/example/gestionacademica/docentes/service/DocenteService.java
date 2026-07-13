@@ -1,6 +1,7 @@
 package com.example.gestionacademica.docentes.service;
 
 import com.example.gestionacademica.auth.domain.Rol;
+import com.example.gestionacademica.catalogos.domain.Especializacion;
 import com.example.gestionacademica.docentes.domain.Docente;
 import com.example.gestionacademica.catalogos.domain.GradoAcademico;
 import com.example.gestionacademica.catalogos.domain.TipoDocumento;
@@ -8,6 +9,7 @@ import com.example.gestionacademica.auth.domain.Usuario;
 import com.example.gestionacademica.docentes.repository.DocenteRepository;
 import com.example.gestionacademica.auth.repository.RolRepository;
 import com.example.gestionacademica.auth.repository.UsuarioRepository;
+import com.example.gestionacademica.catalogos.repository.EspecializacionRepository;
 import com.example.gestionacademica.catalogos.repository.GradoAcademicoRepository;
 import com.example.gestionacademica.catalogos.repository.TipoDocumentoRepository;
 import jakarta.persistence.criteria.Join;
@@ -33,6 +35,7 @@ public class DocenteService {
     private final UsuarioRepository usuarioRepository;
     private final GradoAcademicoRepository gradoAcademicoRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final EspecializacionRepository especializacionRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder codificadorContrasena;
 
@@ -102,12 +105,24 @@ public class DocenteService {
      * Crea un nuevo docente con su usuario base.
      */
     @Transactional
-        public Docente crear(
-        Usuario usuario,
-        Docente docente,
-        Integer idGrado,
-        Integer idTipoDocumento
-        ) {
+    public Docente crear(
+            Usuario usuario,
+            Docente docente,
+            Integer idGrado,
+            Integer idTipoDocumento) {
+        return crear(usuario, docente, idGrado, idTipoDocumento, null);
+    }
+
+    /**
+     * Crea un nuevo docente con su usuario base y especializacion.
+     */
+    @Transactional
+    public Docente crear(
+            Usuario usuario,
+            Docente docente,
+            Integer idGrado,
+            Integer idTipoDocumento,
+            Integer idEspecializacion) {
 
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new RuntimeException(
@@ -127,6 +142,8 @@ public class DocenteService {
             .orElseThrow(() -> new RuntimeException(
                 "Grado academico no encontrado con ID: " + idGrado));
 
+        Especializacion especializacion = buscarEspecializacion(idEspecializacion);
+
         Rol rolDocente = rolRepository.findByNombreIgnoreCase("DOCENTE")
                 .orElseThrow(() -> new RuntimeException("El rol 'DOCENTE' no existe."));
 
@@ -139,14 +156,23 @@ public class DocenteService {
 
         docente.setUsuario(usuarioGuardado);
         docente.setGradoAcademico(grado);
+        docente.setEspecializacion(especializacion);
         return docenteRepository.save(docente);
-        }
+    }
 
     /**
      * Actualiza datos de un docente.
      */
     @Transactional
     public Docente actualizar(Integer id, Docente datos, Integer idGrado) {
+        return actualizar(id, datos, idGrado, null);
+    }
+
+    /**
+     * Actualiza datos de un docente y su especializacion.
+     */
+    @Transactional
+    public Docente actualizar(Integer id, Docente datos, Integer idGrado, Integer idEspecializacion) {
 
         Docente existente = buscarPorId(id);
 
@@ -156,8 +182,18 @@ public class DocenteService {
 
         existente.setEspecialidad(datos.getEspecialidad());
         existente.setGradoAcademico(grado);
+        existente.setEspecializacion(buscarEspecializacion(idEspecializacion));
 
         return docenteRepository.save(existente);
+    }
+
+    private Especializacion buscarEspecializacion(Integer idEspecializacion) {
+        if (idEspecializacion == null) {
+            return null;
+        }
+        return especializacionRepository.findById(idEspecializacion)
+                .orElseThrow(() -> new RuntimeException(
+                        "Especializacion no encontrada con ID: " + idEspecializacion));
     }
 
     /**

@@ -1,14 +1,17 @@
 package com.example.gestionacademica.cursos.controller;
 
 import com.example.gestionacademica.cursos.domain.CicloAcademico;
+import com.example.gestionacademica.cursos.dto.GenerarAnioAcademicoRequest;
 import com.example.gestionacademica.cursos.service.CicloAcademicoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -53,7 +56,18 @@ public class CicloAcademicoController {
      * @param ciclo datos del ciclo
      * @return ciclo creado
      */
+    @PostMapping("/generar-anio")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Generar periodos academicos I y II para un año")
+    public ResponseEntity<List<CicloAcademico>> generarAnio(
+            @Valid @RequestBody GenerarAnioAcademicoRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(cicloAcademicoService.generarAnio(request.getAnio()));
+    }
+
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear ciclo academico")
     public ResponseEntity<CicloAcademico> crear(@RequestBody CicloAcademico ciclo) {
         return ResponseEntity.status(HttpStatus.CREATED).body(cicloAcademicoService.crear(ciclo));
@@ -67,6 +81,7 @@ public class CicloAcademicoController {
      * @return ciclo actualizado
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar ciclo academico")
     public ResponseEntity<CicloAcademico> actualizar(
             @Parameter(description = "ID del ciclo academico", example = "1")
@@ -82,6 +97,7 @@ public class CicloAcademicoController {
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar ciclo academico")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del ciclo academico", example = "1")

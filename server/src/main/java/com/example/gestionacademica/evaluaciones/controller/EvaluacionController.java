@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -80,6 +81,7 @@ public class EvaluacionController {
      * @return evaluacion creada
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear evaluacion", description = "Requiere idSeccion como parametro de query")
     public ResponseEntity<Evaluacion> crear(
             @RequestBody Evaluacion evaluacion,
@@ -97,6 +99,7 @@ public class EvaluacionController {
      * @return evaluacion actualizada
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar evaluacion")
     public ResponseEntity<Evaluacion> actualizar(
             @Parameter(description = "ID de la evaluacion", example = "1")
@@ -114,6 +117,7 @@ public class EvaluacionController {
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar evaluacion")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID de la evaluacion", example = "1")

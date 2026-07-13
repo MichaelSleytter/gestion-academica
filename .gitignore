@@ -92,6 +92,8 @@ Thumbs.db
 # Environment files
 # =====================
 .env
+.env.*
+!.env.example
 
 # =====================
 # OpenCode
@@ -111,5 +113,23 @@ graphify-out/**
 # AI / Agent / Memory files
 # =====================
 .pi/
+.pi-subagents/
+.pi-lens/
+.codegraph/
 openspec/
 context.md
+
+# InsForge & AI agent skills
+.insforge
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf

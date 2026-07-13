@@ -2,16 +2,25 @@ package com.example.gestionacademica.docentes.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.gestionacademica.auth.domain.Rol;
+import com.example.gestionacademica.auth.domain.Usuario;
+import com.example.gestionacademica.auth.repository.RolRepository;
+import com.example.gestionacademica.catalogos.domain.Especializacion;
+import com.example.gestionacademica.catalogos.domain.GradoAcademico;
+import com.example.gestionacademica.catalogos.domain.TipoDocumento;
+import com.example.gestionacademica.catalogos.repository.EspecializacionRepository;
 import com.example.gestionacademica.docentes.domain.Docente;
 import com.example.gestionacademica.docentes.repository.DocenteRepository;
 import com.example.gestionacademica.catalogos.repository.GradoAcademicoRepository;
 import com.example.gestionacademica.catalogos.repository.TipoDocumentoRepository;
 import com.example.gestionacademica.auth.repository.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +50,15 @@ class DocenteServiceTest {
 
     @Mock
     private TipoDocumentoRepository tipoDocumentoRepository;
+
+    @Mock
+    private EspecializacionRepository especializacionRepository;
+
+    @Mock
+    private RolRepository rolRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private DocenteService docenteService;
@@ -106,4 +124,68 @@ class DocenteServiceTest {
 
         verify(docenteRepository, never()).deleteById(999);
     }
+
+    /** Verifica que crear asigne la especializacion seleccionada. */
+    @Test
+    @DisplayName("crear: debe asignar especializacion por ID")
+    void crear_debeAsignarEspecializacionPorId() {
+        Usuario usuario = new Usuario();
+        usuario.setEmail("docente@universidad.edu");
+        usuario.setNumeroDocumento("12345678");
+        usuario.setPassword("secret123");
+
+        Docente docente = new Docente();
+        GradoAcademico grado = new GradoAcademico();
+        TipoDocumento tipoDocumento = new TipoDocumento();
+        Especializacion especializacion = new Especializacion();
+        Rol rol = new Rol();
+
+        when(usuarioRepository.existsByEmail(usuario.getEmail())).thenReturn(false);
+        when(usuarioRepository.existsByNumeroDocumento(usuario.getNumeroDocumento())).thenReturn(false);
+        when(tipoDocumentoRepository.findById(1)).thenReturn(Optional.of(tipoDocumento));
+        when(gradoAcademicoRepository.findById(2)).thenReturn(Optional.of(grado));
+        when(especializacionRepository.findById(3)).thenReturn(Optional.of(especializacion));
+        when(rolRepository.findByNombreIgnoreCase("DOCENTE")).thenReturn(Optional.of(rol));
+        when(passwordEncoder.encode("secret123")).thenReturn("encoded");
+        when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        when(docenteRepository.save(docente)).thenReturn(docente);
+
+        Docente resultado = docenteService.crear(usuario, docente, 2, 1, 3);
+
+        assertThat(resultado.getEspecializacion()).isSameAs(especializacion);
+        verify(docenteRepository, times(1)).save(docente);
+    }
+
+    /** Verifica que el texto legacy siga funcionando durante la migracion. */
+    @Test
+    @DisplayName("crear: debe permitir especialidad legacy sin especializacion catalogada")
+    void crear_conEspecializacionNula_debePreservarEspecialidadLegacy() {
+        Usuario usuario = new Usuario();
+        usuario.setEmail("legacy@universidad.edu");
+        usuario.setNumeroDocumento("87654321");
+        usuario.setPassword("secret123");
+
+        Docente docente = new Docente();
+        docente.setEspecialidad("Matemáticas");
+        GradoAcademico grado = new GradoAcademico();
+        TipoDocumento tipoDocumento = new TipoDocumento();
+        Rol rol = new Rol();
+
+        when(usuarioRepository.existsByEmail(usuario.getEmail())).thenReturn(false);
+        when(usuarioRepository.existsByNumeroDocumento(usuario.getNumeroDocumento())).thenReturn(false);
+        when(tipoDocumentoRepository.findById(1)).thenReturn(Optional.of(tipoDocumento));
+        when(gradoAcademicoRepository.findById(2)).thenReturn(Optional.of(grado));
+        when(rolRepository.findByNombreIgnoreCase("DOCENTE")).thenReturn(Optional.of(rol));
+        when(passwordEncoder.encode("secret123")).thenReturn("encoded");
+        when(usuarioRepository.save(usuario)).thenReturn(usuario);
+        when(docenteRepository.save(docente)).thenReturn(docente);
+
+        Docente resultado = docenteService.crear(usuario, docente, 2, 1, null);
+
+        assertThat(resultado.getEspecializacion()).isNull();
+        assertThat(resultado.getEspecialidad()).isEqualTo("Matemáticas");
+        verify(especializacionRepository, never()).findById(any());
+        verify(docenteRepository, times(1)).save(docente);
+    }
 }
+

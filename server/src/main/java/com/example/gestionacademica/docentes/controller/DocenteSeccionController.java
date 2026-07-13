@@ -9,6 +9,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -86,6 +87,7 @@ public class DocenteSeccionController {
      * @return asignacion creada
      */
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear asignacion docente-seccion")
     public ResponseEntity<DocenteSeccion> crear(
             @Parameter(description = "ID del docente", example = "1")
@@ -103,6 +105,7 @@ public class DocenteSeccionController {
      * @return respuesta sin contenido
      */
     @DeleteMapping("/{idDocente}/{idSeccion}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar asignacion docente-seccion")
     public ResponseEntity<Void> eliminar(
             @Parameter(description = "ID del docente", example = "1")

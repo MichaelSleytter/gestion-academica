@@ -15,6 +15,11 @@ public interface SeccionRepository extends JpaRepository<Seccion, Integer>, JpaS
 
     Optional<Seccion> findByCodigoSeccion(String codigoSeccion);
 
+    Optional<Seccion> findTopByCurso_IdCursoAndCicloAcademico_IdCicloAndCodigoSeccionStartingWithOrderByCodigoSeccionDesc(
+            Integer idCurso,
+            Integer idCiclo,
+            String codigoSeccionPrefix);
+
     List<Seccion> findByCurso_IdCurso(Integer idCurso);
 
     List<Seccion> findByCicloAcademico_IdCiclo(Integer idCiclo);

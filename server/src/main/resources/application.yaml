@@ -45,7 +45,7 @@ spring:
     hibernate:
       # Validate that JPA entities match the DB schema managed by Flyway
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -91,7 +91,7 @@ springdoc:
 # ============================================
 logging:
   level:
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: INFO
     com.example.gestionacademica: INFO
 # ============================================
 # CORS
@@ -108,6 +108,10 @@ app:
   # URL base del frontend (Angular) usada para construir enlaces de reset
   frontend:
     base-url: ${FRONTEND_BASE_URL:http://localhost:4200}
+  insforge:
+    storage:
+      base-url: ${INSFORGE_URL:https://3auan78u.us-east.insforge.app}
+      anon-key: ${INSFORGE_ANON_KEY:}
 
 # ============================================
 # JWT CONFIGURATION
@@ -116,9 +120,15 @@ app:
 # En producción: usa una clave de mínimo 256 bits
 # Genera una con: openssl rand -base64 32
 jwt:
-  secret: ${JWT_SECRET:miSuperSecretKeyQueDebeSerMuyLargaYSeguraParaProduccion2024!}
+  secret: ${JWT_SECRET}
   # Tiempo de expiración del Access Token en milisegundos
   # 15 minutos = 15 * 60 * 1000 = 900000 ms
   access-token-expiration: ${JWT_ACCESS_EXPIRATION:900000}
   # Tiempo de expiración del Refresh Token en días
   refresh-token-expiration-days: ${JWT_REFRESH_EXPIRATION_DAYS:7}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

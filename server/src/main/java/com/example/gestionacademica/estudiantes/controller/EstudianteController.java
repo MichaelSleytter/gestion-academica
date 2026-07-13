@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -99,6 +100,7 @@ public class EstudianteController {
     // ─────────────────────────────────────────────────────────────────
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Crear nuevo estudiante", description = "Registra un nuevo estudiante junto con su usuario base en el sistema")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Estudiante creado correctamente"),
@@ -133,6 +135,7 @@ public class EstudianteController {
     // ─────────────────────────────────────────────────────────────────
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Actualizar estudiante", description = "Actualiza los datos academicos de un estudiante existente")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Estudiante actualizado correctamente"),
@@ -161,6 +164,7 @@ public class EstudianteController {
     // ─────────────────────────────────────────────────────────────────
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar estudiante", description = "Elimina un estudiante del sistema por su ID")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Estudiante eliminado correctamente"),

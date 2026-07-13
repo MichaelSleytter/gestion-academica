@@ -7,6 +7,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.gestionacademica.cursos.domain.CicloAcademico;
+import com.example.gestionacademica.cursos.domain.Curso;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.cursos.repository.CicloAcademicoRepository;
 import com.example.gestionacademica.cursos.repository.CursoRepository;
@@ -107,4 +109,61 @@ class SeccionServiceTest {
 
         verify(seccionRepository, never()).deleteById(999);
     }
+
+    /** Verifica que generarProximoCodigo use siglas, sufijo de ciclo y secuencia. */
+    @Test
+    @DisplayName("generarProximoCodigo: debe usar siglas de curso, ciclo y secuencia")
+    void generarProximoCodigo_debeUsarSiglasCicloYSecuencia() {
+        Curso curso = new Curso();
+        curso.setIdCurso(1);
+        curso.setNombre("Matemáticas I");
+
+        CicloAcademico ciclo = new CicloAcademico();
+        ciclo.setIdCiclo(2);
+        ciclo.setNombre("2026-I");
+
+        Seccion existente = new Seccion();
+        existente.setCodigoSeccion("MAT-I-002");
+
+        when(cursoRepository.findById(1)).thenReturn(Optional.of(curso));
+        when(cicloAcademicoRepository.findById(2)).thenReturn(Optional.of(ciclo));
+        when(seccionRepository.findTopByCurso_IdCursoAndCicloAcademico_IdCicloAndCodigoSeccionStartingWithOrderByCodigoSeccionDesc(
+                1, 2, "MAT-I-"))
+            .thenReturn(Optional.of(existente));
+
+        String codigo = seccionService.generarProximoCodigo(1, 2);
+
+        assertThat(codigo).isEqualTo("MAT-I-003");
+    }
+
+    /** Verifica que crear genere el codigo cuando no se envia manualmente. */
+    @Test
+    @DisplayName("crear: debe autogenerar codigo cuando viene vacio")
+    void crear_conCodigoVacio_debeAutogenerarCodigo() {
+        Curso curso = new Curso();
+        curso.setIdCurso(1);
+        curso.setNombre("Programación Web");
+
+        CicloAcademico ciclo = new CicloAcademico();
+        ciclo.setIdCiclo(2);
+        ciclo.setNombre("2026-II");
+
+        Seccion seccion = new Seccion();
+        seccion.setCodigoSeccion(" ");
+        seccion.setVacantes(30);
+
+        when(cursoRepository.findById(1)).thenReturn(Optional.of(curso));
+        when(cicloAcademicoRepository.findById(2)).thenReturn(Optional.of(ciclo));
+        when(seccionRepository.findTopByCurso_IdCursoAndCicloAcademico_IdCicloAndCodigoSeccionStartingWithOrderByCodigoSeccionDesc(
+                1, 2, "PRO-II-"))
+            .thenReturn(Optional.empty());
+        when(seccionRepository.existsByCodigoSeccion("PRO-II-001")).thenReturn(false);
+        when(seccionRepository.save(seccion)).thenReturn(seccion);
+
+        Seccion resultado = seccionService.crear(seccion, 1, 2);
+
+        assertThat(resultado.getCodigoSeccion()).isEqualTo("PRO-II-001");
+        assertThat(resultado.getColor()).isNotBlank();
+    }
 }
+

@@ -3,6 +3,7 @@ package com.example.gestionacademica.matriculas.service;
 import com.example.gestionacademica.estudiantes.domain.Estudiante;
 import com.example.gestionacademica.matriculas.domain.Matricula;
 import com.example.gestionacademica.matriculas.domain.MatriculaEstado;
+import com.example.gestionacademica.matriculas.dto.MatriculaMisCursosDTO;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.estudiantes.repository.EstudianteRepository;
 import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
@@ -46,6 +47,35 @@ public class MatriculaService {
      */
     public List<Matricula> listarPorEstudiante(Integer idEstudiante) {
         return matriculaRepository.findByEstudiante_IdUsuario(idEstudiante);
+    }
+
+    /**
+     * Obtiene los cursos activos del estudiante autenticado con datos
+     * de sección, curso y ciclo académico.
+     *
+     * @param idEstudiante ID del estudiante (idUsuario).
+     * @return Lista de DTOs con datos de matrícula, sección y curso.
+     */
+    public List<MatriculaMisCursosDTO> listarMisCursos(Integer idEstudiante) {
+        return matriculaRepository.findActiveByEstudianteIdWithSeccionCurso(idEstudiante)
+                .stream()
+                .map(this::aMisCursosDTO)
+                .toList();
+    }
+
+    private MatriculaMisCursosDTO aMisCursosDTO(Matricula matricula) {
+        var seccion = matricula.getSeccion();
+        var curso = seccion.getCurso();
+        return new MatriculaMisCursosDTO(
+                matricula.getIdMatricula(),
+                matricula.getEstado().name(),
+                seccion.getIdSeccion(),
+                seccion.getCodigoSeccion(),
+                seccion.getCicloAcademicoNombre(),
+                curso.getIdCurso(),
+                curso.getNombre(),
+                curso.getCreditos()
+        );
     }
 
     /**

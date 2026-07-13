@@ -27,10 +27,20 @@ public class DocenteMapper {
         if (docente == null) return null;
 
         DocenteResponseDTO.DocenteResponseDTOBuilder constructorRespuesta =
-            DocenteResponseDTO.builder()
-                .idUsuario(docente.getIdUsuario())
-                .especialidad(docente.getEspecialidad())
-                .idGrado(
+                DocenteResponseDTO.builder()
+                    .idUsuario(docente.getIdUsuario())
+                    .especialidad(docente.getEspecialidad())
+                    .idEspecializacion(
+                        docente.getEspecializacion() != null
+                            ? docente.getEspecializacion().getIdEspecializacion()
+                            : null
+                    )
+                    .nombreEspecializacion(
+                        docente.getEspecializacion() != null
+                            ? docente.getEspecializacion().getNombre()
+                            : null
+                    )
+                    .idGrado(
                     docente.getGradoAcademico() != null
                         ? docente.getGradoAcademico().getIdGrado()
                         : null
