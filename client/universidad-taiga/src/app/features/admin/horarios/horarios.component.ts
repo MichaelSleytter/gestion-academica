@@ -3,8 +3,10 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   TuiButton,
+  TuiDataList,
   TuiDialog,
   TuiDialogService,
+  TuiDropdown,
   TuiHint,
   TuiIcon,
   TuiInput,
@@ -12,10 +14,10 @@ import {
   TuiTextfield,
   TuiTitle,
 } from '@taiga-ui/core';
-import { TuiPlatform, TuiTime } from '@taiga-ui/cdk';
+import { TuiPlatform, type TuiStringHandler } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import { TUI_CONFIRM, type TuiConfirmData, TuiInputTime, TuiSkeleton, tuiCreateTimePeriods, tuiInputTimeOptionsProvider } from '@taiga-ui/kit';
+import { TUI_CONFIRM, type TuiConfirmData, TuiChevron, TuiSelect, TuiSkeleton } from '@taiga-ui/kit';
 import { firstValueFrom } from 'rxjs';
 import { HorarioResponse } from '../../../models/horario/horario.response';
 import { HorarioCreateRequest } from '../../../models/horario/horario.request';
@@ -48,41 +50,76 @@ interface DialogObserver {
   complete(): void;
 }
 
+export interface TimeOption {
+  readonly value: string;
+  readonly label: string;
+}
+
+const TIME_OPTION_START_MINUTES = 8 * 60 + 30;
+const TIME_OPTION_END_MINUTES = 22 * 60 + 30;
+const TIME_OPTION_STEP_MINUTES = 30;
+
+export function createTimeOptions(
+  startMinutes = TIME_OPTION_START_MINUTES,
+  endMinutes = TIME_OPTION_END_MINUTES,
+  stepMinutes = TIME_OPTION_STEP_MINUTES,
+): readonly TimeOption[] {
+  const options: TimeOption[] = [];
+
+  for (let minutes = startMinutes; minutes <= endMinutes; minutes += stepMinutes) {
+    options.push({
+      value: formatTimeValue(minutes),
+      label: formatTimeLabel(minutes),
+    });
+  }
+
+  return options;
+}
+
+function formatTimeValue(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function formatTimeLabel(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+
+  return `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+}
+
+function clampTimeMinutes(totalMinutes: number): number {
+  return Math.min(Math.max(totalMinutes, TIME_OPTION_START_MINUTES), TIME_OPTION_END_MINUTES);
+}
+
 @Component({
   selector: 'app-horarios',
   imports: [
     ReactiveFormsModule,
     TuiButton,
     TuiCardLarge,
+    TuiChevron,
+    TuiDataList,
     TuiDialog,
+    TuiDropdown,
     TuiHeader,
     TuiHint,
     TuiInput,
     TuiPlatform,
+    TuiSelect,
     TuiTextfield,
     TuiTable,
     TuiTitle,
     TuiIcon,
-    TuiInputTime,
     TuiSkeleton,
   ],
   templateUrl: './horarios.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [
-    tuiInputTimeOptionsProvider({
-      valueTransformer: {
-        fromControlValue(controlValue: string): TuiTime | null {
-          if (!controlValue) return null;
-          const [hours, minutes] = controlValue.split(':').map(Number);
-          return isNaN(hours) || isNaN(minutes) ? null : new TuiTime(hours, minutes);
-        },
-        toControlValue(time: TuiTime | null): string {
-          return time ? time.toString('HH:MM') : '';
-        },
-      },
-    }),
-  ],
 })
 /**
  * Página de gestión de horarios académicos.
@@ -231,11 +268,11 @@ export class Horarios {
   protected readonly calendarHours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
   protected readonly hourHeight = HOUR_HEIGHT;
 
-  /** 30-min interval times for the time picker suggestions. */
-  protected readonly acceptableTimes: readonly TuiTime[] = (() => {
-    const periods = tuiCreateTimePeriods(START_HOUR, END_HOUR, [0, 30]);
-    return [...periods, new TuiTime(END_HOUR, 0)];
-  })();
+  /** 30-minute selectable time slots from 08:30 AM to 10:30 PM. */
+  protected readonly timeOptions = createTimeOptions();
+
+  protected readonly timeOptionLabel: TuiStringHandler<string> = (value) =>
+    this.timeOptions.find((option) => option.value === value)?.label ?? value;
 
   readonly selectedSectionId = signal<number | null>(null);
   readonly selectedDayIndex = signal<number | null>(null);
@@ -287,11 +324,13 @@ export class Horarios {
   }
 
   openCrearDesdeSlot(dayIndex: number, hour: number): void {
+    const slot = this.defaultSlotTime(hour);
+
     this.openNuevoHorarioModal();
     this.horarioForm.patchValue({
       diaSemana: this.calendarDays[dayIndex] ?? this.calendarDays[0],
-      horaInicio: this.formatHour(hour),
-      horaFin: this.formatHour(hour + 1),
+      horaInicio: slot.horaInicio,
+      horaFin: slot.horaFin,
     });
   }
 
@@ -432,6 +471,20 @@ export class Horarios {
 
   formatHour(hour: number): string {
     return `${String(hour).padStart(2, '0')}:00`;
+  }
+
+  private defaultSlotTime(hour: number): Pick<HorarioCreateRequest, 'horaInicio' | 'horaFin'> {
+    const startMinutes = clampTimeMinutes(hour * 60);
+    const preferredEndMinutes = clampTimeMinutes((hour + 1) * 60);
+    const endMinutes = Math.max(
+      preferredEndMinutes,
+      Math.min(startMinutes + TIME_OPTION_STEP_MINUTES, TIME_OPTION_END_MINUTES),
+    );
+
+    return {
+      horaInicio: formatTimeValue(startMinutes),
+      horaFin: formatTimeValue(endMinutes),
+    };
   }
 
   onDragStart(event: DragEvent, calendarEvent: CalendarHorarioEvent): void {

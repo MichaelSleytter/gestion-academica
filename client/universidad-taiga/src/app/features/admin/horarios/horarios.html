@@ -377,18 +377,28 @@
       }
 
       <!-- Hora inicio -->
-      <tui-textfield tuiTextfieldSize="m">
+      <tui-textfield tuiChevron tuiTextfieldSize="m" [stringify]="timeOptionLabel">
         <label tuiLabel>Hora de inicio</label>
-        <input placeholder="Ej: 08:00" tuiInputTime [accept]="acceptableTimes" formControlName="horaInicio" />
+        <input placeholder="Seleccionar hora de inicio" tuiSelect formControlName="horaInicio" />
+        <tui-data-list *tuiDropdown>
+          @for (time of timeOptions; track time.value) {
+          <button tuiOption type="button" [value]="time.value">{{ time.label }}</button>
+          }
+        </tui-data-list>
       </tui-textfield>
       @if (horarioForm.controls.horaInicio.touched && horarioForm.controls.horaInicio.invalid) {
       <p class="-mt-3 text-xs text-red-500">La hora de inicio es obligatoria</p>
       }
 
       <!-- Hora fin -->
-      <tui-textfield tuiTextfieldSize="m">
+      <tui-textfield tuiChevron tuiTextfieldSize="m" [stringify]="timeOptionLabel">
         <label tuiLabel>Hora de fin</label>
-        <input placeholder="Ej: 10:00" tuiInputTime [accept]="acceptableTimes" formControlName="horaFin" />
+        <input placeholder="Seleccionar hora de fin" tuiSelect formControlName="horaFin" />
+        <tui-data-list *tuiDropdown>
+          @for (time of timeOptions; track time.value) {
+          <button tuiOption type="button" [value]="time.value">{{ time.label }}</button>
+          }
+        </tui-data-list>
       </tui-textfield>
       @if (horarioForm.controls.horaFin.touched && horarioForm.controls.horaFin.invalid) {
       <p class="-mt-3 text-xs text-red-500">La hora de fin es obligatoria</p>

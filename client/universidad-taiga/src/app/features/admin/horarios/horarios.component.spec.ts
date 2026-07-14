@@ -10,7 +10,20 @@ import {
   provideQueryTestClient,
 } from '../../../testing/angular-test-providers';
 
-import { Horarios } from './horarios.component';
+import { Horarios, createTimeOptions } from './horarios.component';
+
+describe('createTimeOptions', () => {
+  it('should create 30-minute options from 08:30 AM to 10:30 PM', () => {
+    const options = createTimeOptions();
+
+    expect(options).toHaveLength(29);
+    expect(options[0]).toEqual({ value: '08:30', label: '08:30 AM' });
+    expect(options[1]).toEqual({ value: '09:00', label: '09:00 AM' });
+    expect(options[2]).toEqual({ value: '09:30', label: '09:30 AM' });
+    expect(options.at(-2)).toEqual({ value: '22:00', label: '10:00 PM' });
+    expect(options.at(-1)).toEqual({ value: '22:30', label: '10:30 PM' });
+  });
+});
 
 describe('Horarios', () => {
   let component: Horarios;
@@ -59,6 +72,16 @@ describe('Horarios', () => {
     expect(component.horarioForm.controls.diaSemana.value).toBe('Miércoles');
     expect(component.horarioForm.controls.horaInicio.value).toBe('09:00');
     expect(component.horarioForm.controls.horaFin.value).toBe('10:00');
+  });
+
+  it('should keep calendar slot prefills inside selectable time bounds', () => {
+    component.openCrearDesdeSlot(0, 7);
+    expect(component.horarioForm.controls.horaInicio.value).toBe('08:30');
+    expect(component.horarioForm.controls.horaFin.value).toBe('09:00');
+
+    component.openCrearDesdeSlot(0, 22);
+    expect(component.horarioForm.controls.horaInicio.value).toBe('22:00');
+    expect(component.horarioForm.controls.horaFin.value).toBe('22:30');
   });
 
   it('should open edit mode when a calendar event is selected', () => {
