@@ -12,7 +12,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import {
   TuiButton,
+  TuiDataList,
   TuiDialog,
+  TuiDropdown,
   TuiIcon,
   TuiInput,
   TuiNotificationService,
@@ -22,14 +24,7 @@ import {
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import {
-  TuiChevron,
-  TuiDataListWrapper,
-  TuiInputColor,
-  TuiSkeleton,
-  TuiSelect,
-  TuiSwitch,
-} from '@taiga-ui/kit';
+import { TuiChevron, TuiInputColor, TuiSkeleton, TuiSelect, TuiSwitch } from '@taiga-ui/kit';
 import type { SeccionResponse } from '../../../models/seccion/seccion.response';
 import type { SeccionCreateRequest } from '../../../models/seccion/seccion.request';
 import {
@@ -67,7 +62,8 @@ interface DialogObserver {
     TuiTitle,
     TuiIcon,
     TuiChevron,
-    TuiDataListWrapper,
+    TuiDataList,
+    TuiDropdown,
     TuiInputColor,
     TuiSkeleton,
     TuiSelect,
@@ -311,7 +307,31 @@ export class Secciones implements OnDestroy {
 
   regenerarCodigoAutomatico(): void {
     this.codigoAutomatico.set(true);
+
+    if (!this.puedeGenerarCodigoAutomatico()) {
+      this.seccionForm.controls.idCurso.markAsTouched();
+      this.seccionForm.controls.idCiclo.markAsTouched();
+      return;
+    }
+
     void this.solicitarCodigoAutomatico();
+  }
+
+  puedeGenerarCodigoAutomatico(): boolean {
+    const value = this.seccionForm.getRawValue();
+    return Boolean(this.codigoAutomatico() && value.idCurso?.idCurso && value.idCiclo?.idCiclo);
+  }
+
+  puedeGuardarSeccion(): boolean {
+    if (this.isGuardando() || this.codigoAutomaticoCargando()) {
+      return false;
+    }
+
+    if (!this.codigoAutomatico()) {
+      return true;
+    }
+
+    return Boolean(this.seccionForm.controls.codigoSeccion.value.trim());
   }
 
   // ─── Modales ─────────────────────────────────────────────────────────
@@ -571,7 +591,15 @@ export class Secciones implements OnDestroy {
     const idCurso = value.idCurso?.idCurso;
     const idCiclo = value.idCiclo?.idCiclo;
 
-    if (this.modoFormulario() !== 'crear' || !this.codigoAutomatico() || !idCurso || !idCiclo) {
+    if (this.modoFormulario() !== 'crear' || !this.codigoAutomatico()) {
+      return;
+    }
+
+    if (!idCurso || !idCiclo) {
+      this.codigoSolicitudSecuencia++;
+      this.codigoAutomaticoCargando.set(false);
+      this.codigoAutomaticoError.set(null);
+      this.seccionForm.controls.codigoSeccion.setValue('', { emitEvent: false });
       return;
     }
 

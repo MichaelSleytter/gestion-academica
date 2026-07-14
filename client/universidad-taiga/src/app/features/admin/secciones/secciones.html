@@ -285,13 +285,17 @@
           size="m"
           tuiButton
           type="button"
-          [disabled]="!codigoAutomatico() || codigoAutomaticoCargando()"
+          [disabled]="!puedeGenerarCodigoAutomatico() || codigoAutomaticoCargando()"
           (click)="regenerarCodigoAutomatico()"
         >
           Regenerar
         </button>
       </div>
-      @if (codigoAutomaticoCargando()) {
+      @if (codigoAutomatico() && !puedeGenerarCodigoAutomatico()) {
+        <p class="text-xs text-text-secondary -mt-3">
+          Seleccioná curso y ciclo para generar el código automáticamente.
+        </p>
+      } @else if (codigoAutomaticoCargando()) {
         <p class="text-xs text-text-secondary -mt-3">Generando código…</p>
       } @else if (codigoAutomaticoError()) {
         <p class="text-xs text-red-500 -mt-3">{{ codigoAutomaticoError() }}</p>
@@ -318,7 +322,13 @@
           tuiSelect
           formControlName="idCurso"
         />
-        <tui-data-list-wrapper *tuiDropdown [items]="cursosList()" />
+        <tui-data-list *tuiDropdown>
+          @for (curso of cursosList(); track curso.idCurso) {
+            <button tuiOption type="button" [value]="curso">{{ curso.nombre }}</button>
+          } @empty {
+            <button tuiOption type="button" [disabled]="true">No hay cursos disponibles</button>
+          }
+        </tui-data-list>
       </tui-textfield>
       @if (seccionForm.controls.idCurso.touched && seccionForm.controls.idCurso.invalid) {
         <p class="text-xs text-red-500 -mt-3">El curso es obligatorio</p>
@@ -334,7 +344,13 @@
           tuiSelect
           formControlName="idCiclo"
         />
-        <tui-data-list-wrapper *tuiDropdown [items]="ciclosList()" />
+        <tui-data-list *tuiDropdown>
+          @for (ciclo of ciclosList(); track ciclo.idCiclo) {
+            <button tuiOption type="button" [value]="ciclo">{{ ciclo.nombre }}</button>
+          } @empty {
+            <button tuiOption type="button" [disabled]="true">No hay ciclos disponibles</button>
+          }
+        </tui-data-list>
       </tui-textfield>
       @if (seccionForm.controls.idCiclo.touched && seccionForm.controls.idCiclo.invalid) {
         <p class="text-xs text-red-500 -mt-3">El ciclo académico es obligatorio</p>
@@ -394,7 +410,7 @@
           size="m"
           tuiButton
           type="submit"
-          [disabled]="isGuardando()"
+          [disabled]="!puedeGuardarSeccion()"
           (click)="guardarSeccion(observer)"
         >
           {{ modoFormulario() === 'crear' ? 'Crear' : 'Guardar' }}
@@ -467,7 +483,15 @@
             autocomplete="off"
             placeholder="Seleccionar docente"
           />
-          <tui-data-list-wrapper *tuiDropdown [items]="docentesDisponibles()" />
+          <tui-data-list *tuiDropdown>
+            @for (docente of docentesDisponibles(); track docente.idUsuario) {
+              <button tuiOption type="button" [value]="docente">
+                {{ docenteNombre(docente) }}
+              </button>
+            } @empty {
+              <button tuiOption type="button" [disabled]="true">No hay docentes disponibles</button>
+            }
+          </tui-data-list>
         </tui-textfield>
         <button
           appearance="primary"

@@ -128,6 +128,7 @@ describe('Secciones', () => {
       .mockImplementation(() => undefined as never);
 
     component.modoFormulario.set('crear');
+    component.activarCodigoManual(true);
     component.seccionForm.patchValue({
       codigoSeccion: 'MAT-I-001',
       vacantes: 30,
