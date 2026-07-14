@@ -5,11 +5,7 @@ import { type Observable, tap, catchError, throwError, finalize, shareReplay } f
 import { APP_API_URL } from '../tokens/api.tokens';
 import { TokenService } from './token.service';
 import { RoleService } from './role.service';
-import {
-  ForgotPasswordRequest,
-  ResetPasswordRequest,
-  type MessageResponse,
-} from '../../models/auth.model';
+import type { MessageResponse } from '../../models/auth.model';
 
 /**
  * AuthService: operaciones HTTP de autenticación.
@@ -29,7 +25,11 @@ export class AuthService {
   private readonly apiUrl = `${this.apiBaseUrl}/auth`;
 
   private isVerifying = false;
-  private refreshRequest$: Observable<{ accessToken: string; tokenType: string; expiresIn: number }> | null = null;
+  private refreshRequest$: Observable<{
+    accessToken: string;
+    tokenType: string;
+    expiresIn: number;
+  }> | null = null;
 
   constructor() {
     // Al iniciar, intentamos renovar la sesión mediante la cookie httpOnly.
@@ -155,7 +155,10 @@ export class AuthService {
         catchError((error) => {
           this.tokenService.clearToken();
           this.roleService.clearRoles();
-          this.router.navigate(['/login']);
+          // No navegar a login aquí — el interceptor HTTP ya maneja
+          // el logout si una request real falla después del refresh.
+          // Esto evita que un refresh fallido (por timeout de red,
+          // por ejemplo) saque al usuario de la sesión abruptamente.
           return throwError(() => error);
         }),
         finalize(() => {
@@ -212,6 +215,11 @@ export class AuthService {
    */
   forceRefresh(): void {
     this.tokenService.cancelRefresh();
-    this.refresh().subscribe();
+    this.refresh().subscribe({
+      error: () => {
+        // Refresh silencioso falló — el interceptor se encargará
+        // de redirigir a login cuando una request real falle.
+      },
+    });
   }
 }
