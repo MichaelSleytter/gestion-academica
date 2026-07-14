@@ -17,6 +17,7 @@ import {
   TuiTitle,
 } from '@taiga-ui/core';
 import { TuiPlatform } from '@taiga-ui/cdk';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormsModule, Validators } from '@angular/forms';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
@@ -77,6 +78,9 @@ interface DialogObserver {
 export class Docentes {
   private readonly formBuilder = inject(FormBuilder);
   private readonly notifications = inject(TuiNotificationService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly initialQueryParams = this.route.snapshot.queryParamMap;
 
   /** Columnas de la tabla. */
   readonly columns = [
@@ -88,14 +92,16 @@ export class Docentes {
     'acciones',
   ] as const;
 
-  /** Modo de visualización. */
-  readonly viewMode = signal<'grid' | 'row'>('row');
+  /** Modo de visualización: grilla de tarjetas o filas de tabla. */
+  readonly viewMode = signal<'grid' | 'row'>(
+    this.initialQueryParams.get('view') === 'grid' ? 'grid' : 'row',
+  );
 
   // ─── Paginación y búsqueda ───────────────────────────────────────────
 
-  readonly pagina = signal(0);
+  readonly pagina = signal(this.getInitialPage());
   readonly tamaño = signal(10);
-  readonly busqueda = signal('');
+  readonly busqueda = signal(this.initialQueryParams.get('q')?.trim() ?? '');
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly docentesQuery = useDocentesPaginadosQuery(this.pagina, this.tamaño, this.busqueda);
@@ -170,6 +176,7 @@ export class Docentes {
 
   setViewMode(index: number): void {
     this.viewMode.set(index === 0 ? 'grid' : 'row');
+    this.syncListQueryParams();
   }
 
   // ─── Búsqueda ────────────────────────────────────────────────────────
@@ -179,17 +186,27 @@ export class Docentes {
     this.debounceTimer = setTimeout(() => {
       this.busqueda.set(texto.trim());
       this.pagina.set(0);
+      this.syncListQueryParams();
     }, 300);
   }
 
   // ─── Paginación ──────────────────────────────────────────────────────
 
+  setPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    this.syncListQueryParams();
+  }
+
   paginaAnterior(): void {
-    if (this.pagina() > 0) this.pagina.update((p) => p - 1);
+    if (this.pagina() > 0) {
+      this.setPagina(this.pagina() - 1);
+    }
   }
 
   paginaSiguiente(): void {
-    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update((p) => p + 1);
+    if (this.pagina() < this.totalPaginas() - 1) {
+      this.setPagina(this.pagina() + 1);
+    }
   }
 
   readonly hayPaginaAnterior = computed(() => this.pagina() > 0);
@@ -359,6 +376,25 @@ export class Docentes {
 
   isEliminando(): boolean {
     return this.eliminarDocenteMutation.isPending();
+  }
+
+  private syncListQueryParams(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        view: this.viewMode() === 'grid' ? 'grid' : null,
+        q: this.busqueda() || null,
+        page: this.pagina() > 0 ? this.pagina() + 1 : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private getInitialPage(): number {
+    const rawPage = Number(this.initialQueryParams.get('page'));
+    if (!Number.isInteger(rawPage) || rawPage <= 1) return 0;
+    return rawPage - 1;
   }
 
   // ─── Privados ────────────────────────────────────────────────────────

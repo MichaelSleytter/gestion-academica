@@ -3,27 +3,49 @@
   tuiForm="m"
   [formGroup]="form()"
   novalidate
-  (ngSubmit)="guardar.emit()"
+  (ngSubmit)="submit()"
 >
   <!-- Fila 1: Nombre + Apellido -->
   <div class="grid grid-cols-2 gap-x-4 gap-y-5">
     <div class="flex flex-col">
       <tui-textfield>
         <label tuiLabel>Nombre</label>
-        <input formControlName="nombre" placeholder="Ej. Juan" tuiInput />
+        <input
+          formControlName="nombre"
+          name="nombre"
+          autocomplete="given-name"
+          placeholder="Ej. Juan…"
+          tuiInput
+          aria-describedby="nombre-error"
+          [attr.aria-invalid]="getFieldError('nombre') ? 'true' : null"
+        />
       </tui-textfield>
-      @let nombreError = getFieldError('nombre'); @if (nombreError) {
-      <span class="mt-3 text-xs text-danger">{{ nombreError }}</span>
+      @let nombreError = getFieldError('nombre');
+      @if (nombreError) {
+        <span id="nombre-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+          nombreError
+        }}</span>
       }
     </div>
 
     <div class="flex flex-col">
       <tui-textfield>
         <label tuiLabel>Apellido</label>
-        <input formControlName="apellido" placeholder="Ej. Pérez" tuiInput />
+        <input
+          formControlName="apellido"
+          name="apellido"
+          autocomplete="family-name"
+          placeholder="Ej. Pérez…"
+          tuiInput
+          aria-describedby="apellido-error"
+          [attr.aria-invalid]="getFieldError('apellido') ? 'true' : null"
+        />
       </tui-textfield>
-      @let apellidoError = getFieldError('apellido'); @if (apellidoError) {
-      <span class="mt-3 text-xs text-danger">{{ apellidoError }}</span>
+      @let apellidoError = getFieldError('apellido');
+      @if (apellidoError) {
+        <span id="apellido-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+          apellidoError
+        }}</span>
       }
     </div>
   </div>
@@ -33,10 +55,24 @@
     <div class="flex flex-col col-span-2">
       <tui-textfield class="w-full">
         <label tuiLabel>Correo electrónico</label>
-        <input formControlName="email" placeholder="ejemplo@correo.com" tuiInput type="email" />
+        <input
+          formControlName="email"
+          name="email"
+          autocomplete="email"
+          inputmode="email"
+          spellcheck="false"
+          placeholder="ejemplo@correo.com…"
+          tuiInput
+          type="email"
+          aria-describedby="email-error"
+          [attr.aria-invalid]="getFieldError('email') ? 'true' : null"
+        />
       </tui-textfield>
-      @let emailError = getFieldError('email'); @if (emailError) {
-      <span class="mt-3 text-xs text-danger">{{ emailError }}</span>
+      @let emailError = getFieldError('email');
+      @if (emailError) {
+        <span id="email-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+          emailError
+        }}</span>
       }
     </div>
   </div>
@@ -46,21 +82,44 @@
     <div class="flex flex-col">
       <tui-textfield tuiChevron [stringify]="stringifyTipoDocumento">
         <label tuiLabel>Tipo de documento</label>
-        <input formControlName="tipoDocumento" placeholder="Selecciona" tuiSelect />
+        <input
+          formControlName="tipoDocumento"
+          name="tipoDocumento"
+          autocomplete="off"
+          placeholder="Selecciona…"
+          tuiSelect
+          aria-describedby="tipoDocumento-error"
+          [attr.aria-invalid]="getFieldError('tipoDocumento') ? 'true' : null"
+        />
         <tui-data-list-wrapper *tuiDropdown [items]="tiposDocumento()" />
       </tui-textfield>
-      @let tipoDocError = getFieldError('tipoDocumento'); @if (tipoDocError) {
-      <span class="mt-3 text-xs text-danger">{{ tipoDocError }}</span>
+      @let tipoDocError = getFieldError('tipoDocumento');
+      @if (tipoDocError) {
+        <span id="tipoDocumento-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+          tipoDocError
+        }}</span>
       }
     </div>
 
     <div class="flex flex-col">
       <tui-textfield>
         <label tuiLabel>Número de documento</label>
-        <input formControlName="numeroDocumento" placeholder="Ej. 75896324" tuiInput />
+        <input
+          formControlName="numeroDocumento"
+          name="numeroDocumento"
+          autocomplete="off"
+          inputmode="numeric"
+          placeholder="Ej. 75896324…"
+          tuiInput
+          aria-describedby="numeroDocumento-error"
+          [attr.aria-invalid]="getFieldError('numeroDocumento') ? 'true' : null"
+        />
       </tui-textfield>
-      @let numDocError = getFieldError('numeroDocumento'); @if (numDocError) {
-      <span class="mt-3 text-xs text-danger">{{ numDocError }}</span>
+      @let numDocError = getFieldError('numeroDocumento');
+      @if (numDocError) {
+        <span id="numeroDocumento-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+          numDocError
+        }}</span>
       }
     </div>
   </div>
@@ -70,57 +129,105 @@
     <div class="flex flex-col">
       <tui-textfield tuiChevron [stringify]="stringifyEspecializacion">
         <label tuiLabel>Especialización</label>
-        <input formControlName="especializacion" placeholder="Selecciona especialización" tuiSelect />
+        <input
+          formControlName="especializacion"
+          name="especializacion"
+          autocomplete="off"
+          placeholder="Selecciona especialización…"
+          tuiSelect
+          aria-describedby="especializacion-error"
+          [attr.aria-invalid]="getFieldError('especializacion') ? 'true' : null"
+        />
         <tui-data-list-wrapper *tuiDropdown [items]="especializaciones()" />
       </tui-textfield>
-      @let espError = getFieldError('especializacion'); @if (espError) {
-      <span class="mt-3 text-xs text-danger">{{ espError }}</span>
+      @let espError = getFieldError('especializacion');
+      @if (espError) {
+        <span id="especializacion-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+          espError
+        }}</span>
       }
     </div>
 
     <div class="flex flex-col">
       <tui-textfield tuiChevron [stringify]="stringifyGrado">
         <label tuiLabel>Grado académico</label>
-        <input formControlName="grado" placeholder="Selecciona grado" tuiSelect />
+        <input
+          formControlName="grado"
+          name="grado"
+          autocomplete="off"
+          placeholder="Selecciona grado…"
+          tuiSelect
+          aria-describedby="grado-error"
+          [attr.aria-invalid]="getFieldError('grado') ? 'true' : null"
+        />
         <tui-data-list-wrapper *tuiDropdown [items]="grados()" />
       </tui-textfield>
-      @let gradoError = getFieldError('grado'); @if (gradoError) {
-      <span class="mt-3 text-xs text-danger">{{ gradoError }}</span>
+      @let gradoError = getFieldError('grado');
+      @if (gradoError) {
+        <span id="grado-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+          gradoError
+        }}</span>
       }
     </div>
   </div>
 
   <!-- Fila 5: Contraseña (solo creación / opcional en edición) -->
   @if (modo() === 'crear') {
-  <div class="grid grid-cols-2 gap-x-4 gap-y-5">
-    <div class="flex flex-col col-span-2">
-      <tui-textfield class="w-full">
-        <label tuiLabel>Contraseña</label>
-        <input formControlName="password" placeholder="Mínimo 8 caracteres" tuiInput type="password" />
-      </tui-textfield>
-      @let passError = getFieldError('password'); @if (passError) {
-      <span class="mt-3 text-xs text-danger">{{ passError }}</span>
-      }
+    <div class="grid grid-cols-2 gap-x-4 gap-y-5">
+      <div class="flex flex-col col-span-2">
+        <tui-textfield class="w-full">
+          <label tuiLabel>Contraseña</label>
+          <input
+            formControlName="password"
+            name="password"
+            autocomplete="new-password"
+            placeholder="Mínimo 8 caracteres…"
+            tuiInput
+            type="password"
+            aria-describedby="password-error"
+            [attr.aria-invalid]="getFieldError('password') ? 'true' : null"
+          />
+        </tui-textfield>
+        @let passError = getFieldError('password');
+        @if (passError) {
+          <span id="password-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+            passError
+          }}</span>
+        }
+      </div>
     </div>
-  </div>
   } @else {
-  <div class="grid grid-cols-2 gap-x-4 gap-y-5">
-    <div class="flex flex-col col-span-2">
-      <tui-textfield class="w-full">
-        <label tuiLabel>Nueva contraseña (opcional)</label>
-        <input formControlName="password" placeholder="Dejar vacío para mantener la actual" tuiInput type="password" />
-      </tui-textfield>
-      @let passEditError = getFieldError('password'); @if (passEditError) {
-      <span class="mt-3 text-xs text-danger">{{ passEditError }}</span>
-      }
+    <div class="grid grid-cols-2 gap-x-4 gap-y-5">
+      <div class="flex flex-col col-span-2">
+        <tui-textfield class="w-full">
+          <label tuiLabel>Nueva contraseña (opcional)</label>
+          <input
+            formControlName="password"
+            name="password"
+            autocomplete="new-password"
+            placeholder="Dejar vacío para mantener la actual…"
+            tuiInput
+            type="password"
+            aria-describedby="password-error"
+            [attr.aria-invalid]="getFieldError('password') ? 'true' : null"
+          />
+        </tui-textfield>
+        @let passEditError = getFieldError('password');
+        @if (passEditError) {
+          <span id="password-error" class="mt-3 text-xs text-danger" aria-live="polite">{{
+            passEditError
+          }}</span>
+        }
+      </div>
     </div>
-  </div>
   }
 
   <footer class="flex items-center justify-end gap-3 border-t border-border pt-4">
     <button appearance="secondary" tuiButton type="button" (click)="cancelar.emit()">
       Cancelar
     </button>
-    <button tuiButton type="submit" [disabled]="isGuardando()">{{ getTextoBotonGuardar() }}</button>
+    <button tuiButton type="submit" [disabled]="isGuardando()" aria-live="polite">
+      {{ isGuardando() ? 'Guardando…' : getTextoBotonGuardar() }}
+    </button>
   </footer>
 </form>

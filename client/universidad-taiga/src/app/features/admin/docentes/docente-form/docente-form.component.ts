@@ -1,16 +1,36 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import type { FormGroup } from '@angular/forms';
 import { TuiButton, TuiInput, TuiTextfield } from '@taiga-ui/core';
 import { TuiChevron, TuiDataListWrapper, TuiSelect } from '@taiga-ui/kit';
 import { TuiForm } from '@taiga-ui/layout';
-import type { Especializacion, GradoAcademico, TipoDocumento } from '../../../../models/catalogos/catalogo.response';
+import type {
+  Especializacion,
+  GradoAcademico,
+  TipoDocumento,
+} from '../../../../models/catalogos/catalogo.response';
 
 type ModoFormulario = 'crear' | 'editar';
 
 @Component({
   selector: 'app-docente-form',
-  imports: [ReactiveFormsModule, TuiButton, TuiChevron, TuiDataListWrapper, TuiForm, TuiInput, TuiSelect, TuiTextfield],
+  imports: [
+    ReactiveFormsModule,
+    TuiButton,
+    TuiChevron,
+    TuiDataListWrapper,
+    TuiForm,
+    TuiInput,
+    TuiSelect,
+    TuiTextfield,
+  ],
   templateUrl: './docente-form.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -21,6 +41,8 @@ type ModoFormulario = 'crear' | 'editar';
  * para guardar o cancelar.
  */
 export class DocenteForm {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   readonly form = input.required<FormGroup>();
   readonly modo = input.required<ModoFormulario>();
   readonly tiposDocumento = input<TipoDocumento[]>([]);
@@ -58,5 +80,22 @@ export class DocenteForm {
 
   stringifyEspecializacion(item: Especializacion | null): string {
     return item?.nombre ?? '';
+  }
+
+  submit(): void {
+    if (this.form().invalid) {
+      this.form().markAllAsTouched();
+      setTimeout(() => this.focusFirstInvalidControl());
+      return;
+    }
+
+    this.guardar.emit();
+  }
+
+  private focusFirstInvalidControl(): void {
+    const control = this.elementRef.nativeElement.querySelector(
+      '[aria-invalid="true"]',
+    ) as HTMLElement | null;
+    control?.focus();
   }
 }
