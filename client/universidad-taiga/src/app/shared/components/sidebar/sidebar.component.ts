@@ -33,17 +33,17 @@ type MenuItem = {
   imports: [RouterModule, NgOptimizedImage, NgIcon],
   template: `
     <aside
-      class="flex flex-col items-center w-20 h-screen bg-primary"
+      class="fixed inset-x-0 bottom-0 z-40 flex h-16 flex-row items-center justify-around bg-primary pb-[env(safe-area-inset-bottom)] md:static md:h-screen md:w-20 md:flex-col md:justify-start md:pb-0"
       role="navigation"
       aria-label="Sidebar"
     >
       <!-- Logo -->
-      <div class="p-4 flex items-center justify-center">
+      <div class="hidden p-4 items-center justify-center md:flex">
         <img ngSrc="/assets/logo.png" width="32" height="32" alt="Logo" class="w-8 h-8" />
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 mt-2" aria-label="Main navigation">
+      <nav class="flex flex-1 items-center justify-center gap-1 md:mt-2 md:flex-col md:justify-start md:gap-0" aria-label="Main navigation">
         @for (item of menuItems(); track item.route) {
           <a
             [routerLink]="item.route"
@@ -55,14 +55,14 @@ type MenuItem = {
           >
             <span class="sr-only">{{ item.label }}</span>
             @if (item.icon) {
-              <ng-icon [name]="item.icon" class="nav-icon" size="24" width="24" height="24" />
+              <ng-icon [name]="item.icon" class="nav-icon" size="24" width="24" height="24" aria-hidden="true" />
             }
             <!-- Tooltip on hover -->
             <span
               class="absolute left-full ml-3 px-2 py-1 rounded-md text-xs font-medium whitespace-nowrap
                      bg-white text-primary shadow-md opacity-0 invisible
-                     group-hover:opacity-100 group-hover:visible
-                     transition-all duration-150 z-50"
+                      group-hover:opacity-100 group-hover:visible
+                      transition-[opacity,visibility] duration-150 z-50"
             >
               {{ item.label }}
             </span>
@@ -73,17 +73,17 @@ type MenuItem = {
       </nav>
 
       <!-- Bottom actions: configuración + salir -->
-      <div class="p-3 flex flex-col items-center gap-3">
-        <button
+      <div class="flex items-center gap-1 p-2 md:flex-col md:gap-3 md:p-3">
+        <a
           class="action-btn"
           aria-label="Configuración de perfil"
           [routerLink]="['perfil']"
           routerLinkActive="active"
         >
-          <ng-icon name="tablerSettings" size="24" />
-        </button>
-        <button class="action-btn" aria-label="Cerrar sesión" (click)="onLogout()">
-          <ng-icon name="tablerLogout" size="24" />
+          <ng-icon name="tablerSettings" size="24" aria-hidden="true" />
+        </a>
+        <button class="action-btn" type="button" aria-label="Cerrar sesión" (click)="onLogout()">
+          <ng-icon name="tablerLogout" size="24" aria-hidden="true" />
         </button>
       </div>
     </aside>

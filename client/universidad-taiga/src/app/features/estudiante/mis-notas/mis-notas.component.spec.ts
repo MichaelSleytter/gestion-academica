@@ -1,5 +1,5 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { QueryClient } from '@tanstack/angular-query-experimental';
 import { of } from 'rxjs';
@@ -16,19 +16,18 @@ import {
 } from '../../../testing/angular-test-providers';
 
 describe('MisNotas', () => {
-  let component: MisNotas;
-  let fixture: ComponentFixture<MisNotas>;
+  let component!: MisNotas;
+  let fixture!: ComponentFixture<MisNotas>;
   let estudianteRoleService: { getMisCursos: ReturnType<typeof vi.fn> };
+  let activatedRouteStub: ReturnType<typeof createActivatedRouteStub>;
+  let router: { navigate: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date(2026, 6, 15, 12));
     estudianteRoleService = { getMisCursos: vi.fn().mockResolvedValue([]) };
-    const activatedRouteStub = {
-      paramMap: of({ get: () => null }),
-      url: of([]),
-      snapshot: { paramMap: { get: () => null } },
-    };
+    activatedRouteStub = createActivatedRouteStub();
+    router = { navigate: vi.fn().mockResolvedValue(true) };
 
     await TestBed.configureTestingModule({
       imports: [MisNotas],
@@ -38,21 +37,26 @@ describe('MisNotas', () => {
         provideQueryTestClient(),
         { provide: EstudianteRoleService, useValue: estudianteRoleService },
         { provide: ActivatedRoute, useValue: activatedRouteStub },
+        { provide: Router, useValue: router },
         { provide: APP_API_URL, useValue: 'http://localhost:8080/api/v1' },
       ],
     }).compileComponents();
+  });
 
+  async function createComponent(): Promise<void> {
     fixture = TestBed.createComponent(MisNotas);
     component = fixture.componentInstance;
     await fixture.whenStable();
-  });
+  }
 
   afterEach(() => {
     vi.useRealTimers();
     TestBed.inject(QueryClient).clear();
   });
 
-  it('should create', () => {
+  it('should create', async () => {
+    await createComponent();
+
     expect(component).toBeTruthy();
   });
 
@@ -64,10 +68,7 @@ describe('MisNotas', () => {
       curso(4, '2026-I', '2026-03-01', '2026-07-15', 'RETIRADA'),
     ];
     estudianteRoleService.getMisCursos.mockResolvedValue(cursos);
-    TestBed.inject(QueryClient).clear();
-    fixture = TestBed.createComponent(MisNotas);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
+    await createComponent();
     await vi.waitFor(() => expect(component.cursosMatriculados()).toEqual(cursos));
 
     expect(component.cursosFiltrados().map((item) => item.idSeccion)).toEqual([1]);
@@ -81,7 +82,32 @@ describe('MisNotas', () => {
 
     expect(component.cursosFiltrados().map((item) => item.idSeccion)).toEqual([2]);
   });
+
+  it('falls back to actual when periodo query param is stale', async () => {
+    activatedRouteStub.snapshot.queryParamMap = convertToParamMap({ periodo: '2024-I' });
+    estudianteRoleService.getMisCursos.mockResolvedValue([
+      curso(1, '2026-I', '2026-03-01', '2026-07-15'),
+      curso(2, '2026-II', '2026-08-01', '2026-12-15'),
+    ]);
+    await createComponent();
+    await vi.waitFor(() => expect(component.cursosMatriculados().length).toBe(2));
+
+    expect(component.periodoSeleccionado()).toBe('actual');
+    expect(component.cursosFiltrados().map((item) => item.idSeccion)).toEqual([1]);
+    expect(router.navigate).toHaveBeenCalledWith([], expect.objectContaining({ queryParams: { periodo: null } }));
+  });
 });
+
+function createActivatedRouteStub() {
+  return {
+    paramMap: of(convertToParamMap({})),
+    url: of([]),
+    snapshot: {
+      paramMap: convertToParamMap({}),
+      queryParamMap: convertToParamMap({}),
+    },
+  };
+}
 
 function curso(
   idSeccion: number,

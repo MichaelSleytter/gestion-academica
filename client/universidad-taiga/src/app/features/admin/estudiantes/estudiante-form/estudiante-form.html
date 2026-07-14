@@ -3,91 +3,153 @@
   tuiForm="m"
   [formGroup]="form()"
   novalidate
-  (ngSubmit)="guardar.emit()"
+  (ngSubmit)="submit()"
 >
   <!-- Fila 1: Nombre + Apellido -->
-  <div class="grid grid-cols-2 gap-x-4 gap-y-5">
+  <div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
     <div class="flex flex-col">
       <tui-textfield>
         <label tuiLabel>Nombre</label>
-        <input formControlName="nombre" placeholder="Ej. Juan" tuiInput />
+        <input
+          formControlName="nombre"
+          name="nombre"
+          autocomplete="given-name"
+          placeholder="Ej. Juan…"
+          tuiInput
+          aria-describedby="nombre-error"
+          [attr.aria-invalid]="getFieldError('nombre') ? 'true' : null"
+        />
       </tui-textfield>
       @let nombreError = getFieldError('nombre'); @if (nombreError) {
-      <span class="mt-3 text-xs text-danger">{{ nombreError }}</span>
+      <span id="nombre-error" class="mt-3 text-xs text-danger" aria-live="polite">{{ nombreError }}</span>
       }
     </div>
 
     <div class="flex flex-col">
       <tui-textfield>
         <label tuiLabel>Apellido</label>
-        <input formControlName="apellido" placeholder="Ej. Pérez" tuiInput />
+        <input
+          formControlName="apellido"
+          name="apellido"
+          autocomplete="family-name"
+          placeholder="Ej. Pérez…"
+          tuiInput
+          aria-describedby="apellido-error"
+          [attr.aria-invalid]="getFieldError('apellido') ? 'true' : null"
+        />
       </tui-textfield>
       @let apellidoError = getFieldError('apellido'); @if (apellidoError) {
-      <span class="mt-3 text-xs text-danger">{{ apellidoError }}</span>
+      <span id="apellido-error" class="mt-3 text-xs text-danger" aria-live="polite">{{ apellidoError }}</span>
       }
     </div>
   </div>
 
   <!-- Fila 2: Ciclo -->
-  <div class="grid grid-cols-2 gap-x-4 gap-y-5">
+  <div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
     <div class="flex flex-col">
       <tui-textfield>
         <label tuiLabel>Ciclo</label>
-        <input formControlName="ciclo" placeholder="Ej. 5" tuiInput type="number" />
+        <input
+          formControlName="ciclo"
+          name="ciclo"
+          autocomplete="off"
+          inputmode="numeric"
+          placeholder="Ej. 5…"
+          tuiInput
+          type="number"
+          aria-describedby="ciclo-error"
+          [attr.aria-invalid]="getFieldError('ciclo') ? 'true' : null"
+        />
       </tui-textfield>
       @let cicloError = getFieldError('ciclo'); @if (cicloError) {
-      <span class="mt-3 text-xs text-danger">{{ cicloError }}</span>
+      <span id="ciclo-error" class="mt-3 text-xs text-danger" aria-live="polite">{{ cicloError }}</span>
       }
     </div>
   </div>
 
   <!-- Fila 3: Email (ancho completo) -->
-  <div class="grid grid-cols-2 gap-x-4 gap-y-5">
-    <div class="flex flex-col col-span-2">
+  <div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+    <div class="flex flex-col sm:col-span-2">
       <tui-textfield class="w-full">
         <label tuiLabel>Correo electrónico personal</label>
-        <input formControlName="email" placeholder="ejemplo@correo.com" tuiInput type="email" />
+        <input
+          formControlName="email"
+          name="email"
+          autocomplete="email"
+          inputmode="email"
+          spellcheck="false"
+          placeholder="ejemplo@correo.com…"
+          tuiInput
+          type="email"
+          aria-describedby="email-error"
+          [attr.aria-invalid]="getFieldError('email') ? 'true' : null"
+        />
       </tui-textfield>
       @let emailError = getFieldError('email'); @if (emailError) {
-      <span class="mt-3 text-xs text-danger">{{ emailError }}</span>
+      <span id="email-error" class="mt-3 text-xs text-danger" aria-live="polite">{{ emailError }}</span>
       }
     </div>
   </div>
 
   <!-- Fila 4: Documento -->
-  <div class="grid grid-cols-2 gap-x-4 gap-y-5">
+  <div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
     <div class="flex flex-col">
       <tui-textfield tuiChevron [stringify]="stringifyTipoDocumento">
         <label tuiLabel>Tipo de documento</label>
-        <input formControlName="tipoDocumento" placeholder="Selecciona" tuiSelect />
+        <input
+          formControlName="tipoDocumento"
+          name="tipoDocumento"
+          autocomplete="off"
+          placeholder="Selecciona…"
+          tuiSelect
+          aria-describedby="tipoDocumento-error"
+          [attr.aria-invalid]="getFieldError('tipoDocumento') ? 'true' : null"
+        />
         <tui-data-list-wrapper *tuiDropdown [items]="tiposDocumento()" />
       </tui-textfield>
       @let tipoDocError = getFieldError('tipoDocumento'); @if (tipoDocError) {
-      <span class="mt-3 text-xs text-danger">{{ tipoDocError }}</span>
+      <span id="tipoDocumento-error" class="mt-3 text-xs text-danger" aria-live="polite">{{ tipoDocError }}</span>
       }
     </div>
 
     <div class="flex flex-col">
       <tui-textfield>
         <label tuiLabel>Número de documento</label>
-        <input formControlName="numeroDocumento" placeholder="Ej. 75896324" tuiInput />
+        <input
+          formControlName="numeroDocumento"
+          name="numeroDocumento"
+          autocomplete="off"
+          inputmode="numeric"
+          placeholder="Ej. 75896324…"
+          tuiInput
+          aria-describedby="numeroDocumento-error"
+          [attr.aria-invalid]="getFieldError('numeroDocumento') ? 'true' : null"
+        />
       </tui-textfield>
       @let numDocError = getFieldError('numeroDocumento'); @if (numDocError) {
-      <span class="mt-3 text-xs text-danger">{{ numDocError }}</span>
+      <span id="numeroDocumento-error" class="mt-3 text-xs text-danger" aria-live="polite">{{ numDocError }}</span>
       }
     </div>
   </div>
 
   <!-- Fila 5: Carrera (ancho completo) -->
-  <div class="grid grid-cols-2 gap-x-4 gap-y-5">
-    <div class="flex flex-col col-span-2">
+  <div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+    <div class="flex flex-col sm:col-span-2">
       <tui-textfield tuiChevron [stringify]="stringifyCarrera" class="w-full">
         <label tuiLabel>Carrera</label>
-        <input formControlName="carrera" placeholder="Selecciona carrera" tuiSelect />
+        <input
+          formControlName="carrera"
+          name="carrera"
+          autocomplete="off"
+          placeholder="Selecciona carrera…"
+          tuiSelect
+          aria-describedby="carrera-error"
+          [attr.aria-invalid]="getFieldError('carrera') ? 'true' : null"
+        />
         <tui-data-list-wrapper *tuiDropdown [items]="carreras()" />
       </tui-textfield>
       @let carreraError = getFieldError('carrera'); @if (carreraError) {
-      <span class="mt-3 text-xs text-danger">{{ carreraError }}</span>
+      <span id="carrera-error" class="mt-3 text-xs text-danger" aria-live="polite">{{ carreraError }}</span>
       }
     </div>
   </div>
@@ -96,6 +158,8 @@
     <button appearance="secondary" tuiButton type="button" (click)="cancelar.emit()">
       Cancelar
     </button>
-    <button tuiButton type="submit" [disabled]="isGuardando()">{{ getTextoBotonGuardar() }}</button>
+    <button tuiButton type="submit" [disabled]="isGuardando()" aria-live="polite">
+      {{ isGuardando() ? 'Guardando…' : getTextoBotonGuardar() }}
+    </button>
   </footer>
 </form>

@@ -1,3 +1,9 @@
+:host {
+  display: block;
+  min-width: 0;
+  height: 100%;
+}
+
 .btn-historial {
   height: 2.75rem;
   width: 100%;
@@ -8,5 +14,4 @@
   font-weight: 700;
   color: var(--tui-text-primary);
 }
-
 

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { ActivatedRoute } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { TuiIcon, TuiLoader } from '@taiga-ui/core';
+import { TuiButton, TuiIcon, TuiLoader } from '@taiga-ui/core';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
 import type {
   CursoProgreso,
@@ -34,7 +34,7 @@ interface StatusView {
  */
 @Component({
   selector: 'app-historial',
-  imports: [TuiCardLarge, TuiHeader, TuiIcon, TuiLoader],
+  imports: [TuiButton, TuiCardLarge, TuiHeader, TuiIcon, TuiLoader],
   templateUrl: './historial.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -2,7 +2,7 @@
   <div appearance="floating" tuiCardLarge>
     <header tuiHeader class="flex h-full items-center justify-between">
       <div class="flex flex-col justify-center">
-        <h2 tuiTitle>Mi horario</h2>
+        <h2 tuiTitle class="text-balance">Mi horario</h2>
         <span class="subtitle text-sm font-medium text-text-secondary">
           Consulta tus clases matriculadas activas
         </span>
@@ -11,13 +11,16 @@
   </div>
 
   @if (isLoading()) {
-    <div appearance="floating" tuiCardLarge class="flex min-h-64 items-center justify-center">
-      <tui-loader size="m">Cargando horario...</tui-loader>
+    <div appearance="floating" tuiCardLarge class="flex min-h-64 items-center justify-center" aria-live="polite">
+      <tui-loader size="m">Cargando horario…</tui-loader>
     </div>
   } @else if (isError()) {
-    <div appearance="floating" tuiCardLarge class="flex min-h-64 flex-col items-center justify-center gap-2 text-center">
+    <div appearance="floating" tuiCardLarge class="flex min-h-64 flex-col items-center justify-center gap-2 text-center" aria-live="polite">
       <p class="text-base font-bold text-text-primary">No se pudo cargar tu horario</p>
       <p class="text-sm text-text-secondary">Intenta nuevamente más tarde.</p>
+      <button appearance="secondary" tuiButton type="button" (click)="horarioQuery.refetch()">
+        Reintentar
+      </button>
     </div>
   } @else if (calendarEvents().length === 0) {
     <div appearance="floating" tuiCardLarge class="flex min-h-64 flex-col items-center justify-center gap-2 text-center">
@@ -33,7 +36,7 @@
           <div class="flex flex-wrap gap-2" aria-label="Leyenda de colores por sección">
             @for (section of calendarLegend(); track section.id) {
               <span class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-sm font-medium text-text-secondary">
-                <span class="size-3 rounded-full" [style.background]="section.color"></span>
+                <span class="size-3 rounded-full" [style.background]="section.color" aria-hidden="true"></span>
                 {{ section.label }}
               </span>
             }
@@ -44,20 +47,20 @@
 
     <section appearance="floating" tuiCardLarge class="overflow-hidden">
       <div class="overflow-x-auto rounded-2xl border border-border bg-surface">
-        <div class="grid min-w-[760px]" [style.gridTemplateColumns]="'88px repeat(' + calendarDays.length + ', minmax(160px, 1fr))'">
-          <div class="sticky left-0 z-20 border-b border-r border-border bg-surface-hover p-3 text-xs font-bold uppercase text-text-secondary">Hora</div>
+        <div class="grid min-w-[760px]" role="grid" aria-label="Horario semanal" [style.gridTemplateColumns]="'88px repeat(' + calendarDays.length + ', minmax(160px, 1fr))'">
+          <div class="sticky left-0 z-20 border-b border-r border-border bg-surface-hover p-3 text-xs font-bold uppercase text-text-secondary" role="columnheader">Hora</div>
           @for (day of calendarDays; track day) {
-            <div class="border-b border-r border-border bg-surface-hover p-3 text-center text-sm font-bold text-text-primary">
+            <div class="border-b border-r border-border bg-surface-hover p-3 text-center text-sm font-bold text-text-primary" role="columnheader">
               {{ day }}
             </div>
           }
 
           @for (hour of calendarHours; track hour) {
-            <div class="sticky left-0 z-10 border-b border-r border-border bg-surface px-3 py-2 text-xs font-bold tabular-nums text-text-secondary" [style.height.px]="hourHeight">
+            <div class="sticky left-0 z-10 border-b border-r border-border bg-surface px-3 py-2 text-xs font-bold tabular-nums text-text-secondary" role="rowheader" [style.height.px]="hourHeight">
               {{ formatHour(hour) }}
             </div>
             @for (day of calendarDays; track day; let dayIndex = $index) {
-              <div class="relative border-b border-r border-border bg-surface" [style.height.px]="hourHeight">
+              <div class="relative border-b border-r border-border bg-surface" role="gridcell" [attr.aria-label]="day + ' ' + formatHour(hour)" [style.height.px]="hourHeight">
                 @for (event of eventsForDay(dayIndex); track event.idHorario) {
                   @if (event.top >= (hour - 7) * hourHeight && event.top < (hour - 6) * hourHeight) {
                     <article
@@ -66,11 +69,11 @@
                       [style.height.px]="event.height"
                       [style.background]="event.backgroundColor"
                       [style.borderLeft]="'4px solid ' + event.color"
-                      [attr.aria-label]="event.title + ', ' + event.subtitle + ', ' + event.horaInicio.substring(0, 5) + ' a ' + event.horaFin.substring(0, 5)"
+                      [attr.aria-label]="event.title + ', ' + event.subtitle + ', ' + formatTime(event.horaInicio) + ' a ' + formatTime(event.horaFin)"
                     >
                       <strong class="block truncate text-sm text-text-primary">{{ event.subtitle }}</strong>
                       <span class="block truncate text-xs text-text-secondary">{{ event.title }} · {{ event.aula || 'Sin aula' }}</span>
-                      <span class="block truncate text-xs text-text-tertiary">{{ event.horaInicio.substring(0, 5) }}–{{ event.horaFin.substring(0, 5) }}</span>
+                      <span class="block truncate text-xs text-text-tertiary">{{ formatTime(event.horaInicio) }}–{{ formatTime(event.horaFin) }}</span>
                     </article>
                   }
                 }

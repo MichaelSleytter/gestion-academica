@@ -11,33 +11,44 @@
     >
       Volver
     </button>
-    <h2 class="text-2xl font-bold text-text-primary">Matriculados</h2>
+    <h2 class="text-2xl font-bold text-balance text-text-primary">Matriculados</h2>
   </div>
 
   <!-- ─── Contenido principal ─────────────────────────────────── -->
   @if (isLoading()) {
     <div
       class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface"
+      aria-live="polite"
     >
-      <tui-loader size="l">Cargando matriculados...</tui-loader>
+      <tui-loader size="l">Cargando matriculados…</tui-loader>
     </div>
   } @else if (matriculasQuery.isError()) {
-    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
-      No se pudieron cargar los matriculados.
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700" aria-live="polite">
+      <p>No se pudieron cargar los matriculados.</p>
+      <button appearance="secondary" tuiButton type="button" class="mt-3" (click)="matriculasQuery.refetch()">
+        Reintentar
+      </button>
     </div>
   } @else {
     <div class="flex items-center justify-between gap-4">
       <!-- Info de vacantes -->
-      <div class="flex items-center gap-3">
-        <div class="flex h-2 w-40 overflow-hidden rounded-full bg-surface-hover">
+      <div class="flex flex-col gap-1 text-sm font-medium text-text-secondary">
+        @if (capacidad() !== null) {
+          <span>{{ ocupados() }} de {{ capacidad() }} ocupadas · {{ vacantesDisponibles() }} vacantes</span>
           <div
-            class="h-full rounded-full bg-primary transition-all duration-300"
-            [style.width.%]="
-              matriculasQuery.data()?.length ? (ocupados() / (ocupados() + 1)) * 100 : 0
-            "
-          ></div>
-        </div>
-        <span class="text-sm font-medium text-text-secondary"> {{ ocupados() }} ocupadas </span>
+            class="h-2 w-48 overflow-hidden rounded-full bg-surface-hover"
+            role="meter"
+            aria-label="Ocupación de vacantes"
+            aria-valuemin="0"
+            [attr.aria-valuenow]="ocupados()"
+            [attr.aria-valuemax]="capacidad()"
+            [attr.aria-valuetext]="ocupados() + ' de ' + capacidad() + ' ocupadas, ' + vacantesDisponibles() + ' vacantes'"
+          >
+            <div class="h-full rounded-full bg-primary" [style.width.%]="ocupacionPorcentaje()"></div>
+          </div>
+        } @else {
+          <span>{{ ocupados() }} ocupadas</span>
+        }
       </div>
 
       <!-- Botón matricular -->
@@ -47,8 +58,8 @@
     </div>
 
     <!-- ─── Tabla de matriculados ────────────────────────────── -->
-    <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-      <table class="w-full text-left text-sm">
+    <div class="overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
+      <table class="min-w-[760px] w-full text-left text-sm">
         <thead>
           <tr
             class="border-b border-border bg-surface-hover text-xs font-semibold uppercase tracking-wide text-text-tertiary"
@@ -112,19 +123,29 @@
     [(tuiDialog)]="matricularModalAbierto"
   >
     <div class="flex flex-col gap-4 p-4">
-      <p class="text-sm text-text-secondary">Vacantes disponibles</p>
+      <p class="text-sm text-text-secondary">Selecciona un estudiante para matricular</p>
 
       <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
         <input
           tuiInput
-          placeholder="Buscar por código o nombre"
+          aria-label="Buscar estudiantes por código o nombre"
+          name="buscarEstudianteMatricula"
+          autocomplete="off"
+          placeholder="Buscar por código o nombre…"
           (input)="onBusquedaEstudianteChange($any($event).target.value)"
         />
       </tui-textfield>
 
       @if (buscandoEstudiantes()) {
-        <div class="flex items-center justify-center py-4">
+        <div class="flex items-center justify-center py-4" aria-live="polite">
           <tui-loader size="s"></tui-loader>
+        </div>
+      } @else if (busquedaEstudianteError()) {
+        <div class="rounded-xl border border-red-200 bg-red-50 p-3 text-center text-sm text-red-700" aria-live="polite">
+          <p>{{ busquedaEstudianteError() }}</p>
+          <button appearance="secondary" tuiButton type="button" size="s" class="mt-2" (click)="retryBuscarEstudiantes()">
+            Reintentar
+          </button>
         </div>
       } @else if (estudiantesResultados().length > 0) {
         <div class="flex flex-col gap-1 max-h-60 overflow-y-auto rounded-lg border border-border">
@@ -176,7 +197,7 @@
           [disabled]="estudianteSeleccionado() === null || matricularMutation.isPending()"
           (click)="confirmarMatricular(observer)"
         >
-          {{ matricularMutation.isPending() ? 'Matriculando...' : 'Matricular' }}
+          {{ matricularMutation.isPending() ? 'Matriculando…' : 'Matricular' }}
         </button>
       </div>
     </div>
@@ -217,7 +238,7 @@
           [disabled]="retirarMutation.isPending()"
           (click)="confirmarRetirar(observer)"
         >
-          {{ retirarMutation.isPending() ? 'Retirando...' : 'Retirar' }}
+          {{ retirarMutation.isPending() ? 'Retirando…' : 'Retirar' }}
         </button>
       </div>
     </div>

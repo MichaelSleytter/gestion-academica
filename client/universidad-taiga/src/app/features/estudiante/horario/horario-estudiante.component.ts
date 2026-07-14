@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
-import { TuiLoader } from '@taiga-ui/core';
+import { TuiButton, TuiLoader } from '@taiga-ui/core';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
 import { useMiHorarioQuery } from '../../../queries/estudiante-role.query';
 import {
@@ -12,9 +12,19 @@ import {
   uniqueEventSections,
 } from '../../admin/horarios/calendar.helpers';
 
+const TIME_FORMATTER = new Intl.DateTimeFormat('es-PE', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
+function createTimeOnlyDate(hour: number, minute = 0): Date {
+  return new Date(2000, 0, 1, hour, minute);
+}
+
 @Component({
   selector: 'app-horario-estudiante',
-  imports: [TuiCardLarge, TuiHeader, TuiLoader],
+  imports: [TuiButton, TuiCardLarge, TuiHeader, TuiLoader],
   templateUrl: './horario-estudiante.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -36,6 +46,11 @@ export class HorarioEstudiante {
   }
 
   formatHour(hour: number): string {
-    return `${String(hour).padStart(2, '0')}:00`;
+    return TIME_FORMATTER.format(createTimeOnlyDate(hour));
+  }
+
+  formatTime(value: string): string {
+    const [hour, minute] = value.split(':').map(Number);
+    return TIME_FORMATTER.format(createTimeOnlyDate(hour, minute));
   }
 }

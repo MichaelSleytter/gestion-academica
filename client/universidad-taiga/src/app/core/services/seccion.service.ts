@@ -43,6 +43,10 @@ export class SeccionService {
     return lastValueFrom(this.http.get<PageResponse<SeccionResponse>>(url, { params }));
   }
 
+  getSeccionById(idSeccion: number): Promise<SeccionResponse> {
+    return lastValueFrom(this.http.get<SeccionResponse>(`${this.apiBaseUrl}/secciones/${idSeccion}`));
+  }
+
   /**
    * Obtiene la lista de cursos para el dropdown del formulario.
    * Usa el endpoint paginado de cursos con un tamaño grande.

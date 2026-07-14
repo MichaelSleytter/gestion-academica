@@ -6,7 +6,7 @@ export interface SeccionCreateRequest {
   codigoSeccion: string;
   /** Nombre del ciclo académico */
   cicloAcademicoNombre: string;
-  /** Cantidad de vacantes */
+  /** Capacidad total de estudiantes para la sección */
   vacantes: number;
   /** Color visual opcional para identificar la sección en horarios */
   color?: string | null;

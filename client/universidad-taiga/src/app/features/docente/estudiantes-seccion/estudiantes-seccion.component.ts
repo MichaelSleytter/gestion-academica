@@ -14,20 +14,23 @@ import { useMatriculasBySeccionQuery } from '../../../queries/docente-role.query
         <button appearance="flat" tuiButton type="button" (click)="goBack()" iconStart="@tui.arrow-left">
           Volver
         </button>
-        <h2 class="text-2xl font-bold text-text-primary">Estudiantes de la sección</h2>
+        <h2 class="text-2xl font-bold text-balance text-text-primary">Estudiantes de la sección</h2>
       </div>
 
       @if (query.isPending()) {
-        <div class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface">
-          <tui-loader size="l">Cargando estudiantes...</tui-loader>
+        <div class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface" aria-live="polite">
+          <tui-loader size="l">Cargando estudiantes…</tui-loader>
         </div>
       } @else if (query.isError()) {
-        <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
-          No se pudieron cargar los estudiantes.
+        <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700" aria-live="polite">
+          <p>No se pudieron cargar los estudiantes.</p>
+          <button appearance="secondary" tuiButton type="button" class="mt-3" (click)="query.refetch()">
+            Reintentar
+          </button>
         </div>
       } @else {
-        <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-          <table class="w-full text-left text-sm">
+        <div class="overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
+          <table class="min-w-[760px] w-full text-left text-sm">
             <thead>
               <tr class="border-b border-border bg-surface-hover text-xs font-semibold uppercase tracking-wide text-text-tertiary">
                 <th class="px-5 py-3">Código</th>

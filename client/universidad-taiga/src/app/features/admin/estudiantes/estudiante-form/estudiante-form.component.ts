@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import type { FormGroup } from '@angular/forms';
 import {
@@ -47,6 +47,8 @@ type ModoFormulario = 'crear' | 'editar';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EstudianteForm {
+  private readonly elementRef = inject(ElementRef<HTMLElement>);
+
   /** FormGroup con los controles del formulario de estudiante. */
   readonly form = input.required<FormGroup>();
 
@@ -67,6 +69,16 @@ export class EstudianteForm {
 
   /** Emite cuando se cancela la operación. */
   readonly cancelar = output();
+
+  submit(): void {
+    if (this.form().invalid) {
+      this.form().markAllAsTouched();
+      setTimeout(() => this.focusFirstInvalidControl());
+      return;
+    }
+
+    this.guardar.emit();
+  }
 
   /**
    * Retorna el título del diálogo según el modo actual.
@@ -137,5 +149,10 @@ export class EstudianteForm {
    */
   stringifyCarrera(item: Carrera | null): string {
     return item?.nombre ?? '';
+  }
+
+  private focusFirstInvalidControl(): void {
+    const control = this.elementRef.nativeElement.querySelector('[aria-invalid="true"]') as HTMLElement | null;
+    control?.focus();
   }
 }

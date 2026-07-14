@@ -1,8 +1,8 @@
-<div tuiPlatform="web" class="card flex flex-col gap-3 p-2.5">
+<div tuiPlatform="web" class="card flex min-w-0 flex-col gap-3 rounded-3xl bg-background p-2.5">
   <div appearance="floating" tuiCardLarge>
-    <header tuiHeader class="flex justify-between items-center h-full">
-      <div class="flex flex-col justify-center">
-        <h2 tuiTitle>Estudiantes</h2>
+    <header tuiHeader class="flex h-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex min-w-0 flex-col justify-center">
+        <h2 tuiTitle class="text-balance">Estudiantes</h2>
         <span class="subtitle text-sm font-medium text-text-secondary"
           >Gestiona y administra {{ totalEstudiantes() }} estudiantes registrados</span
         >
@@ -13,6 +13,7 @@
         size="m"
         tuiButton
         type="button"
+        class="w-full sm:w-auto"
         (click)="openNuevoEstudianteModal()"
       >
         + Nuevo Estudiante
@@ -24,12 +25,16 @@
   </div>
   <div appearance="floating" tuiCardLarge>
     <section>
-      <div class="flex items-center gap-4">
-        <div class="flex-1">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div class="min-w-0 flex-1">
           <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
             <input
-              placeholder="Buscar por nombre, código o carrera"
+              aria-label="Buscar estudiantes por nombre, código o carrera"
+              name="buscarEstudiantes"
+              autocomplete="off"
+              placeholder="Buscar por nombre, código o carrera…"
               tuiInput
+              [value]="busqueda()"
               (input)="onBusquedaChange($any($event).target.value)"
             />
           </tui-textfield>
@@ -40,20 +45,33 @@
           [activeItemIndex]="viewMode() === 'grid' ? 0 : 1"
           (activeItemIndexChange)="setViewMode($event)"
         >
-          <button title="Grid" type="button">
-            <tui-icon icon="@tui.grid-2x2" />
+          <button title="Grid" type="button" aria-label="Ver estudiantes en tarjetas">
+            <tui-icon icon="@tui.grid-2x2" aria-hidden="true" />
           </button>
-          <button title="Fila" type="button">
-            <tui-icon icon="@tui.list" />
+          <button title="Fila" type="button" aria-label="Ver estudiantes en tabla">
+            <tui-icon icon="@tui.list" aria-hidden="true" />
           </button>
         </tui-segmented>
       </div>
     </section>
   </div>
 
-  @if (viewMode() === 'grid') {
+  @if (estudiantesQuery.isError()) {
+    <div
+      appearance="floating"
+      tuiCardLarge
+      class="flex flex-col items-center justify-center gap-3 py-12 text-center"
+      aria-live="polite"
+    >
+      <p class="text-base font-bold text-text-primary">No se pudieron cargar los estudiantes</p>
+      <p class="text-sm text-text-secondary">Revisá tu conexión e intentá nuevamente.</p>
+      <button appearance="secondary" tuiButton type="button" (click)="estudiantesQuery.refetch()">
+        Reintentar
+      </button>
+    </div>
+  } @else if (viewMode() === 'grid') {
     @if (isLoading()) {
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-4" aria-live="polite">
         @for (item of [1, 2, 3, 4, 5, 6]; track item) {
           <div appearance="floating" tuiCardLarge class="p-4" [tuiSkeleton]="true"></div>
         }
@@ -64,7 +82,7 @@
         tuiCardLarge
         class="flex flex-col items-center justify-center py-16 gap-4"
       >
-        <tui-icon icon="@tui.users" class="text-text-muted" [style.font-size]="'3rem'" />
+          <tui-icon icon="@tui.users" class="text-text-muted" [style.font-size]="'3rem'" aria-hidden="true" />
         <p class="text-text-secondary text-center">
           {{
             busqueda()
@@ -77,12 +95,13 @@
         </button>
       </div>
     } @else {
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(min(100%,18rem),1fr))] gap-4">
         @for (
           estudiante of estudiantesQuery.data()?.content ?? [];
           track estudiante.codigoEstudiante
         ) {
           <app-card-estudiante
+            class="min-w-0"
             [estudiante]="estudiante"
             (editar)="openEditarEstudianteModal($event)"
             (eliminar)="openEliminarEstudianteModal($event)"
@@ -92,10 +111,10 @@
       </div>
     }
   } @else {
-    <div class="overflow-hidden rounded-2xl border border-border bg-surface">
+    <div class="overflow-x-auto rounded-2xl border border-border bg-surface">
       <table
         tuiTable
-        class="w-full border-separate border-spacing-0 table-auto"
+        class="min-w-[760px] w-full border-separate border-spacing-0 table-auto"
         [columns]="columns"
       >
         <thead tuiThead class="bg-surface-hover" [tuiSkeleton]="isLoading()">
@@ -192,6 +211,7 @@
                     <span
                       class="inline-flex size-1.5 rounded-full"
                       [class]="estado.dotClasses"
+                      aria-hidden="true"
                     ></span>
                     {{ estado.label }}
                   </span>
@@ -199,7 +219,7 @@
 
                 <td *tuiCell="'acciones'" tuiTd class="border-b border-border px-6 py-4 text-right">
                   <div
-                    class="inline-flex items-center gap-1 opacity-0 pointer-events-none transition duration-200 group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto"
+                    class="inline-flex items-center gap-1 opacity-100 transition-opacity duration-200"
                   >
                     <button
                       appearance="action"
@@ -267,7 +287,7 @@
                   [class]="
                     $index === pagina() ? 'bg-primary text-on-primary' : 'text-text-secondary'
                   "
-                  (click)="pagina.set($index)"
+                  (click)="setPagina($index)"
                 >
                   {{ $index + 1 }}
                 </button>

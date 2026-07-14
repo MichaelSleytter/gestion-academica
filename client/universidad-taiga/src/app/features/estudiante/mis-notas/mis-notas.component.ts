@@ -78,14 +78,14 @@ export class MisNotas {
     ),
   );
 
-  readonly periodoSeleccionado = signal('actual');
+  readonly periodoSeleccionado = signal(this.route.snapshot.queryParamMap.get('periodo')?.trim() || 'actual');
 
   readonly periodos = computed(() =>
     [...new Set(this.cursosMatriculados().map((curso) => curso.cicloAcademicoNombre).filter(Boolean))],
   );
 
   readonly cursosFiltrados = computed(() => {
-    const periodo = this.periodoSeleccionado();
+    const periodo = this.periodoNormalizado(this.periodoSeleccionado());
     if (periodo === 'todos') return this.cursosMatriculados();
     if (periodo === 'actual') return this.cursosActuales();
     return this.cursosMatriculados().filter((curso) => curso.cicloAcademicoNombre === periodo);
@@ -153,6 +153,17 @@ export class MisNotas {
 
   constructor() {
     effect(() => {
+      if (!this.misCursosQuery.data()) return;
+
+      const periodo = this.periodoSeleccionado();
+      const periodoNormalizado = this.periodoNormalizado(periodo);
+      if (periodo === periodoNormalizado) return;
+
+      this.periodoSeleccionado.set(periodoNormalizado);
+      this.syncPeriodoQueryParam(periodoNormalizado);
+    });
+
+    effect(() => {
       if (this.activeTab() === 'contenido' && this.idSeccion()) {
         void this.cargarContenido(this.idSeccion()!);
       }
@@ -195,24 +206,41 @@ export class MisNotas {
   readonly isError = computed(() => {
     if (this.isDetailView()) {
       if (this.activeTab() === 'contenido') return !!this.contenidoError();
-      return this.evaluacionesQuery.isError();
+      return this.evaluacionesQuery.isError() || this.notasQuery.isError();
     }
     return this.misCursosQuery.isError();
   });
 
-  // ─── Navegación ───────────────────────────────────────────────
+  readonly notasErrorMessage = computed(() => {
+    if (this.evaluacionesQuery.isError()) return 'No se pudieron cargar las evaluaciones.';
+    if (this.notasQuery.isError()) return 'No se pudieron cargar tus notas.';
+    return '';
+  });
 
-  /** Navega a la vista de notas de un curso. */
-  verNotas(idSeccion: number): void {
-    void this.router.navigate(['/app/estudiante/mis-cursos', idSeccion, 'notas']);
-  }
-
-  verContenido(): void {
-    void this.router.navigate(['/app/estudiante/mis-cursos', this.idSeccion(), 'contenido']);
+  retryContenido(): void {
+    const id = this.idSeccion();
+    if (id) void this.cargarContenido(id);
   }
 
   onPeriodoChange(event: Event): void {
-    this.periodoSeleccionado.set((event.target as HTMLSelectElement).value);
+    const periodo = (event.target as HTMLSelectElement).value;
+    this.periodoSeleccionado.set(periodo);
+    this.syncPeriodoQueryParam(periodo);
+  }
+
+  private syncPeriodoQueryParam(periodo: string): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { periodo: periodo === 'actual' ? null : periodo },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private periodoNormalizado(periodo: string): string {
+    return periodo === 'actual' || periodo === 'todos' || this.periodos().includes(periodo)
+      ? periodo
+      : 'actual';
   }
 
   private async cargarContenido(idSeccion: number): Promise<void> {
@@ -229,7 +257,7 @@ export class MisNotas {
 
   /** Vuelve a la lista de cursos. */
   volverALista(): void {
-    void this.router.navigate(['/app/estudiante/mis-cursos']);
+    void this.router.navigate(['/app/estudiante/mis-cursos'], { queryParamsHandling: 'merge' });
   }
 
   /** Estado badge según estado de matrícula. */
@@ -259,5 +287,12 @@ export class MisNotas {
   /** Ancho de la barra de progreso del promedio (0-100%). */
   promedioBarWidth(promedio: number): number {
     return Math.min((promedio / 20) * 100, 100);
+  }
+
+  formatGrade(value: number): string {
+    return new Intl.NumberFormat('es-PE', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+    }).format(value);
   }
 }

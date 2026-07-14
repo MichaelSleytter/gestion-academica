@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { FormBuilder, Validators } from '@angular/forms';
 import {
@@ -68,22 +68,26 @@ interface DialogObserver {
 export class Estudiantes {
   private readonly formBuilder = inject(FormBuilder);
   private readonly notifications = inject(TuiNotificationService);
+  private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly initialQueryParams = this.route.snapshot.queryParamMap;
 
   /** Columnas de la tabla de estudiantes. */
   readonly columns = ['estudiante', 'codigo', 'carrera', 'ciclo', 'estado', 'acciones'] as const;
 
   /** Modo de visualización: grilla de tarjetas o filas de tabla. */
-  readonly viewMode = signal<'grid' | 'row'>('grid');
+  readonly viewMode = signal<'grid' | 'row'>(
+    this.initialQueryParams.get('view') === 'row' ? 'row' : 'grid',
+  );
 
   // ─── Paginación y búsqueda ───────────────────────────────────────────
 
   /** Página actual (0-based). */
-  readonly pagina = signal(0);
+  readonly pagina = signal(this.getInitialPage());
   /** Elementos por página. */
   readonly tamaño = signal(10);
   /** Texto de búsqueda actual. */
-  readonly busqueda = signal('');
+  readonly busqueda = signal(this.initialQueryParams.get('q')?.trim() ?? '');
   /** Timer para debounce del search. */
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -143,6 +147,7 @@ export class Estudiantes {
    */
   setViewMode(index: number): void {
     this.viewMode.set(index === 0 ? 'grid' : 'row');
+    this.syncListQueryParams();
   }
 
   /** Abre modal de creación con formulario limpio. */
@@ -336,20 +341,26 @@ export class Estudiantes {
     this.debounceTimer = setTimeout(() => {
       this.busqueda.set(texto.trim());
       this.pagina.set(0);
+      this.syncListQueryParams();
     }, 300);
+  }
+
+  setPagina(pagina: number): void {
+    this.pagina.set(pagina);
+    this.syncListQueryParams();
   }
 
   /** Navega a la página anterior si no es la primera. */
   paginaAnterior(): void {
     if (this.pagina() > 0) {
-      this.pagina.update(p => p - 1);
+      this.setPagina(this.pagina() - 1);
     }
   }
 
   /** Navega a la página siguiente si no es la última. */
   paginaSiguiente(): void {
     if (this.pagina() < this.totalPaginas() - 1) {
-      this.pagina.update(p => p + 1);
+      this.setPagina(this.pagina() + 1);
     }
   }
 
@@ -387,6 +398,24 @@ export class Estudiantes {
     });
     this.estudianteForm.markAsPristine();
     this.estudianteForm.markAsUntouched();
+  }
+
+  private syncListQueryParams(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        view: this.viewMode() === 'row' ? 'row' : null,
+        q: this.busqueda() || null,
+        page: this.pagina() > 0 ? this.pagina() + 1 : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private getInitialPage(): number {
+    const page = Number(this.initialQueryParams.get('page'));
+    return Number.isFinite(page) && page > 1 ? page - 1 : 0;
   }
 
   private cargarFormularioDesdeEstudiante(estudiante: EstudianteResponse): void {

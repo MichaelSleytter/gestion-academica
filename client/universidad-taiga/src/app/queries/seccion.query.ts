@@ -50,6 +50,18 @@ export function useSeccionesPaginadosQuery(
   }));
 }
 
+export function useSeccionQuery(idSeccion: Signal<number>) {
+  const service = inject(SeccionService);
+
+  return injectQuery<SeccionResponse, Error>(() => ({
+    queryKey: SECCION_KEY(idSeccion()),
+    queryFn: () => service.getSeccionById(idSeccion()),
+    enabled: idSeccion() > 0,
+    staleTime: 1000 * 30,
+    retry: 1,
+  }));
+}
+
 /**
  * Mutación para crear una sección.
  *

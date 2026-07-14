@@ -20,6 +20,7 @@ import {
   useMatricularMutation,
   useRetirarMutation,
 } from '../../../queries/matricula.query';
+import { useSeccionQuery } from '../../../queries/seccion.query';
 
 /**
  * Vista de gestión de matrículas de una sección.
@@ -54,12 +55,26 @@ export class Matriculas {
 
   /** Query de matrículas por sección. */
   readonly matriculasQuery = useMatriculasBySeccionQuery(this.idSeccion);
+  readonly seccionQuery = useSeccionQuery(this.idSeccion);
 
   /** Cantidad de matrículas activas (para el indicador de vacantes). */
   readonly ocupados = computed(() => {
     const data = this.matriculasQuery.data();
     if (!data) return 0;
     return data.filter((m) => m.estado === 'ACTIVA').length;
+  });
+
+  /** Capacidad total configurada para la sección. */
+  readonly capacidad = computed(() => this.seccionQuery.data()?.vacantes ?? null);
+
+  readonly vacantesDisponibles = computed(() => {
+    const capacidad = this.capacidad();
+    return capacidad === null ? null : Math.max(capacidad - this.ocupados(), 0);
+  });
+
+  readonly ocupacionPorcentaje = computed(() => {
+    const capacidad = this.capacidad();
+    return capacidad ? Math.min((this.ocupados() / capacidad) * 100, 100) : 0;
   });
 
   /** Indica si la consulta está cargando. */
@@ -82,6 +97,7 @@ export class Matriculas {
   readonly busquedaEstudiante = signal('');
   /** Resultados de la búsqueda de estudiantes. */
   readonly estudiantesResultados = signal<EstudianteItem[]>([]);
+  readonly busquedaEstudianteError = signal('');
   /** Estudiante seleccionado en el modal. */
   readonly estudianteSeleccionado = signal<number | null>(null);
   /** Indica si está cargando la búsqueda. */
@@ -103,6 +119,7 @@ export class Matriculas {
     this.debounceTimer = setTimeout(() => {
       const query = texto.trim();
       this.busquedaEstudiante.set(query);
+      this.busquedaEstudianteError.set('');
       if (query.length < 2) {
         this.estudiantesResultados.set([]);
         return;
@@ -113,6 +130,7 @@ export class Matriculas {
 
   private buscarEstudiantes(query: string): void {
     this.buscandoEstudiantes.set(true);
+    this.busquedaEstudianteError.set('');
     this.estudianteService
       .getEstudiantesPaginado(0, 20, query)
       .then((page) => {
@@ -128,6 +146,7 @@ export class Matriculas {
       })
       .catch(() => {
         this.estudiantesResultados.set([]);
+        this.busquedaEstudianteError.set('No se pudo buscar estudiantes. Reintentá la búsqueda.');
       })
       .finally(() => {
         this.buscandoEstudiantes.set(false);
@@ -140,6 +159,7 @@ export class Matriculas {
   openMatricularModal(): void {
     this.busquedaEstudiante.set('');
     this.estudiantesResultados.set([]);
+    this.busquedaEstudianteError.set('');
     this.estudianteSeleccionado.set(null);
     this.matricularModalAbierto.set(true);
   }
@@ -149,7 +169,13 @@ export class Matriculas {
     this.matricularModalAbierto.set(false);
     this.busquedaEstudiante.set('');
     this.estudiantesResultados.set([]);
+    this.busquedaEstudianteError.set('');
     this.estudianteSeleccionado.set(null);
+  }
+
+  retryBuscarEstudiantes(): void {
+    const query = this.busquedaEstudiante();
+    if (query.length >= 2) this.buscarEstudiantes(query);
   }
 
   /** Confirma la matrícula del estudiante seleccionado. */
@@ -171,6 +197,7 @@ export class Matriculas {
             .subscribe();
           observer.complete();
           this.closeMatricularModal();
+          void this.seccionQuery.refetch();
         },
         onError: (error: unknown) => {
           const httpError = error as HttpErrorResponse;
@@ -215,9 +242,11 @@ export class Matriculas {
             autoClose: 3000,
           })
           .subscribe();
-        observer.complete();
-        this.closeRetirarModal();
-      },
+          observer.complete();
+          this.closeRetirarModal();
+          void this.matriculasQuery.refetch();
+          void this.seccionQuery.refetch();
+        },
       onError: (error: unknown) => {
         const httpError = error as HttpErrorResponse;
         this.notifications

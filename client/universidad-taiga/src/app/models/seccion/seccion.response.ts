@@ -9,7 +9,7 @@ export interface SeccionResponse {
   codigoSeccion: string;
   /** Nombre del ciclo académico (campo directo) */
   cicloAcademicoNombre: string;
-  /** Cantidad de vacantes disponibles */
+  /** Capacidad total configurada por el backend; no es vacante restante. */
   vacantes: number;
   /** Color visual opcional para identificar la sección en horarios */
   color?: string | null;
