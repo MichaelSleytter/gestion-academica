@@ -223,7 +223,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
 
         // NO aplicar filtro a estos paths (porque aún no existe token)
-        return path.startsWith("/api/auth/login") ||
-                path.startsWith("/api/auth/register");
+        return path.startsWith("/api/v1/auth/login") ||
+                path.startsWith("/api/v1/auth/register");
     }
 }
