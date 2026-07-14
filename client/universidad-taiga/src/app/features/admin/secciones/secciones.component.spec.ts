@@ -2,7 +2,11 @@ import { Component } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { TuiRoot } from '@taiga-ui/core';
-import { SeccionService } from '../../../core/services/seccion.service';
+import {
+  SeccionService,
+  type CicloAcademicoResponse,
+} from '../../../core/services/seccion.service';
+import type { CursoResponse } from '../../../models/curso/curso.response';
 import {
   emptyPage,
   provideAngularComponentTest,
@@ -48,8 +52,8 @@ describe('Secciones', () => {
 
     component.modoFormulario.set('crear');
     component.codigoAutomatico.set(true);
-    component.seccionForm.controls.idCurso.setValue(1);
-    component.seccionForm.controls.idCiclo.setValue(10);
+    component.seccionForm.controls.idCurso.setValue(cursoMatematicas);
+    component.seccionForm.controls.idCiclo.setValue(ciclo2026I);
 
     await flushPromises();
 
@@ -63,8 +67,8 @@ describe('Secciones', () => {
     component.codigoAutomatico.set(true);
     component.activarCodigoManual(true);
     component.seccionForm.controls.codigoSeccion.setValue('CUSTOM-01');
-    component.seccionForm.controls.idCurso.setValue(2);
-    component.seccionForm.controls.idCiclo.setValue(20);
+    component.seccionForm.controls.idCurso.setValue(cursoProgramacion);
+    component.seccionForm.controls.idCiclo.setValue(ciclo2026II);
 
     await flushPromises();
 
@@ -78,8 +82,8 @@ describe('Secciones', () => {
 
     component.modoFormulario.set('crear');
     component.codigoAutomatico.set(true);
-    component.seccionForm.controls.idCurso.setValue(3);
-    component.seccionForm.controls.idCiclo.setValue(30);
+    component.seccionForm.controls.idCurso.setValue(cursoMatematicas);
+    component.seccionForm.controls.idCiclo.setValue(ciclo2026I);
     component.activarCodigoManual(true);
 
     await flushPromises();
@@ -99,20 +103,20 @@ describe('Secciones', () => {
     component.openNuevaSeccionModal();
     fixture.detectChanges();
 
-    component.seccionForm.controls.idCurso.setValue(4);
-    component.seccionForm.controls.idCiclo.setValue(40);
+    component.seccionForm.controls.idCurso.setValue(cursoMatematicas);
+    component.seccionForm.controls.idCiclo.setValue(ciclo2026I);
     fixture.detectChanges();
 
     const automaticInput = getCodeInput();
     expect(automaticInput?.readOnly).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Generando código...');
+    expect(fixture.nativeElement.textContent).toContain('Generando código');
 
     component.activarCodigoManual(true);
     fixture.detectChanges();
 
     const manualInput = getCodeInput();
     expect(manualInput?.readOnly).toBe(false);
-    expect(fixture.nativeElement.textContent).not.toContain('Generando código...');
+    expect(fixture.nativeElement.textContent).not.toContain('Generando código');
 
     resolveCode('MAT-I-004');
     await flushPromises();
@@ -128,8 +132,8 @@ describe('Secciones', () => {
       codigoSeccion: 'MAT-I-001',
       vacantes: 30,
       cicloAcademicoNombre: '2026-I',
-      idCurso: 1,
-      idCiclo: 10,
+      idCurso: cursoMatematicas,
+      idCiclo: ciclo2026I,
       color: '#2563EB',
     });
 
@@ -157,12 +161,43 @@ describe('Secciones', () => {
 })
 class SeccionesHost {}
 
+const cursoMatematicas: CursoResponse = {
+  idCurso: 1,
+  nombre: 'Matemáticas I',
+  creditos: 4,
+  descripcion: null,
+};
+
+const cursoProgramacion: CursoResponse = {
+  idCurso: 2,
+  nombre: 'Programación Web',
+  creditos: 4,
+  descripcion: null,
+};
+
+const ciclo2026I: CicloAcademicoResponse = {
+  idCiclo: 10,
+  nombre: '2026-I',
+  fechaInicio: '2026-03-01',
+  fechaFin: '2026-07-31',
+};
+
+const ciclo2026II: CicloAcademicoResponse = {
+  idCiclo: 20,
+  nombre: '2026-II',
+  fechaInicio: '2026-08-01',
+  fechaFin: '2026-12-20',
+};
+
 function createSeccionServiceMock() {
   return {
     getSeccionesPaginado: vi.fn().mockResolvedValue(emptyPage()),
-    getCursosList: vi.fn().mockResolvedValue(emptyPage()),
+    getCursosList: vi.fn().mockResolvedValue({
+      ...emptyPage<CursoResponse>(),
+      content: [cursoMatematicas, cursoProgramacion],
+    }),
     getDocentesList: vi.fn().mockResolvedValue(emptyPage()),
-    getCiclosAcademicosList: vi.fn().mockResolvedValue([]),
+    getCiclosAcademicosList: vi.fn().mockResolvedValue([ciclo2026I, ciclo2026II]),
     crearSeccion: vi.fn(),
     actualizarSeccion: vi.fn(),
     eliminarSeccion: vi.fn(),

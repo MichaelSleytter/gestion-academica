@@ -169,8 +169,7 @@ export class Secciones implements OnDestroy {
   }
 
   private actualizarNombreCicloSeleccionado(): void {
-    const idCiclo = this.seccionForm.controls.idCiclo.value;
-    const ciclo = this.ciclosList().find((item) => item.idCiclo === idCiclo);
+    const ciclo = this.seccionForm.controls.idCiclo.value;
     if (ciclo && this.seccionForm.controls.cicloAcademicoNombre.value !== ciclo.nombre) {
       this.seccionForm.controls.cicloAcademicoNombre.setValue(ciclo.nombre);
     }
@@ -225,13 +224,13 @@ export class Secciones implements OnDestroy {
     ]),
     vacantes: this.formBuilder.nonNullable.control(1, [Validators.required, Validators.min(1)]),
     cicloAcademicoNombre: this.formBuilder.nonNullable.control('', [Validators.required]),
-    idCurso: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
-    idCiclo: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
+    idCurso: this.formBuilder.control<CursoResponse | null>(null, [Validators.required]),
+    idCiclo: this.formBuilder.control<CicloAcademicoResponse | null>(null, [Validators.required]),
     color: this.formBuilder.control<string | null>(null),
   });
 
   readonly asignacionDocenteForm = this.formBuilder.group({
-    idDocente: this.formBuilder.nonNullable.control<number | null>(null, [Validators.required]),
+    idDocente: this.formBuilder.control<DocenteResponse | null>(null, [Validators.required]),
   });
 
   readonly docentesAsignados = signal<DocenteResponse[]>([]);
@@ -243,22 +242,12 @@ export class Secciones implements OnDestroy {
     return this.docentesList().filter((docente) => !asignados.has(docente.idUsuario));
   });
 
-  readonly cursoIds = computed(() => this.cursosList().map((curso) => curso.idCurso));
-  readonly cicloIds = computed(() => this.ciclosList().map((ciclo) => ciclo.idCiclo));
-  readonly docenteIdsDisponibles = computed(() =>
-    this.docentesDisponibles().map((docente) => docente.idUsuario),
-  );
+  readonly stringifyCurso = (curso: CursoResponse | null): string => curso?.nombre ?? '';
 
-  readonly stringifyCurso = (idCurso: number | null): string =>
-    this.cursosList().find((curso) => curso.idCurso === idCurso)?.nombre ?? '';
+  readonly stringifyCiclo = (ciclo: CicloAcademicoResponse | null): string => ciclo?.nombre ?? '';
 
-  readonly stringifyCiclo = (idCiclo: number | null): string =>
-    this.ciclosList().find((ciclo) => ciclo.idCiclo === idCiclo)?.nombre ?? '';
-
-  readonly stringifyDocente = (idDocente: number | null): string => {
-    const docente = this.docentesList().find((item) => item.idUsuario === idDocente);
-    return docente ? this.docenteNombre(docente) : '';
-  };
+  readonly stringifyDocente = (docente: DocenteResponse | null): string =>
+    docente ? this.docenteNombre(docente) : '';
 
   // ─── Mutaciones ──────────────────────────────────────────────────────
 
@@ -391,8 +380,13 @@ export class Secciones implements OnDestroy {
     if (!payload) return;
 
     const raw = this.seccionForm.getRawValue();
-    const idCurso = raw.idCurso!;
-    const idCiclo = raw.idCiclo!;
+    const idCurso = raw.idCurso?.idCurso;
+    const idCiclo = raw.idCiclo?.idCiclo;
+
+    if (!idCurso || !idCiclo) {
+      this.seccionForm.markAllAsTouched();
+      return;
+    }
 
     if (this.modoFormulario() === 'crear') {
       this.crearSeccionMutation.mutate(
@@ -485,7 +479,8 @@ export class Secciones implements OnDestroy {
 
   async asignarDocente(): Promise<void> {
     const seccion = this.seccionSeleccionada();
-    const idDocente = this.asignacionDocenteForm.controls.idDocente.value;
+    const docente = this.asignacionDocenteForm.controls.idDocente.value;
+    const idDocente = docente?.idUsuario;
 
     if (!seccion || !idDocente || this.asignacionDocenteForm.invalid) {
       this.asignacionDocenteForm.markAllAsTouched();
@@ -573,8 +568,8 @@ export class Secciones implements OnDestroy {
 
   private async solicitarCodigoAutomatico(): Promise<void> {
     const value = this.seccionForm.getRawValue();
-    const idCurso = value.idCurso;
-    const idCiclo = value.idCiclo;
+    const idCurso = value.idCurso?.idCurso;
+    const idCiclo = value.idCiclo?.idCiclo;
 
     if (this.modoFormulario() !== 'crear' || !this.codigoAutomatico() || !idCurso || !idCiclo) {
       return;
@@ -619,8 +614,8 @@ export class Secciones implements OnDestroy {
       codigoSeccion: seccion.codigoSeccion,
       vacantes: seccion.vacantes,
       cicloAcademicoNombre: seccion.cicloAcademicoNombre,
-      idCurso: seccion.curso.idCurso,
-      idCiclo: seccion.cicloAcademico.idCiclo,
+      idCurso: seccion.curso,
+      idCiclo: seccion.cicloAcademico,
       color: seccion.color ?? null,
     });
     this.seccionForm.markAsPristine();

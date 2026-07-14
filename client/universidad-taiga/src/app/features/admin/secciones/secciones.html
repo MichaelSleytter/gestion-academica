@@ -318,7 +318,7 @@
           tuiSelect
           formControlName="idCurso"
         />
-        <tui-data-list-wrapper *tuiDropdown [items]="cursoIds()" />
+        <tui-data-list-wrapper *tuiDropdown [items]="cursosList()" />
       </tui-textfield>
       @if (seccionForm.controls.idCurso.touched && seccionForm.controls.idCurso.invalid) {
         <p class="text-xs text-red-500 -mt-3">El curso es obligatorio</p>
@@ -334,7 +334,7 @@
           tuiSelect
           formControlName="idCiclo"
         />
-        <tui-data-list-wrapper *tuiDropdown [items]="cicloIds()" />
+        <tui-data-list-wrapper *tuiDropdown [items]="ciclosList()" />
       </tui-textfield>
       @if (seccionForm.controls.idCiclo.touched && seccionForm.controls.idCiclo.invalid) {
         <p class="text-xs text-red-500 -mt-3">El ciclo académico es obligatorio</p>
@@ -467,7 +467,7 @@
             autocomplete="off"
             placeholder="Seleccionar docente"
           />
-          <tui-data-list-wrapper *tuiDropdown [items]="docenteIdsDisponibles()" />
+          <tui-data-list-wrapper *tuiDropdown [items]="docentesDisponibles()" />
         </tui-textfield>
         <button
           appearance="primary"
