@@ -5,6 +5,8 @@ import com.example.gestionacademica.cursos.domain.Curso;
 import com.example.gestionacademica.cursos.domain.Seccion;
 import com.example.gestionacademica.cursos.repository.CicloAcademicoRepository;
 import com.example.gestionacademica.cursos.repository.CursoRepository;
+import com.example.gestionacademica.auth.domain.Usuario;
+import com.example.gestionacademica.docentes.repository.DocenteSeccionRepository;
 import com.example.gestionacademica.matriculas.repository.MatriculaRepository;
 import com.example.gestionacademica.cursos.repository.SeccionRepository;
 import jakarta.transaction.Transactional;
@@ -12,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
@@ -33,6 +38,7 @@ public class SeccionService {
     private final CursoRepository cursoRepository;
     private final CicloAcademicoRepository cicloAcademicoRepository;
     private final MatriculaRepository matriculaRepository;
+    private final DocenteSeccionRepository docenteSeccionRepository;
 
     /**
      * Lista todas las secciones.
@@ -71,6 +77,17 @@ public class SeccionService {
         return seccionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Sección no encontrada con ID: " + id));
+    }
+
+    /**
+     * Busca una sección por ID validando acceso de ADMIN o docente asignado.
+     */
+    public Seccion buscarPorIdAutorizado(Integer id, Authentication authentication) {
+        Seccion seccion = buscarPorId(id);
+        if (hasRole(authentication, "ADMIN") || isAssignedDocente(authentication, id)) {
+            return seccion;
+        }
+        throw new AccessDeniedException("No tiene permiso para consultar esta sección.");
     }
 
     /**
@@ -190,6 +207,29 @@ public class SeccionService {
         return cicloAcademicoRepository.findById(idCiclo)
                 .orElseThrow(() -> new RuntimeException(
                         "Ciclo academico no encontrado con ID: " + idCiclo));
+    }
+
+    private boolean isAssignedDocente(Authentication authentication, Integer idSeccion) {
+        return hasRole(authentication, "DOCENTE")
+                && docenteSeccionRepository.existsByDocente_IdUsuarioAndSeccion_IdSeccion(
+                        currentUserId(authentication), idSeccion);
+    }
+
+    private Integer currentUserId(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof Usuario usuario) {
+            return usuario.getIdUsuario();
+        }
+        throw new AccessDeniedException("Usuario autenticado inválido.");
+    }
+
+    private boolean hasRole(Authentication authentication, String role) {
+        if (authentication == null) {
+            return false;
+        }
+        String authority = "ROLE_" + role;
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority::equals);
     }
 
     private String generarProximoCodigo(Curso curso, CicloAcademico ciclo) {

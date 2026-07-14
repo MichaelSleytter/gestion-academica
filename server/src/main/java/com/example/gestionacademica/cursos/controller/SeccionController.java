@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -57,11 +58,13 @@ public class SeccionController {
      * @return respuesta HTTP con la sección encontrada
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCENTE')")
     @Operation(summary = "Buscar sección por ID")
     public ResponseEntity<Seccion> buscarPorId(
             @Parameter(description = "ID de la sección", example = "1")
-            @PathVariable Integer id) {
-        return ResponseEntity.ok(seccionService.buscarPorId(id));
+            @PathVariable Integer id,
+            Authentication authentication) {
+        return ResponseEntity.ok(seccionService.buscarPorIdAutorizado(id, authentication));
     }
 
     /**
