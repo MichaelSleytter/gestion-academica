@@ -22,7 +22,14 @@ import {
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import { TuiInputColor, TuiSkeleton, TuiSelect, TuiSwitch } from '@taiga-ui/kit';
+import {
+  TuiChevron,
+  TuiDataListWrapper,
+  TuiInputColor,
+  TuiSkeleton,
+  TuiSelect,
+  TuiSwitch,
+} from '@taiga-ui/kit';
 import type { SeccionResponse } from '../../../models/seccion/seccion.response';
 import type { SeccionCreateRequest } from '../../../models/seccion/seccion.request';
 import {
@@ -59,6 +66,8 @@ interface DialogObserver {
     TuiTable,
     TuiTitle,
     TuiIcon,
+    TuiChevron,
+    TuiDataListWrapper,
     TuiInputColor,
     TuiSkeleton,
     TuiSelect,
@@ -233,6 +242,23 @@ export class Secciones implements OnDestroy {
     const asignados = new Set(this.docentesAsignados().map((docente) => docente.idUsuario));
     return this.docentesList().filter((docente) => !asignados.has(docente.idUsuario));
   });
+
+  readonly cursoIds = computed(() => this.cursosList().map((curso) => curso.idCurso));
+  readonly cicloIds = computed(() => this.ciclosList().map((ciclo) => ciclo.idCiclo));
+  readonly docenteIdsDisponibles = computed(() =>
+    this.docentesDisponibles().map((docente) => docente.idUsuario),
+  );
+
+  readonly stringifyCurso = (idCurso: number | null): string =>
+    this.cursosList().find((curso) => curso.idCurso === idCurso)?.nombre ?? '';
+
+  readonly stringifyCiclo = (idCiclo: number | null): string =>
+    this.ciclosList().find((ciclo) => ciclo.idCiclo === idCiclo)?.nombre ?? '';
+
+  readonly stringifyDocente = (idDocente: number | null): string => {
+    const docente = this.docentesList().find((item) => item.idUsuario === idDocente);
+    return docente ? this.docenteNombre(docente) : '';
+  };
 
   // ─── Mutaciones ──────────────────────────────────────────────────────
 

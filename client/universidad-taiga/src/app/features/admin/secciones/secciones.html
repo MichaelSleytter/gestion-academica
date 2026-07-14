@@ -309,28 +309,32 @@
       }
 
       <!-- Curso (select) -->
-      <tui-textfield tuiTextfieldSize="m">
+      <tui-textfield tuiTextfieldSize="m" tuiChevron [stringify]="stringifyCurso">
         <label tuiLabel>Curso</label>
-        <select name="idCurso" autocomplete="off" tuiInput formControlName="idCurso">
-          <option [ngValue]="null" disabled>Seleccionar curso</option>
-          @for (curso of cursosList(); track curso.idCurso) {
-            <option [ngValue]="curso.idCurso">{{ curso.nombre }}</option>
-          }
-        </select>
+        <input
+          name="idCurso"
+          autocomplete="off"
+          placeholder="Seleccionar curso"
+          tuiSelect
+          formControlName="idCurso"
+        />
+        <tui-data-list-wrapper *tuiDropdown [items]="cursoIds()" />
       </tui-textfield>
       @if (seccionForm.controls.idCurso.touched && seccionForm.controls.idCurso.invalid) {
         <p class="text-xs text-red-500 -mt-3">El curso es obligatorio</p>
       }
 
       <!-- Ciclo Académico (select) -->
-      <tui-textfield tuiTextfieldSize="m">
+      <tui-textfield tuiTextfieldSize="m" tuiChevron [stringify]="stringifyCiclo">
         <label tuiLabel>Ciclo académico</label>
-        <select name="idCiclo" autocomplete="off" tuiInput formControlName="idCiclo">
-          <option [ngValue]="null" disabled>Seleccionar ciclo</option>
-          @for (ciclo of ciclosList(); track ciclo.idCiclo) {
-            <option [ngValue]="ciclo.idCiclo">{{ ciclo.nombre }}</option>
-          }
-        </select>
+        <input
+          name="idCiclo"
+          autocomplete="off"
+          placeholder="Seleccionar ciclo"
+          tuiSelect
+          formControlName="idCiclo"
+        />
+        <tui-data-list-wrapper *tuiDropdown [items]="cicloIds()" />
       </tui-textfield>
       @if (seccionForm.controls.idCiclo.touched && seccionForm.controls.idCiclo.invalid) {
         <p class="text-xs text-red-500 -mt-3">El ciclo académico es obligatorio</p>
@@ -450,14 +454,20 @@
       </div>
 
       <form [formGroup]="asignacionDocenteForm" class="flex items-end gap-2">
-        <tui-textfield tuiTextfieldSize="m" class="flex-1">
+        <tui-textfield
+          tuiTextfieldSize="m"
+          class="flex-1"
+          tuiChevron
+          [stringify]="stringifyDocente"
+        >
           <label tuiLabel>Docente</label>
-          <select tuiInput formControlName="idDocente">
-            <option [ngValue]="null" disabled>Seleccionar docente</option>
-            @for (docente of docentesDisponibles(); track docente.idUsuario) {
-              <option [ngValue]="docente.idUsuario">{{ docenteNombre(docente) }}</option>
-            }
-          </select>
+          <input
+            tuiSelect
+            formControlName="idDocente"
+            autocomplete="off"
+            placeholder="Seleccionar docente"
+          />
+          <tui-data-list-wrapper *tuiDropdown [items]="docenteIdsDisponibles()" />
         </tui-textfield>
         <button
           appearance="primary"
