@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   TuiButton,
@@ -75,6 +82,10 @@ export class Evaluaciones {
   readonly busqueda = signal('');
   /** Timer para debounce del search. */
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Indica si el formulario tiene cambios sin guardar. */
+  private formDirty(): boolean {
+    return this.evaluacionModalAbierto() && this.evaluacionForm.dirty;
+  }
 
   /** Query paginada que se refresca al cambiar página, tamaño o búsqueda. */
   readonly evaluacionesQuery = useEvaluacionesPaginadosQuery(
@@ -114,6 +125,14 @@ export class Evaluaciones {
 
   constructor() {
     this.cargarCatalogos();
+  }
+
+  /** Previene pérdida de datos al cerrar la ventana con cambios sin guardar. */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.formDirty()) {
+      event.preventDefault();
+    }
   }
 
   private cargarCatalogos(): void {

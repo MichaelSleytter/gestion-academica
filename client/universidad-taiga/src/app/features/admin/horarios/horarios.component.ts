@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
@@ -17,10 +24,16 @@ import {
 import { TuiPlatform, type TuiStringHandler } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import { TUI_CONFIRM, type TuiConfirmData, TuiChevron, TuiSelect, TuiSkeleton } from '@taiga-ui/kit';
+import {
+  TUI_CONFIRM,
+  type TuiConfirmData,
+  TuiChevron,
+  TuiSelect,
+  TuiSkeleton,
+} from '@taiga-ui/kit';
 import { firstValueFrom } from 'rxjs';
-import { HorarioResponse } from '../../../models/horario/horario.response';
-import { HorarioCreateRequest } from '../../../models/horario/horario.request';
+import type { HorarioResponse } from '../../../models/horario/horario.response';
+import type { HorarioCreateRequest } from '../../../models/horario/horario.request';
 import {
   useHorariosPaginadosQuery,
   useCrearHorarioMutation,
@@ -33,7 +46,7 @@ import {
   END_HOUR,
   HOUR_HEIGHT,
   START_HOUR,
-  CalendarHorarioEvent,
+  type CalendarHorarioEvent,
   addWeeks,
   filterCalendarEvents,
   getCurrentWeekStart,
@@ -148,6 +161,11 @@ export class Horarios {
   /** Timer para debounce del search. */
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  /** Indica si el formulario tiene cambios sin guardar. */
+  private formDirty(): boolean {
+    return this.horarioModalAbierto() && this.horarioForm.dirty;
+  }
+
   /** Query paginada que se refresca al cambiar página, tamaño o búsqueda. */
   readonly horariosQuery = useHorariosPaginadosQuery(this.pagina, this.tamaño, this.busqueda);
 
@@ -174,6 +192,14 @@ export class Horarios {
       mql.addEventListener('change', (e) => this.isMobile.set(e.matches));
     }
     this.cargarCatalogos();
+  }
+
+  /** Previene pérdida de datos al cerrar la ventana con cambios sin guardar. */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.formDirty()) {
+      event.preventDefault();
+    }
   }
 
   private cargarCatalogos(): void {
@@ -265,7 +291,10 @@ export class Horarios {
   protected readonly String = String;
   protected readonly Number = Number;
   protected readonly calendarDays = CALENDAR_DAYS;
-  protected readonly calendarHours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
+  protected readonly calendarHours = Array.from(
+    { length: END_HOUR - START_HOUR + 1 },
+    (_, i) => START_HOUR + i,
+  );
   protected readonly hourHeight = HOUR_HEIGHT;
 
   /** 30-minute selectable time slots from 08:30 AM to 10:30 PM. */
@@ -378,13 +407,21 @@ export class Horarios {
     this.eliminarHorarioMutation.mutate(seleccionado.idHorario, {
       onSuccess: () => {
         this.notifications
-          .open('Horario eliminado exitosamente', { label: 'Eliminado', appearance: 'success', autoClose: 3000 })
+          .open('Horario eliminado exitosamente', {
+            label: 'Eliminado',
+            appearance: 'success',
+            autoClose: 3000,
+          })
           .subscribe();
         this.horarioSeleccionado.set(null);
       },
       onError: (error) => {
         this.notifications
-          .open(this.errorMessage(error, 'Error al eliminar horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
+          .open(this.errorMessage(error, 'Error al eliminar horario'), {
+            label: 'Error',
+            appearance: 'error',
+            autoClose: 5000,
+          })
           .subscribe();
       },
     });
@@ -410,14 +447,22 @@ export class Horarios {
         {
           onSuccess: () => {
             this.notifications
-              .open('Horario creado exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+              .open('Horario creado exitosamente', {
+                label: 'Éxito',
+                appearance: 'success',
+                autoClose: 3000,
+              })
               .subscribe();
             observer.complete();
             this.closeHorarioModal();
           },
           onError: (error) => {
             this.notifications
-              .open(this.errorMessage(error, 'Error al crear horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
+              .open(this.errorMessage(error, 'Error al crear horario'), {
+                label: 'Error',
+                appearance: 'error',
+                autoClose: 5000,
+              })
               .subscribe();
           },
         },
@@ -433,14 +478,22 @@ export class Horarios {
       {
         onSuccess: () => {
           this.notifications
-            .open('Horario actualizado exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+            .open('Horario actualizado exitosamente', {
+              label: 'Éxito',
+              appearance: 'success',
+              autoClose: 3000,
+            })
             .subscribe();
           observer.complete();
           this.closeHorarioModal();
         },
         onError: (error) => {
           this.notifications
-            .open(this.errorMessage(error, 'Error al actualizar horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .open(this.errorMessage(error, 'Error al actualizar horario'), {
+              label: 'Error',
+              appearance: 'error',
+              autoClose: 5000,
+            })
             .subscribe();
         },
       },
@@ -515,12 +568,20 @@ export class Horarios {
       {
         onSuccess: () => {
           this.notifications
-            .open('Horario actualizado exitosamente', { label: 'Éxito', appearance: 'success', autoClose: 3000 })
+            .open('Horario actualizado exitosamente', {
+              label: 'Éxito',
+              appearance: 'success',
+              autoClose: 3000,
+            })
             .subscribe();
         },
         onError: (error) => {
           this.notifications
-            .open(this.errorMessage(error, 'Error al mover horario'), { label: 'Error', appearance: 'error', autoClose: 5000 })
+            .open(this.errorMessage(error, 'Error al mover horario'), {
+              label: 'Error',
+              appearance: 'error',
+              autoClose: 5000,
+            })
             .subscribe();
         },
       },
@@ -535,17 +596,21 @@ export class Horarios {
       aula: event.aula,
     };
 
-    this.actualizarHorarioMutation.mutate({ id: event.idHorario, horario: payload, idSeccion: event.idSeccion });
+    this.actualizarHorarioMutation.mutate({
+      id: event.idHorario,
+      horario: payload,
+      idSeccion: event.idSeccion,
+    });
   }
 
   // ─── Navegación de páginas ───────────────────────────────────────────
 
   paginaAnterior(): void {
-    if (this.pagina() > 0) this.pagina.update(p => p - 1);
+    if (this.pagina() > 0) this.pagina.update((p) => p - 1);
   }
 
   paginaSiguiente(): void {
-    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update(p => p + 1);
+    if (this.pagina() < this.totalPaginas() - 1) this.pagina.update((p) => p + 1);
   }
 
   // ─── Métodos privados ────────────────────────────────────────────────

@@ -29,6 +29,8 @@
         <div class="flex-1">
           <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
             <input
+              name="buscarSecciones"
+              autocomplete="off"
               placeholder="Buscar por código o ciclo académico"
               tuiInput
               (input)="onBusquedaChange($any($event).target.value)"
@@ -79,6 +81,7 @@
                   icon="@tui.layout-list"
                   class="text-text-muted"
                   [style.fontSize]="'3rem'"
+                  aria-hidden="true"
                 />
                 <p class="text-text-secondary text-center">
                   {{
@@ -105,7 +108,7 @@
                   <div
                     class="flex size-11 items-center justify-center overflow-hidden rounded-2xl border border-border bg-surface-hover text-xs font-bold text-text-secondary"
                   >
-                    <tui-icon icon="@tui.hash" />
+                    <tui-icon icon="@tui.hash" aria-hidden="true" />
                   </div>
                   <span class="truncate text-base font-bold leading-6 text-text-primary">{{
                     seccion.codigoSeccion
@@ -269,6 +272,8 @@
         <tui-textfield tuiTextfieldSize="m" class="flex-1">
           <label tuiLabel>Código de sección</label>
           <input
+            name="codigoSeccion"
+            autocomplete="off"
             tuiInput
             placeholder="Seleccioná curso y ciclo"
             formControlName="codigoSeccion"
@@ -287,7 +292,7 @@
         </button>
       </div>
       @if (codigoAutomaticoCargando()) {
-        <p class="text-xs text-text-secondary -mt-3">Generando código...</p>
+        <p class="text-xs text-text-secondary -mt-3">Generando código…</p>
       } @else if (codigoAutomaticoError()) {
         <p class="text-xs text-red-500 -mt-3">{{ codigoAutomaticoError() }}</p>
       }
@@ -306,7 +311,7 @@
       <!-- Curso (select) -->
       <tui-textfield tuiTextfieldSize="m">
         <label tuiLabel>Curso</label>
-        <select tuiInput formControlName="idCurso">
+        <select name="idCurso" autocomplete="off" tuiInput formControlName="idCurso">
           <option [ngValue]="null" disabled>Seleccionar curso</option>
           @for (curso of cursosList(); track curso.idCurso) {
             <option [ngValue]="curso.idCurso">{{ curso.nombre }}</option>
@@ -320,7 +325,7 @@
       <!-- Ciclo Académico (select) -->
       <tui-textfield tuiTextfieldSize="m">
         <label tuiLabel>Ciclo académico</label>
-        <select tuiInput formControlName="idCiclo">
+        <select name="idCiclo" autocomplete="off" tuiInput formControlName="idCiclo">
           <option [ngValue]="null" disabled>Seleccionar ciclo</option>
           @for (ciclo of ciclosList(); track ciclo.idCiclo) {
             <option [ngValue]="ciclo.idCiclo">{{ ciclo.nombre }}</option>
@@ -334,7 +339,14 @@
       <!-- Vacantes -->
       <tui-textfield tuiTextfieldSize="m">
         <label tuiLabel>Vacantes</label>
-        <input tuiInput type="number" placeholder="Ej: 30" formControlName="vacantes" />
+        <input
+          name="vacantes"
+          autocomplete="off"
+          tuiInput
+          type="number"
+          placeholder="Ej: 30…"
+          formControlName="vacantes"
+        />
       </tui-textfield>
       @if (seccionForm.controls.vacantes.touched && seccionForm.controls.vacantes.invalid) {
         <p class="text-xs text-red-500 -mt-3">
@@ -349,7 +361,14 @@
       <!-- Color opcional -->
       <tui-textfield tuiTextfieldSize="m">
         <label tuiLabel>Color de sección (opcional)</label>
-        <input tuiInputColor format="hex" placeholder="#2563EB" formControlName="color" />
+        <input
+          name="color"
+          autocomplete="off"
+          tuiInputColor
+          format="hex"
+          placeholder="#2563EB"
+          formControlName="color"
+        />
       </tui-textfield>
 
       <!-- cicloAcademicoNombre se auto-puebla desde el select de ciclo -->
@@ -410,7 +429,7 @@
           [disabled]="isEliminando()"
           (click)="confirmarEliminar(observer)"
         >
-          {{ isEliminando() ? 'Eliminando...' : 'Eliminar' }}
+          {{ isEliminando() ? 'Eliminando…' : 'Eliminar' }}
         </button>
       </div>
     </div>
@@ -455,10 +474,12 @@
       <div class="flex flex-col gap-2">
         <p class="text-sm font-semibold text-text-primary">Docentes asignados</p>
         @if (docentesAsignadosLoading()) {
-          <p class="text-sm text-text-secondary">Cargando docentes...</p>
+          <p class="text-sm text-text-secondary">Cargando docentes…</p>
         } @else {
           @for (docente of docentesAsignados(); track docente.idUsuario) {
-            <div class="flex items-center justify-between rounded-xl border border-border px-3 py-2">
+            <div
+              class="flex items-center justify-between rounded-xl border border-border px-3 py-2"
+            >
               <div>
                 <p class="text-sm font-medium text-text-primary">{{ docenteNombre(docente) }}</p>
                 <p class="text-xs text-text-secondary">{{ docente.email }}</p>
@@ -475,7 +496,9 @@
               </button>
             </div>
           } @empty {
-            <p class="rounded-xl border border-dashed border-border p-4 text-sm text-text-secondary">
+            <p
+              class="rounded-xl border border-dashed border-border p-4 text-sm text-text-secondary"
+            >
               No hay docentes asignados.
             </p>
           }

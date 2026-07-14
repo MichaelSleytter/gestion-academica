@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  HostListener,
   inject,
   type OnDestroy,
   signal,
@@ -97,6 +98,10 @@ export class Secciones implements OnDestroy {
   /** Timer para debounce del search. */
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly formSubscriptions = new Subscription();
+  /** Temporal de la última acción no guardada para guard de navegación. */
+  private formDirty(): boolean {
+    return this.seccionModalAbierto() && this.seccionForm.dirty;
+  }
   private codigoSolicitudSecuencia = 0;
 
   /** Query paginada que se refresca al cambiar página, tamaño o búsqueda. */
@@ -130,6 +135,14 @@ export class Secciones implements OnDestroy {
   ngOnDestroy(): void {
     this.formSubscriptions.unsubscribe();
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
+  }
+
+  /** Previene pérdida de datos al cerrar la ventana con cambios sin guardar. */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.formDirty()) {
+      event.preventDefault();
+    }
   }
 
   private sincronizarFormularioConCatalogos(): void {
@@ -458,17 +471,21 @@ export class Secciones implements OnDestroy {
       await this.seccionService.asignarDocente(seccion.idSeccion, idDocente);
       await this.cargarDocentesAsignados(seccion.idSeccion);
       this.asignacionDocenteForm.reset({ idDocente: null });
-      this.notifications.open('Docente asignado exitosamente', {
-        label: 'Éxito',
-        appearance: 'success',
-        autoClose: 3000,
-      }).subscribe();
+      this.notifications
+        .open('Docente asignado exitosamente', {
+          label: 'Éxito',
+          appearance: 'success',
+          autoClose: 3000,
+        })
+        .subscribe();
     } catch (error) {
-      this.notifications.open(error instanceof Error ? error.message : 'Error al asignar docente', {
-        label: 'Error',
-        appearance: 'error',
-        autoClose: 5000,
-      }).subscribe();
+      this.notifications
+        .open(error instanceof Error ? error.message : 'Error al asignar docente', {
+          label: 'Error',
+          appearance: 'error',
+          autoClose: 5000,
+        })
+        .subscribe();
     } finally {
       this.asignacionDocenteGuardando.set(false);
     }
@@ -482,17 +499,21 @@ export class Secciones implements OnDestroy {
     try {
       await this.seccionService.removerDocente(seccion.idSeccion, idDocente);
       await this.cargarDocentesAsignados(seccion.idSeccion);
-      this.notifications.open('Docente removido de la sección', {
-        label: 'Actualizado',
-        appearance: 'success',
-        autoClose: 3000,
-      }).subscribe();
+      this.notifications
+        .open('Docente removido de la sección', {
+          label: 'Actualizado',
+          appearance: 'success',
+          autoClose: 3000,
+        })
+        .subscribe();
     } catch (error) {
-      this.notifications.open(error instanceof Error ? error.message : 'Error al remover docente', {
-        label: 'Error',
-        appearance: 'error',
-        autoClose: 5000,
-      }).subscribe();
+      this.notifications
+        .open(error instanceof Error ? error.message : 'Error al remover docente', {
+          label: 'Error',
+          appearance: 'error',
+          autoClose: 5000,
+        })
+        .subscribe();
     } finally {
       this.asignacionDocenteGuardando.set(false);
     }
@@ -597,11 +618,13 @@ export class Secciones implements OnDestroy {
       this.docentesAsignados.set(await this.seccionService.getDocentesAsignados(idSeccion));
     } catch {
       this.docentesAsignados.set([]);
-      this.notifications.open('No se pudieron cargar los docentes asignados', {
-        label: 'Error',
-        appearance: 'error',
-        autoClose: 5000,
-      }).subscribe();
+      this.notifications
+        .open('No se pudieron cargar los docentes asignados', {
+          label: 'Error',
+          appearance: 'error',
+          autoClose: 5000,
+        })
+        .subscribe();
     } finally {
       this.docentesAsignadosLoading.set(false);
     }

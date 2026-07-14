@@ -6,7 +6,15 @@
         <a routerLink="/app/docente/mis-cursos" class="text-sm font-semibold text-primary"
           >← Volver a mis cursos</a
         >
-        <h2 class="text-2xl font-bold text-text-primary">📊 Carga de notas</h2>
+        <div class="flex items-center gap-3">
+          <span
+            class="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15"
+            aria-hidden="true"
+          >
+            <tui-icon icon="@tui.table-2" />
+          </span>
+          <h2 class="text-2xl font-bold text-text-primary">Carga de notas</h2>
+        </div>
         <span class="text-sm font-medium text-text-secondary">Sección #{{ sectionId() }}</span>
       </div>
 
@@ -159,21 +167,25 @@
                   @let gradeValue = getGradeValue(evaluation.idEvaluacion, idEstudiante);
 
                   <td class="border-b border-border px-3 py-2 text-center">
-                    <div class="relative inline-flex items-center gap-1">
+                    <div class="relative inline-flex items-center gap-1.5">
                       <input
                         [id]="'grade-' + evaluation.idEvaluacion + '-' + idEstudiante"
-                        class="w-20 rounded-lg border px-2.5 py-2 text-center text-sm font-medium tabular-nums outline-none transition-all duration-150 focus:border-primary focus:ring-2 focus:ring-primary/20 [&.saved]:border-green-400 [&.saved]:bg-green-50 [&.error]:border-red-400 [&.error]:bg-red-50"
+                        class="w-20 rounded-lg border border-border bg-white px-2.5 py-2 text-center text-sm font-semibold tabular-nums text-slate-900 caret-primary placeholder:text-slate-400 outline-none transition-[background-color,border-color,box-shadow,color,opacity] duration-150 focus:border-primary focus:bg-white focus:text-slate-900 focus:ring-2 focus:ring-primary/25 focus:ring-offset-1 focus:ring-offset-surface"
                         type="number"
                         min="0"
                         max="20"
                         step="0.01"
                         placeholder="—"
                         autocomplete="off"
-                        [class.border-primary/50]="cellStatus === 'dirty'"
-                        [class.border-green-400]="cellStatus === 'saved'"
+                        [class.border-primary]="cellStatus === 'dirty'"
+                        [class.bg-amber-50]="cellStatus === 'dirty'"
+                        [class.text-amber-950]="cellStatus === 'dirty'"
+                        [class.border-green-500]="cellStatus === 'saved'"
                         [class.bg-green-50]="cellStatus === 'saved'"
-                        [class.border-red-400]="cellStatus === 'error'"
+                        [class.text-green-950]="cellStatus === 'saved'"
+                        [class.border-red-500]="cellStatus === 'error'"
                         [class.bg-red-50]="cellStatus === 'error'"
+                        [class.text-red-950]="cellStatus === 'error'"
                         [class.opacity-60]="cellStatus === 'saving'"
                         [value]="gradeValue ?? ''"
                         (input)="
@@ -190,24 +202,28 @@
                       @if (cellStatus === 'dirty') {
                         <tui-icon
                           icon="@tui.pencil"
-                          class="text-amber-500 shrink-0"
+                          class="shrink-0 rounded-full bg-amber-50 p-0.5 text-amber-700 ring-1 ring-amber-200"
                           [style.fontSize]="'12px'"
+                          aria-hidden="true"
                         />
                       } @else if (cellStatus === 'saving') {
                         <div
-                          class="size-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
+                          class="size-3 shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent"
+                          aria-hidden="true"
                         ></div>
                       } @else if (cellStatus === 'saved') {
                         <tui-icon
                           icon="@tui.check"
-                          class="text-green-500 shrink-0"
+                          class="shrink-0 rounded-full bg-green-50 p-0.5 text-green-700 ring-1 ring-green-200"
                           [style.fontSize]="'12px'"
+                          aria-hidden="true"
                         />
                       } @else if (cellStatus === 'error') {
                         <tui-icon
                           icon="@tui.alert-circle"
-                          class="text-red-500 shrink-0"
+                          class="shrink-0 rounded-full bg-red-50 p-0.5 text-red-700 ring-1 ring-red-200"
                           [style.fontSize]="'12px'"
+                          aria-hidden="true"
                         />
                       }
                     </div>

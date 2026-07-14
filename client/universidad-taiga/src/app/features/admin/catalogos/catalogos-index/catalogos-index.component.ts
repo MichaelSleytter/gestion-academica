@@ -35,18 +35,21 @@ interface CatalogCard {
         </header>
       </div>
 
-      <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Catálogos administrativos">
+      <section
+        class="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+        aria-label="Catálogos administrativos"
+      >
         @for (card of cards; track card.route) {
           <a
             appearance="floating"
             tuiCardLarge
-            class="group flex min-h-56 flex-col justify-between rounded-3xl border border-border bg-surface p-5 no-underline transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+            class="group flex min-h-56 flex-col justify-between rounded-3xl border border-border bg-surface p-5 no-underline transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             [routerLink]="card.route"
             [attr.aria-label]="card.action"
           >
             <div class="flex flex-col gap-4">
               <div
-                class="flex size-12 items-center justify-center rounded-2xl bg-surface-hover text-primary group-hover:bg-primary group-hover:text-on-primary"
+                class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-colors group-hover:bg-primary group-hover:text-white group-focus-visible:bg-primary group-focus-visible:text-white"
                 aria-hidden="true"
               >
                 <tui-icon [icon]="card.icon" />
@@ -58,7 +61,7 @@ interface CatalogCard {
             </div>
             <span class="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary">
               {{ card.action }}
-              <tui-icon icon="@tui.arrow-right" />
+              <tui-icon icon="@tui.arrow-right" aria-hidden="true" />
             </span>
           </a>
         }

@@ -120,7 +120,9 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
         <section>
           <tui-textfield tuiTextfieldSize="m" iconStart="@tui.search">
             <input
-              placeholder="Buscar por nombre"
+              name="buscarCatalogo"
+              autocomplete="off"
+              placeholder="Buscar por nombre…"
               tuiInputSearch
               (input)="onSearchChange($any($event).target.value)"
             />
@@ -149,7 +151,7 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
             <tbody>
               @for (row of loadingRows; track row) {
                 <tr class="border-b border-border">
-                  <td class="px-6 py-4" colspan="3">Cargando catálogo...</td>
+                  <td class="px-6 py-4" colspan="3">Cargando catálogo…</td>
                 </tr>
               }
             </tbody>
@@ -162,6 +164,7 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
                       [icon]="config().icon"
                       class="text-text-muted"
                       [style.fontSize]="'3rem'"
+                      aria-hidden="true"
                     />
                     <p class="text-text-secondary">
                       {{ search() ? noResultsText() : config().empty }}
@@ -178,18 +181,18 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
           } @else {
             <tbody tuiTbody [data]="paginatedItems()">
               @for (item of paginatedItems(); track itemId(item)) {
-                <tr tuiTr class="group hover:bg-surface-hover focus-within:bg-surface-hover">
+                <tr tuiTr class="group hover:bg-surface-hover focus-within:bg-primary/[0.03]">
                   <td
                     *tuiCell="'id'"
                     tuiTd
-                    class="border-b border-border px-6 py-4 text-sm text-text-secondary"
+                    class="border-b border-border px-6 py-4 text-sm font-medium text-text-secondary"
                   >
                     {{ itemId(item) }}
                   </td>
                   <td *tuiCell="'nombre'" tuiTd class="border-b border-border px-6 py-4">
                     <div class="flex items-center gap-3">
                       <span
-                        class="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary"
+                        class="flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/15 transition-colors group-hover:bg-primary group-hover:text-white group-focus-within:bg-primary group-focus-within:text-white"
                         aria-hidden="true"
                       >
                         <tui-icon [icon]="config().icon" />
@@ -212,6 +215,7 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
                           size="xs"
                           tuiIconButton
                           type="button"
+                          class="text-text-secondary hover:bg-primary/10 hover:text-primary focus-visible:bg-primary/10 focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-primary/30"
                           aria-label="Editar registro"
                           (click)="openEdit(item)"
                         ></button>
@@ -221,6 +225,7 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
                           size="xs"
                           tuiIconButton
                           type="button"
+                          class="text-text-secondary hover:bg-red-50 hover:text-red-700 focus-visible:bg-red-50 focus-visible:text-red-700 focus-visible:ring-2 focus-visible:ring-red-200"
                           aria-label="Eliminar registro"
                           (click)="deleteItem(item)"
                         ></button>
@@ -249,7 +254,12 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
       }
 
       @if (dialogOpen()) {
-        <div class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" role="presentation">
+        <div
+          class="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          [attr.aria-labelledby]="'dialog-title-' + kind()"
+        >
           <form
             class="w-full max-w-md rounded-3xl bg-surface p-6 shadow-xl"
             [formGroup]="form"
@@ -257,13 +267,21 @@ type CatalogRow = CatalogNameItem | CicloAcademico;
             (ngSubmit)="saveItem()"
           >
             <header class="mb-5">
-              <h3 class="text-xl font-bold text-text-primary">{{ dialogTitle() }}</h3>
+              <h3 [id]="'dialog-title-' + kind()" class="text-xl font-bold text-text-primary">
+                {{ dialogTitle() }}
+              </h3>
               <p class="text-sm text-text-secondary">Usá un nombre claro y único.</p>
             </header>
 
             <tui-textfield tuiTextfieldSize="m">
               <label tuiLabel>Nombre</label>
-              <input formControlName="nombre" placeholder="Nombre del catálogo" tuiInput />
+              <input
+                name="nombre"
+                autocomplete="off"
+                formControlName="nombre"
+                placeholder="Nombre del catálogo…"
+                tuiInput
+              />
             </tui-textfield>
             <tui-error [error]="nameError()" />
 

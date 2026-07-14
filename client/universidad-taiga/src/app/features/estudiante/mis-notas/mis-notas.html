@@ -36,9 +36,18 @@
         <tui-loader size="l">Cargando tus cursos…</tui-loader>
       </div>
     } @else if (isError()) {
-      <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700" aria-live="polite">
+      <div
+        class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
+        aria-live="polite"
+      >
         <p>No se pudieron cargar tus cursos. Intentá de nuevo más tarde.</p>
-        <button appearance="secondary" tuiButton type="button" class="mt-3" (click)="misCursosQuery.refetch()">
+        <button
+          appearance="secondary"
+          tuiButton
+          type="button"
+          class="mt-3"
+          (click)="misCursosQuery.refetch()"
+        >
           Reintentar
         </button>
       </div>
@@ -46,13 +55,20 @@
       <div
         class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-surface py-16"
       >
-        <tui-icon icon="@tui.book" class="text-text-muted" [style.fontSize]="'3rem'" aria-hidden="true" />
+        <tui-icon
+          icon="@tui.book"
+          class="text-text-muted"
+          [style.fontSize]="'3rem'"
+          aria-hidden="true"
+        />
         <p class="text-text-secondary text-center">No estás matriculado en ningún curso todavía.</p>
       </div>
     } @else if (cursosFiltrados().length === 0) {
       <div class="rounded-2xl border border-border bg-surface p-10 text-center">
         <p class="text-base font-semibold text-text-primary">Sin cursos en este periodo</p>
-        <p class="mt-1 text-sm text-text-secondary">Elegí otro periodo para ver cursos anteriores.</p>
+        <p class="mt-1 text-sm text-text-secondary">
+          Elegí otro periodo para ver cursos anteriores.
+        </p>
       </div>
     } @else {
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -155,33 +171,64 @@
         class="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-surface"
         aria-live="polite"
       >
-        <tui-loader size="l">Cargando {{ activeTab() === 'contenido' ? 'contenido' : 'evaluaciones' }}…</tui-loader>
+        <tui-loader size="l"
+          >Cargando {{ activeTab() === 'contenido' ? 'contenido' : 'evaluaciones' }}…</tui-loader
+        >
       </div>
     } @else if (activeTab() === 'contenido' && contenidoError()) {
-      <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700" aria-live="polite">
+      <div
+        class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
+        aria-live="polite"
+      >
         <p>{{ contenidoError() }}</p>
-        <button appearance="secondary" tuiButton type="button" class="mt-3" (click)="retryContenido()">
+        <button
+          appearance="secondary"
+          tuiButton
+          type="button"
+          class="mt-3"
+          (click)="retryContenido()"
+        >
           Reintentar
         </button>
       </div>
     } @else if (activeTab() === 'notas' && notasErrorMessage()) {
-      <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700" aria-live="polite">
+      <div
+        class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
+        aria-live="polite"
+      >
         <p>{{ notasErrorMessage() }}</p>
-        <button appearance="secondary" tuiButton type="button" class="mt-3" (click)="evaluacionesQuery.refetch(); notasQuery.refetch()">
+        <button
+          appearance="secondary"
+          tuiButton
+          type="button"
+          class="mt-3"
+          (click)="evaluacionesQuery.refetch(); notasQuery.refetch()"
+        >
           Reintentar
         </button>
       </div>
     } @else if (activeTab() === 'contenido') {
       @if (contenido().length === 0) {
-        <div class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-surface py-16">
-          <tui-icon icon="@tui.file" class="text-text-muted" [style.fontSize]="'3rem'" aria-hidden="true" />
-          <p class="text-text-secondary text-center">Este curso no tiene contenido publicado todavía.</p>
+        <div
+          class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-surface py-16"
+        >
+          <tui-icon
+            icon="@tui.file"
+            class="text-text-muted"
+            [style.fontSize]="'3rem'"
+            aria-hidden="true"
+          />
+          <p class="text-text-secondary text-center">
+            Este curso no tiene contenido publicado todavía.
+          </p>
         </div>
       } @else {
         <div class="flex flex-col gap-4">
           @for (grupo of contenidoPorSemana(); track grupo.semana) {
             <div class="overflow-hidden rounded-2xl border border-border bg-surface">
-              <div class="border-b border-border bg-surface-hover px-5 py-3 text-sm font-bold text-text-primary">
+              <div
+                class="border-b border-border bg-surface-hover px-5 py-3 text-sm font-bold text-text-primary"
+              >
                 Semana {{ grupo.semana }}
               </div>
               @for (archivo of grupo.archivos; track archivo.idContenido) {
@@ -191,7 +238,9 @@
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span class="min-w-0 truncate font-medium text-text-primary">{{ archivo.nombreOriginal }}</span>
+                  <span class="min-w-0 truncate font-medium text-text-primary">{{
+                    archivo.nombreOriginal
+                  }}</span>
                   <span class="shrink-0 text-primary">Abrir</span>
                 </a>
               }
@@ -203,7 +252,12 @@
       <div
         class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-surface py-16"
       >
-        <tui-icon icon="@tui.clipboard-list" class="text-text-muted" [style.fontSize]="'3rem'" aria-hidden="true" />
+        <tui-icon
+          icon="@tui.clipboard-list"
+          class="text-text-muted"
+          [style.fontSize]="'3rem'"
+          aria-hidden="true"
+        />
         <p class="text-text-secondary text-center">
           Este curso no tiene evaluaciones registradas todavía.
         </p>
@@ -228,7 +282,10 @@
           </thead>
           <tbody tuiTbody [data]="evaluacionesConNota()">
             @for (item of evaluacionesConNota(); track item.idEvaluacion) {
-              <tr tuiTr class="group border-b border-border last:border-b-0 hover:bg-surface-hover">
+              <tr
+                tuiTr
+                class="group border-b border-border last:border-b-0 hover:bg-surface-hover focus-within:bg-primary/[0.03]"
+              >
                 <td *tuiCell="'nombre'" tuiTd class="px-6 py-4">
                   <span class="text-sm font-medium text-text-primary">{{ item.nombre }}</span>
                 </td>
@@ -241,7 +298,7 @@
                 </td>
                 <td *tuiCell="'nota'" tuiTd class="px-6 py-4 text-center tabular-nums">
                   @if (item.nota !== null) {
-                    <span class="text-base" [class]="notaColorClass(item.nota)">
+                    <span [class]="notaBadgeClass(item.nota)">
                       {{ formatGrade(item.nota) }}
                     </span>
                   } @else {

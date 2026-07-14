@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
@@ -58,7 +65,9 @@ export class MisNotas {
   );
 
   readonly activeTab = toSignal(
-    this.route.url.pipe(map((segments) => segments.at(-1)?.path === 'contenido' ? 'contenido' : 'notas')),
+    this.route.url.pipe(
+      map((segments) => (segments.at(-1)?.path === 'contenido' ? 'contenido' : 'notas')),
+    ),
     { initialValue: 'notas' },
   );
 
@@ -78,11 +87,17 @@ export class MisNotas {
     ),
   );
 
-  readonly periodoSeleccionado = signal(this.route.snapshot.queryParamMap.get('periodo')?.trim() || 'actual');
-
-  readonly periodos = computed(() =>
-    [...new Set(this.cursosMatriculados().map((curso) => curso.cicloAcademicoNombre).filter(Boolean))],
+  readonly periodoSeleccionado = signal(
+    this.route.snapshot.queryParamMap.get('periodo')?.trim() || 'actual',
   );
+
+  readonly periodos = computed(() => [
+    ...new Set(
+      this.cursosMatriculados()
+        .map((curso) => curso.cicloAcademicoNombre)
+        .filter(Boolean),
+    ),
+  ]);
 
   readonly cursosFiltrados = computed(() => {
     const periodo = this.periodoNormalizado(this.periodoSeleccionado());
@@ -279,9 +294,18 @@ export class MisNotas {
   /** Retorna la clase CSS según el valor de nota. */
   notaColorClass(nota: number | null): string {
     if (nota === null) return 'text-text-secondary';
-    if (nota >= 13) return 'text-success font-bold';
-    if (nota >= 10.5) return 'text-warning font-bold';
-    return 'text-error font-bold';
+    if (nota >= 13) return 'text-green-700 font-bold';
+    if (nota >= 10.5) return 'text-amber-700 font-bold';
+    return 'text-red-700 font-bold';
+  }
+
+  notaBadgeClass(nota: number | null): string {
+    const base =
+      'inline-flex min-w-16 items-center justify-center rounded-full border px-2.5 py-1 text-sm font-bold';
+    if (nota === null) return `${base} border-border bg-surface-hover text-text-secondary`;
+    if (nota >= 13) return `${base} border-green-200 bg-green-50 text-green-700`;
+    if (nota >= 10.5) return `${base} border-amber-200 bg-amber-50 text-amber-700`;
+    return `${base} border-red-200 bg-red-50 text-red-700`;
   }
 
   /** Ancho de la barra de progreso del promedio (0-100%). */

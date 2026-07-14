@@ -4,17 +4,26 @@
        ══════════════════════════════════════════════════ -->
   <div appearance="floating" tuiCardLarge>
     <header tuiHeader class="flex items-center gap-3">
-      <tui-icon icon="@tui.user-circle" class="text-primary" [style.fontSize]="'2rem'" />
+      <tui-icon
+        icon="@tui.user-circle"
+        class="text-primary"
+        [style.fontSize]="'2rem'"
+        aria-hidden="true"
+      />
       <div>
         <h2 tuiTitle>Mi Perfil</h2>
-        <span class="text-text-tertiary text-sm">Información personal y configuración de cuenta</span>
+        <span class="text-text-tertiary text-sm"
+          >Información personal y configuración de cuenta</span
+        >
       </div>
     </header>
   </div>
 
   @if (loading()) {
-    <div class="flex min-h-48 items-center justify-center rounded-2xl border border-border bg-surface">
-      <tui-loader size="l">Cargando perfil...</tui-loader>
+    <div
+      class="flex min-h-48 items-center justify-center rounded-2xl border border-border bg-surface"
+    >
+      <tui-loader size="l">Cargando perfil…</tui-loader>
     </div>
   } @else if (loadError(); as err) {
     <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
@@ -27,7 +36,7 @@
     <div appearance="floating" tuiCardLarge>
       <header tuiHeader>
         <h3 tuiTitle>
-          <tui-icon icon="@tui.id-card" class="mr-2 align-middle text-primary" />
+          <tui-icon icon="@tui.id-card" class="mr-2 align-middle text-primary" aria-hidden="true" />
           Datos personales
         </h3>
       </header>
@@ -74,7 +83,11 @@
     <div appearance="floating" tuiCardLarge>
       <header tuiHeader>
         <h3 tuiTitle>
-          <tui-icon icon="@tui.pencil-line" class="mr-2 align-middle text-primary" />
+          <tui-icon
+            icon="@tui.pencil-line"
+            class="mr-2 align-middle text-primary"
+            aria-hidden="true"
+          />
           Editar perfil
         </h3>
       </header>
@@ -83,7 +96,13 @@
         <div>
           <label tuiLabel="Nombre" class="text-xs font-medium text-text-tertiary">Nombre</label>
           <tui-textfield>
-            <input formControlName="nombre" tuiTextfield placeholder="Tu nombre" />
+            <input
+              name="nombre"
+              autocomplete="given-name"
+              formControlName="nombre"
+              tuiTextfield
+              placeholder="Ej: Juan…"
+            />
           </tui-textfield>
           @if (editForm.controls.nombre.touched && editForm.controls.nombre.invalid) {
             <tui-error formControlName="nombre" />
@@ -93,7 +112,13 @@
         <div>
           <label class="text-xs font-medium text-text-tertiary">Apellido</label>
           <tui-textfield>
-            <input formControlName="apellido" tuiTextfield placeholder="Tu apellido" />
+            <input
+              name="apellido"
+              autocomplete="family-name"
+              formControlName="apellido"
+              tuiTextfield
+              placeholder="Ej: Pérez…"
+            />
           </tui-textfield>
           @if (editForm.controls.apellido.touched && editForm.controls.apellido.invalid) {
             <tui-error formControlName="apellido" />
@@ -103,7 +128,15 @@
         <div>
           <label class="text-xs font-medium text-text-tertiary">Email personal</label>
           <tui-textfield>
-            <input formControlName="emailPersonal" tuiTextfield placeholder="opcional@ejemplo.com" type="email" />
+            <input
+              name="emailPersonal"
+              autocomplete="email"
+              inputmode="email"
+              formControlName="emailPersonal"
+              tuiTextfield
+              placeholder="opcional@ejemplo.com"
+              type="email"
+            />
           </tui-textfield>
         </div>
 
@@ -116,7 +149,7 @@
           [disabled]="editSaving()"
           class="self-start"
         >
-          {{ editSaving() ? 'Guardando...' : 'Guardar cambios' }}
+          {{ editSaving() ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </form>
     </div>
@@ -127,30 +160,48 @@
     <div appearance="floating" tuiCardLarge>
       <header tuiHeader>
         <h3 tuiTitle>
-          <tui-icon icon="@tui.lock" class="mr-2 align-middle text-primary" />
+          <tui-icon icon="@tui.lock" class="mr-2 align-middle text-primary" aria-hidden="true" />
           Cambiar contraseña
         </h3>
       </header>
 
       @if (passwordSuccess()) {
-        <div class="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
+        <div
+          class="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700"
+        >
           Contraseña actualizada correctamente.
         </div>
       }
 
       @if (passwordError(); as err) {
-        <div class="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+        <div
+          class="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
+        >
           {{ err }}
         </div>
       }
 
-      <form [formGroup]="passwordForm" class="mt-4 flex flex-col gap-4" (ngSubmit)="cambiarPassword()">
+      <form
+        [formGroup]="passwordForm"
+        class="mt-4 flex flex-col gap-4"
+        (ngSubmit)="cambiarPassword()"
+      >
         <div>
           <label class="text-xs font-medium text-text-tertiary">Contraseña actual</label>
           <tui-textfield>
-            <input formControlName="passwordActual" tuiTextfield placeholder="••••••••" type="password" />
+            <input
+              name="current-password"
+              autocomplete="current-password"
+              formControlName="passwordActual"
+              tuiTextfield
+              placeholder="••••••••"
+              type="password"
+            />
           </tui-textfield>
-          @if (passwordForm.controls.passwordActual.touched && passwordForm.controls.passwordActual.invalid) {
+          @if (
+            passwordForm.controls.passwordActual.touched &&
+            passwordForm.controls.passwordActual.invalid
+          ) {
             <tui-error formControlName="passwordActual" />
           }
         </div>
@@ -158,9 +209,19 @@
         <div>
           <label class="text-xs font-medium text-text-tertiary">Nueva contraseña</label>
           <tui-textfield>
-            <input formControlName="nuevaPassword" tuiTextfield placeholder="Mín. 6 caracteres" type="password" />
+            <input
+              name="new-password"
+              autocomplete="new-password"
+              formControlName="nuevaPassword"
+              tuiTextfield
+              placeholder="Mín. 6 caracteres"
+              type="password"
+            />
           </tui-textfield>
-          @if (passwordForm.controls.nuevaPassword.touched && passwordForm.controls.nuevaPassword.invalid) {
+          @if (
+            passwordForm.controls.nuevaPassword.touched &&
+            passwordForm.controls.nuevaPassword.invalid
+          ) {
             <tui-error formControlName="nuevaPassword" />
           }
         </div>
@@ -168,9 +229,19 @@
         <div>
           <label class="text-xs font-medium text-text-tertiary">Confirmar nueva contraseña</label>
           <tui-textfield>
-            <input formControlName="confirmPassword" tuiTextfield placeholder="Repetí la nueva contraseña" type="password" />
+            <input
+              name="confirm-password"
+              autocomplete="new-password"
+              formControlName="confirmPassword"
+              tuiTextfield
+              placeholder="Repetí la nueva contraseña"
+              type="password"
+            />
           </tui-textfield>
-          @if (passwordForm.controls.confirmPassword.touched && passwordForm.controls.confirmPassword.invalid) {
+          @if (
+            passwordForm.controls.confirmPassword.touched &&
+            passwordForm.controls.confirmPassword.invalid
+          ) {
             <tui-error formControlName="confirmPassword" />
           }
         </div>
@@ -184,7 +255,7 @@
           [disabled]="passwordSaving()"
           class="self-start"
         >
-          {{ passwordSaving() ? 'Cambiando...' : 'Cambiar contraseña' }}
+          {{ passwordSaving() ? 'Cambiando…' : 'Cambiar contraseña' }}
         </button>
       </form>
     </div>
