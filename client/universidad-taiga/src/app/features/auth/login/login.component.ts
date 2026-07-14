@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, type ElementRef, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
@@ -38,13 +38,7 @@ import type { LoginRequest } from '../../../models/auth.model';
       <main id="login-main" class="login-content" tabindex="-1">
         <div class="login-form">
           <!-- Logo -->
-          <img
-            src="data:image/svg+xml,%3Csvg width='37' height='49' viewBox='0 0 37 49' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M37 37L37 18.5C37 8.28274 28.7173 1.41726e-05 18.5 1.28328e-05C8.28274 1.1493e-05 1.13952e-05 8.28274 1.00554e-05 18.5L7.62939e-06 37L37 37Z' fill='%234F46E5'/%3E%3Cpath d='M7.78945 36.9999C7.78945 30.9054 12.73 25.9648 18.8245 25.9648C24.919 25.9648 29.8596 30.9054 29.8596 36.9999L7.78945 36.9999Z' fill='%23DC2626'/%3E%3Cpath d='M7.78945 37.0001C7.78945 43.0946 12.73 48.0352 18.8245 48.0352C24.919 48.0352 29.8596 43.0946 29.8596 37.0001L7.78945 37.0001Z' fill='%23CA8A04'/%3E%3Cpath d='M18.5 22.0701C21.5472 22.0701 24.0175 19.5998 24.0175 16.5525C24.0175 13.5053 21.5472 11.035 18.5 11.035C15.4527 11.035 12.9824 13.5053 12.9824 16.5525C12.9824 19.5998 15.4527 22.0701 18.5 22.0701Z' fill='%23FAFAFF'/%3E%3C/svg%3E"
-            alt="Logo"
-            class="logo"
-            width="37"
-            height="49"
-          />
+          <img src="/logo-login.png" alt="Gestión Académica" class="logo" width="37" height="49" />
 
           <!-- Header -->
           <h1 class="heading">Iniciar Sesión</h1>
@@ -68,9 +62,7 @@ import type { LoginRequest } from '../../../models/auth.model';
                   class="field-input"
                   autocomplete="email"
                   spellcheck="false"
-                  [attr.aria-invalid]="
-                    form.controls.email.invalid && form.controls.email.touched
-                  "
+                  [attr.aria-invalid]="form.controls.email.invalid && form.controls.email.touched"
                   [attr.aria-describedby]="
                     form.controls.email.invalid && form.controls.email.touched
                       ? 'email-error'
@@ -450,9 +442,8 @@ import type { LoginRequest } from '../../../models/auth.model';
         .login-content {
           width: 100%;
           border-radius: 0;
-          padding: max(24px, env(safe-area-inset-top))
-            max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
-            max(24px, env(safe-area-inset-left));
+          padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+            max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
         }
 
         .login-form {

@@ -39,11 +39,20 @@ type MenuItem = {
     >
       <!-- Logo -->
       <div class="hidden p-4 items-center justify-center md:flex">
-        <img ngSrc="/assets/logo.png" width="32" height="32" alt="Logo" class="w-8 h-8" />
+        <img
+          ngSrc="/logo-sidebar.png"
+          width="32"
+          height="32"
+          alt="Gestión Académica"
+          class="h-8 w-8 object-contain"
+        />
       </div>
 
       <!-- Navigation -->
-      <nav class="flex flex-1 items-center justify-center gap-1 md:mt-2 md:flex-col md:justify-start md:gap-0" aria-label="Main navigation">
+      <nav
+        class="flex flex-1 items-center justify-center gap-1 md:mt-2 md:flex-col md:justify-start md:gap-0"
+        aria-label="Main navigation"
+      >
         @for (item of menuItems(); track item.route) {
           <a
             [routerLink]="item.route"
@@ -55,7 +64,14 @@ type MenuItem = {
           >
             <span class="sr-only">{{ item.label }}</span>
             @if (item.icon) {
-              <ng-icon [name]="item.icon" class="nav-icon" size="24" width="24" height="24" aria-hidden="true" />
+              <ng-icon
+                [name]="item.icon"
+                class="nav-icon"
+                size="24"
+                width="24"
+                height="24"
+                aria-hidden="true"
+              />
             }
             <!-- Tooltip on hover -->
             <span
