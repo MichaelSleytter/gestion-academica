@@ -82,6 +82,7 @@
 /* ── 2. Taiga UI — Override de variables de tema ─────────── */
 /* Sin @layer para que tenga prioridad sobre taiga-ui-theme.less */
 :root {
+  color-scheme: light;
   --tui-background-accent-1: #4f46e5;
   --tui-background-accent-1-hover: #4338ca;
   --tui-background-accent-2: #64748b;
@@ -106,6 +107,10 @@
   --tui-radius-l: 0.5rem;
   --tui-height-m: 2.75rem;
   --tui-padding-m: 0.75rem;
+}
+
+:root:has(body[tuiTheme='dark']) {
+  color-scheme: dark;
 }
 
 /* ── 3. Dark mode — Override de tokens Taiga UI y Tailwind ── */
@@ -157,7 +162,7 @@ body[tuiTheme='dark'] {
   --color-border: rgba(255, 255, 255, 0.12);
   --color-text-primary: #f1f5f9;
   --color-text-secondary: #cbd5e1;
-  --color-text-muted: #64748b;
+  --color-text-muted: #94a3b8;
   /* Alias para compatibilidad */
   --color-text-strong: #f1f5f9;
   --color-text-default: #cbd5e1;
@@ -186,5 +191,28 @@ body[tuiTheme='dark'] {
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    scroll-margin-top: 5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

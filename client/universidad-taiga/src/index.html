@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
   <title>UniversidadTaiga</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +17,13 @@
   <script>
     (function () {
       const theme = localStorage.getItem('tuiTheme');
-      if (theme === 'dark' || (!theme && matchMedia('(prefers-color-scheme: dark)').matches)) {
+      const isDark = theme === 'dark' || (!theme && matchMedia('(prefers-color-scheme: dark)').matches);
+      const themeColor = document.querySelector('meta[name="theme-color"]');
+
+      document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+      themeColor?.setAttribute('content', isDark ? '#0f172a' : '#ffffff');
+
+      if (isDark) {
         document.body.setAttribute('tuiTheme', 'dark');
       }
     })();

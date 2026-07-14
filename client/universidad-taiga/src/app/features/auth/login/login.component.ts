@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TuiButton, TuiLink, TuiLoader } from '@taiga-ui/core';
@@ -32,8 +32,10 @@ import type { LoginRequest } from '../../../models/auth.model';
         <div class="login-image-overlay"></div>
       </div>
 
+      <a class="skip-link" href="#login-main">Saltar al inicio de sesión</a>
+
       <!-- Right panel: form content -->
-      <div class="login-content">
+      <main id="login-main" class="login-content" tabindex="-1">
         <div class="login-form">
           <!-- Logo -->
           <img
@@ -57,22 +59,35 @@ import type { LoginRequest } from '../../../models/auth.model';
                 [class.input-error]="form.controls.email.invalid && form.controls.email.touched"
               >
                 <input
+                  #emailInput
                   id="email"
+                  name="email"
                   type="email"
                   formControlName="email"
-                  placeholder="Ingrese su dirección de correo"
+                  placeholder="Ej. nombre@universidad.edu…"
                   class="field-input"
                   autocomplete="email"
+                  spellcheck="false"
+                  [attr.aria-invalid]="
+                    form.controls.email.invalid && form.controls.email.touched
+                  "
+                  [attr.aria-describedby]="
+                    form.controls.email.invalid && form.controls.email.touched
+                      ? 'email-error'
+                      : null
+                  "
                 />
               </div>
               @if (form.controls.email.invalid && form.controls.email.touched) {
-                <p class="error-text">Ingresa un email válido</p>
+                <p id="email-error" class="error-text" aria-live="polite">
+                  Ingresa un email válido
+                </p>
               }
             </div>
 
             <!-- Password -->
             <div class="field-group">
-              <label class="field-label" for="password">Password</label>
+              <label class="field-label" for="password">Contraseña</label>
               <div
                 class="input-wrapper"
                 [class.input-error]="
@@ -80,12 +95,22 @@ import type { LoginRequest } from '../../../models/auth.model';
                 "
               >
                 <input
+                  #passwordInput
                   id="password"
+                  name="password"
                   [type]="passwordVisible() ? 'text' : 'password'"
                   formControlName="password"
-                  placeholder="Ingrese su contraseña"
+                  placeholder="Ej. mínimo 6 caracteres…"
                   class="field-input"
                   autocomplete="current-password"
+                  [attr.aria-invalid]="
+                    form.controls.password.invalid && form.controls.password.touched
+                  "
+                  [attr.aria-describedby]="
+                    form.controls.password.invalid && form.controls.password.touched
+                      ? 'password-error'
+                      : null
+                  "
                 />
                 <button
                   type="button"
@@ -97,6 +122,7 @@ import type { LoginRequest } from '../../../models/auth.model';
                 >
                   @if (passwordVisible()) {
                     <svg
+                      aria-hidden="true"
                       width="24"
                       height="24"
                       viewBox="0 0 24 24"
@@ -114,6 +140,7 @@ import type { LoginRequest } from '../../../models/auth.model';
                     </svg>
                   } @else {
                     <svg
+                      aria-hidden="true"
                       width="24"
                       height="24"
                       viewBox="0 0 24 24"
@@ -129,9 +156,15 @@ import type { LoginRequest } from '../../../models/auth.model';
                 </button>
               </div>
               @if (form.controls.password.invalid && form.controls.password.touched) {
-                <p class="error-text">La contraseña es obligatoria (mínimo 6 caracteres)</p>
+                <p id="password-error" class="error-text" aria-live="polite">
+                  La contraseña es obligatoria (mínimo 6 caracteres)
+                </p>
               }
             </div>
+
+            @if (authError()) {
+              <p class="auth-error" role="alert">{{ authError() }}</p>
+            }
 
             <!-- Submit -->
             <button
@@ -140,15 +173,19 @@ import type { LoginRequest } from '../../../models/auth.model';
               size="l"
               appearance="primary"
               class="btn-submit"
-              [disabled]="form.invalid || isLoading()"
+              [disabled]="isLoading()"
             >
               @if (isLoading()) {
                 <tui-loader size="s" class="btn-loader" />
-                <span>Ingresando...</span>
+                <span>Ingresando…</span>
               } @else {
                 Iniciar Sesión
               }
             </button>
+
+            @if (isLoading()) {
+              <p class="sr-only" role="status" aria-live="polite">Ingresando…</p>
+            }
 
             <!-- Forgot password -->
             <a routerLink="/forgot-password" tuiLink class="forgot-link"
@@ -156,7 +193,7 @@ import type { LoginRequest } from '../../../models/auth.model';
             >
           </form>
         </div>
-      </div>
+      </main>
     </div>
   `,
   styles: [
@@ -169,8 +206,28 @@ import type { LoginRequest } from '../../../models/auth.model';
       .login-page {
         display: flex;
         min-height: 100vh;
+        min-height: 100dvh;
         background: var(--color-surface, #f8fafc);
         font-family: 'Inter', system-ui, sans-serif;
+      }
+
+      .skip-link {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        z-index: 10;
+        transform: translateY(-200%);
+        padding: 10px 14px;
+        border-radius: 0.375rem;
+        background: var(--color-background, #ffffff);
+        color: var(--color-primary, #4f46e5);
+        font-weight: 600;
+        text-decoration: none;
+        transition: transform 0.15s ease;
+      }
+
+      .skip-link:focus-visible {
+        transform: translateY(0);
       }
 
       /* ─── Left panel: image ───────────────────────────────────── */
@@ -224,6 +281,7 @@ import type { LoginRequest } from '../../../models/auth.model';
         color: var(--color-text-strong, #0f172a);
         margin: 0;
         letter-spacing: -0.025em;
+        text-wrap: balance;
       }
 
       /* ─── Form ────────────────────────────────────────────────── */
@@ -298,6 +356,31 @@ import type { LoginRequest } from '../../../models/auth.model';
         margin: -4px 0 0 2px;
       }
 
+      .auth-error {
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 12px 16px;
+        border: 1px solid var(--color-danger, #dc2626);
+        border-radius: 0.375rem;
+        color: var(--color-danger, #dc2626);
+        font-size: 14px;
+        line-height: 20px;
+        overflow-wrap: anywhere;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
       /* ─── Eye toggle button ───────────────────────────────────── */
       .eye-btn {
         flex-shrink: 0;
@@ -312,6 +395,8 @@ import type { LoginRequest } from '../../../models/auth.model';
         cursor: pointer;
         color: var(--color-text-muted, #64748b);
         transition: opacity 0.15s ease;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .eye-btn:hover {
@@ -331,6 +416,8 @@ import type { LoginRequest } from '../../../models/auth.model';
         font-weight: 500;
         font-size: 18px;
         line-height: normal;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .btn-loader {
@@ -346,6 +433,8 @@ import type { LoginRequest } from '../../../models/auth.model';
         color: var(--color-primary, #4f46e5);
         text-decoration: none;
         cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .forgot-link:hover {
@@ -361,11 +450,21 @@ import type { LoginRequest } from '../../../models/auth.model';
         .login-content {
           width: 100%;
           border-radius: 0;
-          padding: 0 24px;
+          padding: max(24px, env(safe-area-inset-top))
+            max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+            max(24px, env(safe-area-inset-left));
         }
 
         .login-form {
           max-width: 400px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .input-wrapper,
+        .skip-link,
+        .eye-btn {
+          transition: none;
         }
       }
     `,
@@ -385,6 +484,11 @@ export class LoginComponent {
   });
 
   isLoading = signal(false);
+  authError = signal('');
+
+  private readonly emailInput = viewChild.required<ElementRef<HTMLInputElement>>('emailInput');
+  private readonly passwordInput =
+    viewChild.required<ElementRef<HTMLInputElement>>('passwordInput');
 
   /**
    * Alterna la visibilidad del campo de contraseña entre texto y password.
@@ -401,15 +505,17 @@ export class LoginComponent {
    * 2. Marca todos los campos como touched si el formulario es inválido.
    * 3. Llama a `AuthService.login()` con las credenciales.
    * 4. En éxito, redirige al home del rol del usuario via `RoleService.getHomeRouteByRole()`.
-   * 5. En error, muestra un `alert()` con el mensaje correspondiente al código HTTP.
+   * 5. En error, muestra un mensaje persistente con el paso recomendado.
    */
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.focusFirstInvalidControl();
       return;
     }
 
     this.isLoading.set(true);
+    this.authError.set('');
 
     const credentials: LoginRequest = {
       email: this.form.value.email ?? '',
@@ -423,19 +529,30 @@ export class LoginComponent {
       error: (error) => {
         this.isLoading.set(false);
 
-        let message: string;
         if (error.status === 401) {
-          message = 'Email o contraseña incorrectos';
+          this.authError.set(
+            'Email o contraseña incorrectos. Revisa tus datos o restablece tu contraseña.',
+          );
         } else if (error.status === 403) {
-          message = 'Tu cuenta ha sido desactivada';
+          this.authError.set(
+            'Tu cuenta ha sido desactivada. Contacta a la administración para recuperar el acceso.',
+          );
         } else if (error.status === 0) {
-          message = 'No se pudo conectar al servidor. Verifica tu conexión.';
+          this.authError.set(
+            'No se pudo conectar al servidor. Verifica tu conexión e intenta de nuevo.',
+          );
         } else {
-          message = error.error?.message || 'Ocurrió un error. Intenta de nuevo.';
+          this.authError.set(error.error?.message || 'Ocurrió un error. Intenta de nuevo.');
         }
-
-        alert(message);
       },
     });
+  }
+
+  private focusFirstInvalidControl(): void {
+    if (this.form.controls.email.invalid) {
+      this.emailInput().nativeElement.focus();
+    } else {
+      this.passwordInput().nativeElement.focus();
+    }
   }
 }
