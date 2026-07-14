@@ -41,7 +41,7 @@ public class CursoContenidoService {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
     private final String storageBaseUrl;
-    private final String storageAnonKey;
+    private final String storageApiKey;
 
     public CursoContenidoService(
             CursoContenidoRepository repository,
@@ -49,14 +49,14 @@ public class CursoContenidoService {
             MatriculaRepository matriculaRepository,
             ObjectMapper objectMapper,
             @Value("${app.insforge.storage.base-url:https://3auan78u.us-east.insforge.app}") String storageBaseUrl,
-            @Value("${app.insforge.storage.anon-key:}") String storageAnonKey) {
+            @Value("${app.insforge.storage.api-key:}") String storageApiKey) {
         this.repository = repository;
         this.docenteSeccionRepository = docenteSeccionRepository;
         this.matriculaRepository = matriculaRepository;
         this.objectMapper = objectMapper;
         this.httpClient = HttpClient.newHttpClient();
         this.storageBaseUrl = storageBaseUrl;
-        this.storageAnonKey = storageAnonKey;
+        this.storageApiKey = storageApiKey;
     }
 
     /**
@@ -179,7 +179,9 @@ public class CursoContenidoService {
             throw new RuntimeException("La ruta del archivo no corresponde a la sección.");
         }
 
-        if (!expectedStorageUrl(request.key()).equals(request.url())) {
+        String expectedUrl = expectedStorageUrl(request.key());
+        String urlWithoutQuery = request.url().split("\\?", 2)[0];
+        if (!expectedUrl.equals(urlWithoutQuery)) {
             throw new RuntimeException("La URL del archivo no corresponde al objeto subido.");
         }
     }
@@ -190,7 +192,7 @@ public class CursoContenidoService {
     }
 
     private StorageUpload uploadToStorage(MultipartFile file, Integer idSeccion) {
-        if (storageAnonKey.isBlank()) {
+        if (storageApiKey.isBlank()) {
             throw new RuntimeException("InsForge Storage no está configurado en el backend.");
         }
 
@@ -223,7 +225,7 @@ public class CursoContenidoService {
         return HttpRequest.newBuilder()
                 .uri(URI.create(expectedStorageUrl(key)))
                 .timeout(Duration.ofSeconds(60))
-                .header("Authorization", "Bearer " + storageAnonKey)
+                .header("Authorization", "Bearer " + storageApiKey)
                 .header("Content-Type", "multipart/form-data; boundary=" + boundary)
                 .PUT(multipartBody(boundary, file))
                 .build();

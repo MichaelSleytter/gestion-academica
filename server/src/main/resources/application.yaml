@@ -118,7 +118,7 @@ app:
   insforge:
     storage:
       base-url: ${INSFORGE_URL:https://3auan78u.us-east.insforge.app}
-      anon-key: ${INSFORGE_ANON_KEY:}
+      api-key: ${INSFORGE_API_KEY:}
 
 # ============================================
 # JWT CONFIGURATION
