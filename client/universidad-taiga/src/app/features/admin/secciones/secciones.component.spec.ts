@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { TuiRoot } from '@taiga-ui/core';
+import { EMPTY } from 'rxjs';
+import { TuiNotificationService, TuiRoot } from '@taiga-ui/core';
 import {
   SeccionService,
   type CicloAcademicoResponse,
 } from '../../../core/services/seccion.service';
 import type { CursoResponse } from '../../../models/curso/curso.response';
+import type { SeccionResponse } from '../../../models/seccion/seccion.response';
 import {
   emptyPage,
   provideAngularComponentTest,
@@ -19,9 +21,11 @@ describe('Secciones', () => {
   let component: Secciones;
   let fixture: ComponentFixture<SeccionesHost>;
   let seccionService: ReturnType<typeof createSeccionServiceMock>;
+  let notifications: { open: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     seccionService = createSeccionServiceMock();
+    notifications = { open: vi.fn(() => EMPTY) };
 
     await TestBed.configureTestingModule({
       imports: [SeccionesHost],
@@ -29,6 +33,7 @@ describe('Secciones', () => {
         ...provideAngularComponentTest(),
         ...provideQueryTestClient(),
         { provide: SeccionService, useValue: seccionService },
+        { provide: TuiNotificationService, useValue: notifications },
       ],
     }).compileComponents();
 
@@ -39,12 +44,22 @@ describe('Secciones', () => {
     fixture.detectChanges();
   });
 
-  it('should create and load section catalogs', () => {
+  it('should create and load section catalogs', async () => {
     expect(component).toBeTruthy();
-    expect(seccionService.getSeccionesPaginado).toHaveBeenCalledWith(0, 10, '');
     expect(seccionService.getCursosList).toHaveBeenCalledOnce();
     expect(seccionService.getDocentesList).toHaveBeenCalledOnce();
     expect(seccionService.getCiclosAcademicosList).toHaveBeenCalledOnce();
+
+    // Esperar a que carguen los catálogos y se active el filtro
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // El filtro default se activa y la query se dispara con el ciclo 2026-I
+    expect(component.filterReady()).toBe(true);
+    expect(component.idCicloFiltro()).toBe(10);
+    expect(seccionService.getSeccionesPaginado).toHaveBeenCalledWith(0, 10, '', 10);
   });
 
   it('should request and apply the next section code when course and cycle change in automatic mode', async () => {
@@ -122,36 +137,52 @@ describe('Secciones', () => {
     await flushPromises();
   });
 
-  it('should include the optional color in the section payload', () => {
-    const mutateSpy = vi
-      .spyOn(component.crearSeccionMutation, 'mutate')
-      .mockImplementation(() => undefined as never);
-
-    component.modoFormulario.set('crear');
-    component.activarCodigoManual(true);
-    component.seccionForm.patchValue({
-      codigoSeccion: 'MAT-I-001',
-      vacantes: 30,
-      cicloAcademicoNombre: '2026-I',
-      idCurso: cursoMatematicas,
-      idCiclo: ciclo2026I,
-      color: '#2563EB',
-    });
-
-    component.guardarSeccion({ complete: vi.fn() });
-
-    expect(mutateSpy).toHaveBeenCalledWith(
-      {
-        seccion: {
-          codigoSeccion: 'MAT-I-001',
-          vacantes: 30,
-          cicloAcademicoNombre: '2026-I',
-          color: '#2563EB',
+  it('should show a friendly warning when deleting a section with active enrollments', () => {
+    vi.spyOn(component.eliminarSeccionMutation, 'mutate').mockImplementation(((
+      _id: number,
+      options: { onError?: (error: unknown) => void },
+    ) => {
+      options.onError?.({
+        status: 400,
+        error: {
+          mensaje: 'No se puede eliminar la sección. Tiene 4 matrícula(s) activa(s).',
+          error: 'Error de negocio',
+          status: 400,
         },
-        idCurso: 1,
-        idCiclo: 10,
+      });
+    }) as never);
+
+    component.openEliminarSeccionModal(seccionMatematicas);
+    component.confirmarEliminar({ complete: vi.fn() });
+
+    expect(notifications.open).toHaveBeenCalledWith(
+      'Esta sección tiene 4 estudiantes matriculados. Primero desmatriculalos o trasladalos a otra sección.',
+      {
+        label: 'No se puede eliminar la sección',
+        appearance: 'warning',
+        autoClose: 5000,
       },
-      expect.any(Object),
+    );
+  });
+
+  it('should show a generic friendly message for unknown delete failures', () => {
+    vi.spyOn(component.eliminarSeccionMutation, 'mutate').mockImplementation(((
+      _id: number,
+      options: { onError?: (error: unknown) => void },
+    ) => {
+      options.onError?.({ message: 'Http failure response for /api/secciones/1: 500' });
+    }) as never);
+
+    component.openEliminarSeccionModal(seccionMatematicas);
+    component.confirmarEliminar({ complete: vi.fn() });
+
+    expect(notifications.open).toHaveBeenCalledWith(
+      'No se pudo eliminar la sección. Intentalo nuevamente.',
+      {
+        label: 'No se pudo eliminar la sección',
+        appearance: 'error',
+        autoClose: 5000,
+      },
     );
   });
 });
@@ -188,6 +219,16 @@ const ciclo2026II: CicloAcademicoResponse = {
   nombre: '2026-II',
   fechaInicio: '2026-08-01',
   fechaFin: '2026-12-20',
+};
+
+const seccionMatematicas: SeccionResponse = {
+  idSeccion: 100,
+  codigoSeccion: 'MAT-I-001',
+  cicloAcademicoNombre: '2026-I',
+  vacantes: 30,
+  color: '#2563EB',
+  curso: cursoMatematicas,
+  cicloAcademico: ciclo2026I,
 };
 
 function createSeccionServiceMock() {

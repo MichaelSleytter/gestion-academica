@@ -1,8 +1,8 @@
-import { inject, Signal } from '@angular/core';
+import { inject, type Signal } from '@angular/core';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
-import { SeccionCreateRequest } from '../models/seccion/seccion.request';
-import { SeccionResponse } from '../models/seccion/seccion.response';
-import { PageResponse } from '../models/shared/page.response';
+import type { SeccionCreateRequest } from '../models/seccion/seccion.request';
+import type { SeccionResponse } from '../models/seccion/seccion.response';
+import type { PageResponse } from '../models/shared/page.response';
 import { SeccionService } from '../core/services/seccion.service';
 import {
   SECCION_ACTUALIZAR_MUTATION_KEY,
@@ -27,23 +27,29 @@ interface ActualizarSeccionVariables {
 }
 
 /**
- * Hook para obtener secciones con paginación y búsqueda opcional.
+ * Hook para obtener secciones con paginación, búsqueda y filtro por ciclo académico.
  *
- * @param pagina   signal con el número de página (0-based)
- * @param tamaño   signal con elementos por página
- * @param busqueda signal con el texto de búsqueda
+ * @param pagina      signal con el número de página (0-based)
+ * @param tamaño      signal con elementos por página
+ * @param busqueda    signal con el texto de búsqueda
+ * @param idCiclo     signal con el ID del ciclo académico (opcional)
+ * @param enabled     signal que habilita la query (opcional, default true)
  * @returns query con PageResponse<SeccionResponse>
  */
 export function useSeccionesPaginadosQuery(
   pagina: Signal<number>,
   tamaño: Signal<number>,
   busqueda: Signal<string>,
+  idCiclo?: Signal<number | null>,
+  enabled?: Signal<boolean>,
 ) {
   const service = inject(SeccionService);
 
   return injectQuery<PageResponse<SeccionResponse>, Error>(() => ({
-    queryKey: SECCIONES_PAGINADOS_KEY(pagina(), tamaño(), busqueda()),
-    queryFn: () => service.getSeccionesPaginado(pagina(), tamaño(), busqueda()),
+    queryKey: SECCIONES_PAGINADOS_KEY(pagina(), tamaño(), busqueda(), idCiclo?.() ?? undefined),
+    queryFn: () =>
+      service.getSeccionesPaginado(pagina(), tamaño(), busqueda(), idCiclo?.() ?? undefined),
+    enabled: enabled?.() ?? true,
     staleTime: 1000 * 30,
     gcTime: 1000 * 60 * 5,
     retry: 1,

@@ -47,28 +47,38 @@ public class SeccionService {
         return seccionRepository.findAll();
     }
 
-    /**
-     * Busca secciones con paginación y filtro de búsqueda opcional.
-     * <p>
-     * La búsqueda se aplica sobre: código de sección y nombre del ciclo académico.
-     *
-     * @param busqueda   texto para filtrar (opcional)
-     * @param paginacion objeto con página, tamaño y ordenamiento
-     * @return página de secciones que coinciden con el filtro
-     */
-    public Page<Seccion> listarPaginado(String busqueda, Pageable paginacion) {
-        Specification<Seccion> spec = (root, query, cb) -> {
-            if (busqueda == null || busqueda.isBlank()) {
-                return cb.conjunction();
+        /**
+         * Busca secciones con paginación y filtros opcionales.
+         * <p>
+         * La búsqueda se aplica sobre: código de sección y nombre del ciclo académico.
+         * El filtro idCiclo restringe por ciclo académico.
+         *
+         * @param busqueda   texto para filtrar (opcional)
+         * @param idCiclo    ID del ciclo académico para filtrar (opcional)
+         * @param paginacion objeto con página, tamaño y ordenamiento
+         * @return página de secciones que coinciden con los filtros
+         */
+        public Page<Seccion> listarPaginado(String busqueda, Integer idCiclo, Pageable paginacion) {
+            Specification<Seccion> spec = Specification.where(null);
+
+            if (busqueda != null && !busqueda.isBlank()) {
+                String patron = "%" + busqueda.toLowerCase() + "%";
+                spec = spec.and((root, query, cb) ->
+                    cb.or(
+                            cb.like(cb.lower(root.get("codigoSeccion")), patron),
+                            cb.like(cb.lower(root.get("cicloAcademicoNombre")), patron)
+                    )
+                );
             }
-            String patron = "%" + busqueda.toLowerCase() + "%";
-            return cb.or(
-                    cb.like(cb.lower(root.get("codigoSeccion")), patron),
-                    cb.like(cb.lower(root.get("cicloAcademicoNombre")), patron)
-            );
-        };
-        return seccionRepository.findAll(spec, paginacion);
-    }
+
+            if (idCiclo != null) {
+                spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("cicloAcademico").get("idCiclo"), idCiclo)
+                );
+            }
+
+            return seccionRepository.findAll(spec, paginacion);
+        }
 
     /**
      * Busca una sección por ID.

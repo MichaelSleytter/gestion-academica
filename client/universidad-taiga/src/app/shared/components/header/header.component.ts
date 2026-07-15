@@ -1,5 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { RoleService } from '../../../core/services/role.service';
 import { TokenService } from '../../../core/services/token.service';
@@ -26,11 +28,17 @@ export class Header {
   private readonly tokenService = inject(TokenService);
   private readonly router = inject(Router);
 
-  /** Título de la página actual */
-  readonly title = computed(() => {
-    const url = this.router.url.split('?')[0];
-    return this.getTitle(url);
-  });
+  /** Título de la página actual, reactivo a cambios de ruta. */
+  readonly title = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(() => {
+        const url = this.router.url.split('?')[0];
+        return this.getTitle(url);
+      }),
+    ),
+    { initialValue: this.getTitle(this.router.url.split('?')[0]) },
+  );
 
   /** Nombre del usuario autenticado */
   readonly userName = computed(() => this.roleService.getDisplayName());
@@ -99,6 +107,8 @@ export class Header {
         return 'Mis Cursos';
       case 'estudiante':
         return 'Mis Cursos';
+      case 'catalogos':
+        return 'Catálogos';
       default:
         return '';
     }

@@ -21,17 +21,19 @@ export class SeccionService {
   private readonly apiBaseUrl = inject(APP_API_URL);
 
   /**
-   * Obtiene secciones con paginación y búsqueda opcional.
+   * Obtiene secciones con paginación, búsqueda y filtro por ciclo académico.
    *
    * @param pagina  número de página (0-based)
    * @param tamaño  elementos por página
    * @param busqueda texto de búsqueda (opcional)
+   * @param idCiclo  ID del ciclo académico para filtrar (opcional)
    * @returns página de secciones
    */
   getSeccionesPaginado(
     pagina: number,
     tamaño: number,
     busqueda?: string,
+    idCiclo?: number,
   ): Promise<PageResponse<SeccionResponse>> {
     const url = `${this.apiBaseUrl}/secciones`;
     let params = new HttpParams().set('pagina', pagina.toString()).set('tamaño', tamaño.toString());
@@ -40,11 +42,17 @@ export class SeccionService {
       params = params.set('busqueda', busqueda.trim());
     }
 
+    if (idCiclo != null && idCiclo > 0) {
+      params = params.set('idCiclo', idCiclo.toString());
+    }
+
     return lastValueFrom(this.http.get<PageResponse<SeccionResponse>>(url, { params }));
   }
 
   getSeccionById(idSeccion: number): Promise<SeccionResponse> {
-    return lastValueFrom(this.http.get<SeccionResponse>(`${this.apiBaseUrl}/secciones/${idSeccion}`));
+    return lastValueFrom(
+      this.http.get<SeccionResponse>(`${this.apiBaseUrl}/secciones/${idSeccion}`),
+    );
   }
 
   /**
@@ -67,12 +75,16 @@ export class SeccionService {
 
   async getDocentesAsignados(idSeccion: number): Promise<DocenteResponse[]> {
     const asignaciones = await lastValueFrom(
-      this.http.get<DocenteSeccionResponse[]>(`${this.apiBaseUrl}/docentes-secciones/seccion/${idSeccion}`),
+      this.http.get<DocenteSeccionResponse[]>(
+        `${this.apiBaseUrl}/docentes-secciones/seccion/${idSeccion}`,
+      ),
     );
 
     return Promise.all(
       asignaciones.map((asignacion) =>
-        lastValueFrom(this.http.get<DocenteResponse>(`${this.apiBaseUrl}/docentes/${asignacion.id.idDocente}`)),
+        lastValueFrom(
+          this.http.get<DocenteResponse>(`${this.apiBaseUrl}/docentes/${asignacion.id.idDocente}`),
+        ),
       ),
     );
   }
@@ -83,7 +95,9 @@ export class SeccionService {
       .set('idDocente', idDocente.toString());
 
     return lastValueFrom(
-      this.http.post<DocenteSeccionResponse>(`${this.apiBaseUrl}/docentes-secciones`, null, { params }),
+      this.http.post<DocenteSeccionResponse>(`${this.apiBaseUrl}/docentes-secciones`, null, {
+        params,
+      }),
     );
   }
 

@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import {
   TuiButton,
@@ -24,7 +24,7 @@ import {
 import { TuiPlatform } from '@taiga-ui/cdk';
 import { TuiTable } from '@taiga-ui/addon-table';
 import { TuiCardLarge, TuiHeader } from '@taiga-ui/layout';
-import { TuiChevron, TuiInputColor, TuiSkeleton, TuiSelect, TuiSwitch } from '@taiga-ui/kit';
+import { TuiChevron, TuiSkeleton, TuiSelect, TuiSwitch } from '@taiga-ui/kit';
 import type { SeccionResponse } from '../../../models/seccion/seccion.response';
 import type { SeccionCreateRequest } from '../../../models/seccion/seccion.request';
 import {
@@ -47,6 +47,12 @@ interface DialogObserver {
   complete(): void;
 }
 
+interface DeleteSectionErrorNotification {
+  label: string;
+  message: string;
+  appearance: 'error' | 'warning';
+}
+
 @Component({
   selector: 'app-secciones',
   imports: [
@@ -64,7 +70,6 @@ interface DialogObserver {
     TuiChevron,
     TuiDataList,
     TuiDropdown,
-    TuiInputColor,
     TuiSkeleton,
     TuiSelect,
     TuiSwitch,
@@ -100,6 +105,12 @@ export class Secciones implements OnDestroy {
   readonly tamaño = signal(10);
   /** Texto de búsqueda actual. */
   readonly busqueda = signal('');
+  /** ID del ciclo académico seleccionado en el filtro de lista. */
+  readonly idCicloFiltro = signal<number | null>(null);
+  /** Indica si el filtro de ciclo por defecto ya fue cargado. */
+  readonly filterReady = signal(false);
+  /** Control para el select del filtro de ciclo. */
+  readonly filtroCicloControl = new FormControl<CicloAcademicoResponse | null>(null);
   /** Timer para debounce del search. */
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly formSubscriptions = new Subscription();
@@ -109,15 +120,21 @@ export class Secciones implements OnDestroy {
   }
   private codigoSolicitudSecuencia = 0;
 
-  /** Query paginada que se refresca al cambiar página, tamaño o búsqueda. */
-  readonly seccionesQuery = useSeccionesPaginadosQuery(this.pagina, this.tamaño, this.busqueda);
+  /** Query paginada que se refresca al cambiar página, tamaño, búsqueda o ciclo. */
+  readonly seccionesQuery = useSeccionesPaginadosQuery(
+    this.pagina,
+    this.tamaño,
+    this.busqueda,
+    this.idCicloFiltro,
+    this.filterReady,
+  );
 
   /** Total de elementos (de la respuesta paginada). */
   readonly totalSecciones = computed(() => this.seccionesQuery.data()?.totalElements ?? 0);
   /** Total de páginas. */
   readonly totalPaginas = computed(() => this.seccionesQuery.data()?.totalPages ?? 0);
-  /** Indica si la consulta está cargando. */
-  readonly isLoading = computed(() => this.seccionesQuery.isPending());
+  /** Indica si la consulta está cargando (incluye mientras se carga el filtro default). */
+  readonly isLoading = computed(() => !this.filterReady() || this.seccionesQuery.isPending());
 
   // ─── Listas para dropdowns ───────────────────────────────────────────
 
@@ -125,6 +142,11 @@ export class Secciones implements OnDestroy {
   readonly cursosList = signal<CursoResponse[]>([]);
   /** Lista de ciclos académicos para el select del formulario. */
   readonly ciclosList = signal<CicloAcademicoResponse[]>([]);
+  /** Lista de ciclos del año actual para el dropdown del formulario. */
+  readonly ciclosListFormulario = computed(() => {
+    const anioActual = new Date().getFullYear().toString();
+    return this.ciclosList().filter((c) => c.nombre.startsWith(anioActual));
+  });
   /** Lista de docentes para asignar a una sección. */
   readonly docentesList = signal<DocenteResponse[]>([]);
   /** Indica si las listas de catálogo están cargando. */
@@ -133,6 +155,7 @@ export class Secciones implements OnDestroy {
   readonly catalogosError = signal<string | null>(null);
 
   constructor() {
+    this.sincronizarFiltroCiclo();
     this.cargarCatalogos();
     this.sincronizarFormularioConCatalogos();
   }
@@ -148,6 +171,15 @@ export class Secciones implements OnDestroy {
     if (this.formDirty()) {
       event.preventDefault();
     }
+  }
+
+  private sincronizarFiltroCiclo(): void {
+    this.formSubscriptions.add(
+      this.filtroCicloControl.valueChanges.subscribe((ciclo) => {
+        this.idCicloFiltro.set(ciclo?.idCiclo ?? null);
+        this.pagina.set(0);
+      }),
+    );
   }
 
   private sincronizarFormularioConCatalogos(): void {
@@ -185,6 +217,14 @@ export class Secciones implements OnDestroy {
         this.ciclosList.set(ciclos);
         this.docentesList.set(docentesPage.content);
         this.catalogosLoading.set(false);
+
+        // Auto-seleccionar el primer ciclo del año actual como filtro default
+        const anioActual = new Date().getFullYear().toString();
+        const cicloDefault = ciclos.find((c) => c.nombre.startsWith(anioActual));
+        if (cicloDefault) {
+          this.filtroCicloControl.setValue(cicloDefault);
+        }
+        this.filterReady.set(true);
       })
       .catch(() => {
         this.catalogosError.set('Error al cargar datos del formulario');
@@ -222,7 +262,6 @@ export class Secciones implements OnDestroy {
     cicloAcademicoNombre: this.formBuilder.nonNullable.control('', [Validators.required]),
     idCurso: this.formBuilder.control<CursoResponse | null>(null, [Validators.required]),
     idCiclo: this.formBuilder.control<CicloAcademicoResponse | null>(null, [Validators.required]),
-    color: this.formBuilder.control<string | null>(null),
   });
 
   readonly asignacionDocenteForm = this.formBuilder.group({
@@ -241,6 +280,13 @@ export class Secciones implements OnDestroy {
   readonly stringifyCurso = (curso: CursoResponse | null): string => curso?.nombre ?? '';
 
   readonly stringifyCiclo = (ciclo: CicloAcademicoResponse | null): string => ciclo?.nombre ?? '';
+
+  readonly stringifyCicloFiltro = (ciclo: CicloAcademicoResponse | null): string =>
+    ciclo
+      ? `${ciclo.nombre} ${this.cicloEsPeriodoActual(ciclo) ? '— Periodo actual' : ''}`
+      : 'Todos los ciclos';
+
+  readonly filtroCicloValue = this.filtroCicloControl.valueChanges;
 
   readonly stringifyDocente = (docente: DocenteResponse | null): string =>
     docente ? this.docenteNombre(docente) : '';
@@ -276,6 +322,21 @@ export class Secciones implements OnDestroy {
 
   /** Array de números de página para iterar en el template. */
   readonly paginasArray = computed(() => Array.from({ length: this.totalPaginas() }, (_, i) => i));
+
+  cicloEsPeriodoActual(ciclo: CicloAcademicoResponse): boolean {
+    const anioActual = new Date().getFullYear().toString();
+    return ciclo.nombre.startsWith(anioActual);
+  }
+
+  /**
+   * Cambia el filtro de ciclo programáticamente (no desde UI).
+   * La UI se maneja via filtroCicloControl.valueChanges.
+   */
+  onCicloFiltroChange(ciclo: CicloAcademicoResponse | null): void {
+    this.filtroCicloControl.setValue(ciclo, { emitEvent: false });
+    this.idCicloFiltro.set(ciclo?.idCiclo ?? null);
+    this.pagina.set(0);
+  }
 
   protected readonly String = String;
 
@@ -486,15 +547,79 @@ export class Secciones implements OnDestroy {
         this.closeEliminarModal();
       },
       onError: (error) => {
+        const notification = this.getDeleteSectionErrorNotification(error);
+
         this.notifications
-          .open(error?.message ?? 'Error al eliminar sección', {
-            label: 'Error',
-            appearance: 'error',
+          .open(notification.message, {
+            label: notification.label,
+            appearance: notification.appearance,
             autoClose: 5000,
           })
           .subscribe();
       },
     });
+  }
+
+  private getDeleteSectionErrorNotification(error: unknown): DeleteSectionErrorNotification {
+    const backendMessage = this.extractBackendErrorMessage(error);
+
+    if (backendMessage && this.isActiveEnrollmentDeleteError(backendMessage)) {
+      const count = this.extractActiveEnrollmentCount(backendMessage);
+      const message = count
+        ? `Esta sección tiene ${count} estudiantes matriculados. Primero desmatriculalos o trasladalos a otra sección.`
+        : 'Esta sección tiene estudiantes matriculados. Primero desmatriculalos o trasladalos a otra sección.';
+
+      return {
+        label: 'No se puede eliminar la sección',
+        message,
+        appearance: 'warning',
+      };
+    }
+
+    return {
+      label: 'No se pudo eliminar la sección',
+      message: 'No se pudo eliminar la sección. Intentalo nuevamente.',
+      appearance: 'error',
+    };
+  }
+
+  private extractBackendErrorMessage(error: unknown): string | null {
+    if (!error || typeof error !== 'object') return null;
+
+    const httpError = error as { error?: unknown; message?: unknown };
+    const payload = httpError.error;
+
+    if (payload && typeof payload === 'object') {
+      const backendError = payload as { mensaje?: unknown; message?: unknown };
+
+      if (typeof backendError.mensaje === 'string') return backendError.mensaje;
+      if (typeof backendError.message === 'string') return backendError.message;
+    }
+
+    if (typeof payload === 'string') return payload;
+    if (typeof httpError.message === 'string') return httpError.message;
+
+    return null;
+  }
+
+  private isActiveEnrollmentDeleteError(message: string): boolean {
+    const normalizedMessage = this.normalizeErrorText(message);
+
+    return normalizedMessage.includes('matricula') && normalizedMessage.includes('activa');
+  }
+
+  private extractActiveEnrollmentCount(message: string): number | null {
+    const normalizedMessage = this.normalizeErrorText(message);
+    const match = normalizedMessage.match(/tiene\s+(\d+)\s+matricula/);
+
+    return match ? Number(match[1]) : null;
+  }
+
+  private normalizeErrorText(message: string): string {
+    return message
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
   }
 
   async asignarDocente(): Promise<void> {
@@ -631,7 +756,6 @@ export class Secciones implements OnDestroy {
       cicloAcademicoNombre: '',
       idCurso: null,
       idCiclo: null,
-      color: null,
     });
     this.seccionForm.markAsPristine();
     this.seccionForm.markAsUntouched();
@@ -644,7 +768,6 @@ export class Secciones implements OnDestroy {
       cicloAcademicoNombre: seccion.cicloAcademicoNombre,
       idCurso: seccion.curso,
       idCiclo: seccion.cicloAcademico,
-      color: seccion.color ?? null,
     });
     this.seccionForm.markAsPristine();
     this.seccionForm.markAsUntouched();
@@ -652,12 +775,10 @@ export class Secciones implements OnDestroy {
 
   private construirPayload(): SeccionCreateRequest | null {
     const value = this.seccionForm.getRawValue();
-    const color = value.color?.trim() || null;
     return {
       codigoSeccion: value.codigoSeccion.trim(),
       vacantes: Number(value.vacantes),
       cicloAcademicoNombre: value.cicloAcademicoNombre.trim(),
-      color,
     };
   }
 

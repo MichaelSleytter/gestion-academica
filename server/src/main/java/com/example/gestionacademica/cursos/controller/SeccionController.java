@@ -47,8 +47,10 @@ public class SeccionController {
             @Parameter(description = "Elementos por página", example = "10")
             @RequestParam(defaultValue = "10") int tamaño,
             @Parameter(description = "Texto de búsqueda (opcional)", example = "2024-01")
-            @RequestParam(required = false) String busqueda) {
-        return ResponseEntity.ok(seccionService.listarPaginado(busqueda, PageRequest.of(pagina, tamaño)));
+            @RequestParam(required = false) String busqueda,
+            @Parameter(description = "ID del ciclo académico para filtrar (opcional)", example = "1")
+            @RequestParam(required = false) Integer idCiclo) {
+        return ResponseEntity.ok(seccionService.listarPaginado(busqueda, idCiclo, PageRequest.of(pagina, tamaño)));
     }
 
     /**

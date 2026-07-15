@@ -22,7 +22,7 @@
     </header>
   </div>
 
-  <!-- ─── Búsqueda ────────────────────────────────────────────── -->
+  <!-- ─── Búsqueda y filtros ──────────────────────────────────── -->
   <div appearance="floating" tuiCardLarge>
     <section>
       <div class="flex items-center gap-4">
@@ -37,6 +37,38 @@
             />
           </tui-textfield>
         </div>
+
+        <tui-textfield
+          tuiTextfieldSize="m"
+          class="w-72"
+          tuiChevron
+          [stringify]="stringifyCicloFiltro"
+        >
+          <label tuiLabel>Ciclo académico</label>
+          <input
+            tuiSelect
+            autocomplete="off"
+            placeholder="Filtrar por ciclo"
+            [formControl]="filtroCicloControl"
+          />
+          <tui-data-list *tuiDropdown>
+            <button tuiOption type="button" [value]="null">Todos los ciclos</button>
+            @for (ciclo of ciclosList(); track ciclo.idCiclo) {
+              <button tuiOption type="button" [value]="ciclo">
+                {{ ciclo.nombre }}
+                @if (cicloEsPeriodoActual(ciclo)) {
+                  <span
+                    class="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                  >
+                    Periodo actual
+                  </span>
+                }
+              </button>
+            } @empty {
+              <button tuiOption type="button" [disabled]="true">No hay ciclos disponibles</button>
+            }
+          </tui-data-list>
+        </tui-textfield>
       </div>
     </section>
   </div>
@@ -334,7 +366,7 @@
         <p class="text-xs text-red-500 -mt-3">El curso es obligatorio</p>
       }
 
-      <!-- Ciclo Académico (select) -->
+      <!-- Ciclo Académico (select) — solo ciclos del año actual -->
       <tui-textfield tuiTextfieldSize="m" tuiChevron [stringify]="stringifyCiclo">
         <label tuiLabel>Ciclo académico</label>
         <input
@@ -345,7 +377,7 @@
           formControlName="idCiclo"
         />
         <tui-data-list *tuiDropdown>
-          @for (ciclo of ciclosList(); track ciclo.idCiclo) {
+          @for (ciclo of ciclosListFormulario(); track ciclo.idCiclo) {
             <button tuiOption type="button" [value]="ciclo">{{ ciclo.nombre }}</button>
           } @empty {
             <button tuiOption type="button" [disabled]="true">No hay ciclos disponibles</button>
@@ -377,19 +409,6 @@
           }
         </p>
       }
-
-      <!-- Color opcional -->
-      <tui-textfield tuiTextfieldSize="m">
-        <label tuiLabel>Color de sección (opcional)</label>
-        <input
-          name="color"
-          autocomplete="off"
-          tuiInputColor
-          format="hex"
-          placeholder="#2563EB"
-          formControlName="color"
-        />
-      </tui-textfield>
 
       <!-- cicloAcademicoNombre se auto-puebla desde el select de ciclo -->
       <input type="hidden" formControlName="cicloAcademicoNombre" />
