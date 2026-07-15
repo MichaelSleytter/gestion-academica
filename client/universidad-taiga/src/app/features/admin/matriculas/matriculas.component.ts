@@ -203,7 +203,7 @@ export class Matriculas {
           const httpError = error as HttpErrorResponse;
           this.notifications
             .open(
-              httpError.error?.message ?? httpError.message ?? 'Error al matricular estudiante',
+              httpError.error?.mensaje ?? httpError.message ?? 'Error al matricular estudiante',
               {
                 label: 'Error',
                 appearance: 'error',
@@ -242,15 +242,15 @@ export class Matriculas {
             autoClose: 3000,
           })
           .subscribe();
-          observer.complete();
-          this.closeRetirarModal();
-          void this.matriculasQuery.refetch();
-          void this.seccionQuery.refetch();
-        },
+        observer.complete();
+        this.closeRetirarModal();
+        void this.matriculasQuery.refetch();
+        void this.seccionQuery.refetch();
+      },
       onError: (error: unknown) => {
         const httpError = error as HttpErrorResponse;
         this.notifications
-          .open(httpError.error?.message ?? httpError.message ?? 'Error al retirar matrícula', {
+          .open(httpError.error?.mensaje ?? httpError.message ?? 'Error al retirar matrícula', {
             label: 'Error',
             appearance: 'error',
             autoClose: 5000,
