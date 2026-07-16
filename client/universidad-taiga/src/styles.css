@@ -43,6 +43,7 @@
 @theme {
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
+  --color-on-primary: #ffffff;
   --color-secondary: #64748b;
   --color-secondary-hover: #475569;
   --color-background: #ffffff;
@@ -154,6 +155,7 @@ body[tuiTheme='dark'] {
   /* ── Tailwind tokens (custom) ── */
   --color-primary: #818cf8;
   --color-primary-hover: #a5b4fc;
+  --color-on-primary: #0f172a;
   --color-secondary: #94a3b8;
   --color-secondary-hover: #cbd5e1;
   --color-background: #0f172a;
