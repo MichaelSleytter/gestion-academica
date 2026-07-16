@@ -371,8 +371,7 @@ public class AuthController {
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         try {
             passwordResetService.solicitarReset(
-                    request.email(),
-                    "http://localhost:4200/reset-password");
+                    request.email());
         } catch (RuntimeException ex) {
             log.warn("Fallo controlado en forgot-password para {}: {}", request.email(), ex.getMessage());
         }

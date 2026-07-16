@@ -42,11 +42,10 @@ public class PasswordResetService {
      * tokens previos, genera uno nuevo con fecha de expiración y envía el
      * correo con el enlace de recuperación.</p>
      *
-     * @param email  correo del usuario que solicita el reset
-     * @param urlBase URL base del frontend para construir el enlace
+     * @param email correo del usuario que solicita el reset
      */
     @Transactional
-    public void solicitarReset(String email, String urlBase) {
+    public void solicitarReset(String email) {
         Usuario usuario;
         try {
             usuario = usuarioService.obtenerPorEmail(email);
@@ -66,11 +65,12 @@ public class PasswordResetService {
                 .build();
         tokenRepository.save(token);
 
+        String resetUrl = this.frontendBaseUrl + "/reset-password";
         emailService.enviarRecuperacionPassword(
                 usuario.getEmail(),
                 usuario.getNombre(),
                 tokenValue,
-                urlBase);
+                resetUrl);
     }
 
     /**
