@@ -1,6 +1,6 @@
 <div align="center">
 
-  # Gestión Académica
+# Gestión Académica
 
   <p><strong>Sistema de gestión académica universitaria — monorepo full-stack</strong></p>
 
@@ -24,7 +24,7 @@ Repositorio full-stack compuesto por una **API REST en Java Spring Boot** (`serv
 <br/>
 
 | Categoría | Tecnología |
-|-----------|------------|
+| ----------- | ------------ |
 | **Lenguaje** | ![Java](https://img.shields.io/badge/Java_21-007396?style=flat-square&logo=openjdk&logoColor=white) |
 | **Framework** | ![Spring Boot](https://img.shields.io/badge/Spring_Boot_3.5-6DB33F?style=flat-square&logo=springboot&logoColor=white) *(Web MVC, Security, Data JPA, Validation)* |
 | **Build** | ![Maven](https://img.shields.io/badge/Maven_Wrapper-C71A36?style=flat-square&logo=apachemaven&logoColor=white) |
@@ -40,7 +40,7 @@ Repositorio full-stack compuesto por una **API REST en Java Spring Boot** (`serv
 <br/>
 
 | Categoría | Tecnología |
-|-----------|------------|
+| ----------- | ------------ |
 | **Framework** | ![Angular](https://img.shields.io/badge/Angular_21-DD0031?style=flat-square&logo=angular&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=flat-square&logo=typescript&logoColor=white) |
 | **UI Components** | ![Taiga UI](https://img.shields.io/badge/Taiga_UI_5-4CC3FF?style=flat-square&logo=taigaui&logoColor=white) |
 | **Estilos** | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white) |
@@ -79,10 +79,23 @@ gestion-academica/
 
 ---
 
+## 📋 Documentación del Proyecto
+
+| Documento | Descripción |
+| ----------- | ------------- |
+| [README.md](./README.md) | Este archivo — visión general del proyecto |
+| [docs/plan-desarrollo.md](./docs/plan-desarrollo.md) | Plan de desarrollo: cronograma, herramientas, roles y metodología |
+| [docs/arquitectura-frontend.md](./docs/arquitectura-frontend.md) | Arquitectura del frontend Angular |
+| [docs/seguridad-autenticacion.md](./docs/seguridad-autenticacion.md) | Flujo de autenticación y seguridad |
+| [server/README.md](./server/README.md) | Documentación del backend Spring Boot |
+| [client/universidad-taiga/README.md](./client/universidad-taiga/README.md) | Documentación del frontend Angular |
+
+---
+
 ## 🌿 Flujo de Ramas
 
 | Rama | Descripción |
-|------|-------------|
+| ------ | ------------- |
 | `main` | Producción. Solo merges desde `develop` o `hotfix/*`. |
 | `develop` | Integración de funcionalidades. |
 | `feature/<nombre>` | Nuevas funcionalidades (derivan de `develop`). |
@@ -98,7 +111,7 @@ gestion-academica/
 ### Backend
 
 | Módulo | Estado |
-|--------|--------|
+| -------- | -------- |
 | Autenticación JWT (login, refresh, logout, forgot/reset password) | ✅ Completo |
 | CRUD Estudiantes | ✅ Completo |
 | CRUD Docentes | ✅ Completo |
@@ -114,7 +127,7 @@ gestion-academica/
 ### Frontend
 
 | Módulo | Estado |
-|--------|--------|
+| -------- | -------- |
 | Login / Forgot / Reset Password | ✅ Completo |
 | Dashboard Admin | ✅ Completo |
 | Gestión de Estudiantes | ✅ Completo |
